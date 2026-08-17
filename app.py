@@ -706,98 +706,11 @@ def comparison_section(payroll_engine=None):
 
     st.divider()
 
-    # Compensación Anual (si hay datos)
-    if "compensation_data" in st.session_state and st.session_state.compensation_data.get("nivel_hay"):
-        st.subheader("💰 Compensación Anual")
-
-        try:
-            from src.analysis.db_manager import AnalysisDBManager
-            from src.compensation_comparator import CompensationComparator, CompensationScenario
-
-            db_manager = AnalysisDBManager()
-            comparador = CompensationComparator(db_manager, payroll_engine)
-            comp_data = st.session_state.compensation_data
-
-            # Escenario actual
-            actual_scenario = CompensationScenario(
-                base_salary=comparison.current.base_salary,
-                target_rentas=comp_data.get("target_rentas", 0.0),
-                nivel_hay=comp_data.get("nivel_hay", ""),
-                mercado=comp_data.get("mercado", "Mercado Financiero"),
-                months=12
-            )
-
-            # Escenario propuesto
-            propuesta_scenario = CompensationScenario(
-                base_salary=comparison.proposal.base_salary,
-                target_rentas=comp_data.get("target_rentas", 0.0),
-                nivel_hay=comp_data.get("nivel_hay", ""),
-                mercado=comp_data.get("mercado", "Mercado Financiero"),
-                months=12
-            )
-
-            # Calcular comparativa
-            comparativa = comparador.compare(actual_scenario, propuesta_scenario)
-
-            # Mostrar tabla comparativa
-            comp_table_data = {
-                "Métrica": [
-                    "Bono Target (rentas)",
-                    "Nivel HAY",
-                    "Mercado",
-                    "Mediana",
-                    "Compratio %",
-                    "% Variable",
-                    "Comp. Anual"
-                ],
-                "Actual": [
-                    f"{comparativa['actual']['target_rentas']:.1f}",
-                    comparativa['actual']['nivel_hay'],
-                    comparativa['actual']['mercado'],
-                    format_peso_chileno(comparativa['actual']['median']),
-                    f"{comparativa['actual']['compratio_pct']:.1f}%",
-                    f"{comparativa['actual']['variable_pct']:.1f}%",
-                    format_peso_chileno(comparativa['actual']['annual_compensation']),
-                ],
-                "Propuesta": [
-                    f"{comparativa['propuesta']['target_rentas']:.1f}",
-                    comparativa['propuesta']['nivel_hay'],
-                    comparativa['propuesta']['mercado'],
-                    format_peso_chileno(comparativa['propuesta']['median']),
-                    f"{comparativa['propuesta']['compratio_pct']:.1f}%",
-                    f"{comparativa['propuesta']['variable_pct']:.1f}%",
-                    format_peso_chileno(comparativa['propuesta']['annual_compensation']),
-                ]
-            }
-
-            df_comp = pd.DataFrame(comp_table_data)
-            st.dataframe(df_comp, use_container_width=True, hide_index=True)
-
-            # Resumen de cambios
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(
-                    "Comp. Actual",
-                    format_peso_chileno(comparativa['actual']['annual_compensation']),
-                    delta=None
-                )
-            with col2:
-                st.metric(
-                    "Comp. Propuesta",
-                    format_peso_chileno(comparativa['propuesta']['annual_compensation']),
-                    delta=format_peso_chileno(comparativa['cambio']['compensation_change']),
-                    delta_color="off"
-                )
-            with col3:
-                st.metric(
-                    "Cambio %",
-                    f"{comparativa['cambio']['compensation_change_pct']:.2f}%",
-                    delta=None
-                )
-
-            st.divider()
-        except Exception as e:
-            st.warning(f"⚠️ No se pudo calcular compensación: {str(e)}")
+    # Compensación Anual (si hay datos) - TEMPORALMENTE DESHABILITADO PARA DEBUGGING
+    # TODO: Optimizar esta sección que podría estar causando bloqueos
+    # if "compensation_data" in st.session_state and st.session_state.compensation_data.get("nivel_hay"):
+    #     st.subheader("💰 Compensación Anual")
+    #     st.info("ℹ️ Sección de compensación anual en desarrollo")
 
     # Historial de Sueldos
     st.subheader("📈 Historial de Sueldos")
