@@ -498,6 +498,39 @@ def proposal_section():
 
     st.divider()
 
+    # Información de Compensación
+    st.subheader("💼 Información de Compensación")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        nivel_hay_input = st.text_input(
+            "Nivel HAY",
+            value="",
+            placeholder="Ej: 16, 18, 20",
+            key="prop_nivel_hay_input",
+            help="Ingrese el nivel HAY del empleado"
+        )
+
+    with col2:
+        target_rentas = st.number_input(
+            "Target (en rentas)",
+            min_value=0.0,
+            value=0.0,
+            step=0.1,
+            key="prop_target_rentas",
+            help="Bono variable como múltiplo del sueldo base (Ej: 2.8)"
+        )
+
+    with col3:
+        mercado_compensacion = st.selectbox(
+            "Mercado",
+            options=["Mercado Financiero", "Mercado Seguros"],
+            key="prop_mercado_comp",
+            help="Seleccione el mercado para comparativa de compensación"
+        )
+
+    st.divider()
+
     # Fecha de aplicación
     col1, col2 = st.columns([1, 4])
     with col1:

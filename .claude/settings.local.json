@@ -31,7 +31,9 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(grep -E \"\\\\.\\(py\\)$\")"
+      "Bash(grep -E \"\\\\.\\(py\\)$\")",
+      "Bash(git commit -m ' *)",
+      "Bash(python -m py_compile app.py)"
     ]
   }
 }
