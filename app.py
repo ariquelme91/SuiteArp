@@ -4,6 +4,7 @@ import streamlit as st
 import os
 import json
 import pandas as pd
+# v2.5 - Fix estacionamiento descuento en comparativa
 from datetime import datetime
 from dotenv import load_dotenv
 from src.utils.formatters import format_peso_chileno
