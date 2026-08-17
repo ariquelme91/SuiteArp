@@ -179,6 +179,34 @@ class AnalysisDBManager:
                     """
                 )
 
+                # Tabla de propuestas de compensación (Actual vs Propuesta)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS compensation_proposals (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        rut TEXT NOT NULL,
+                        empleado_nombre TEXT,
+                        fecha_propuesta TEXT,
+                        actual_base_salary REAL,
+                        actual_target_rentas REAL,
+                        actual_nivel_hay TEXT,
+                        actual_mercado TEXT,
+                        actual_annual_comp REAL,
+                        propuesta_base_salary REAL,
+                        propuesta_target_rentas REAL,
+                        propuesta_nivel_hay TEXT,
+                        propuesta_mercado TEXT,
+                        propuesta_annual_comp REAL,
+                        cambio_comp REAL,
+                        cambio_comp_pct REAL,
+                        comentarios TEXT,
+                        pdf_path TEXT,
+                        fecha_creacion TEXT,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
                 conn.commit()
                 logger.info(f"Base de datos inicializada: {self.db_path}")
 
@@ -598,4 +626,63 @@ class AnalysisDBManager:
                 return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             logger.error(f"Error obteniendo valores manuales: {e}")
+            return []
+
+    def save_compensation_proposal(self, rut: str, empleado_nombre: str,
+                                   actual: Dict[str, Any], propuesta: Dict[str, Any],
+                                   cambio_comp: float, cambio_comp_pct: float,
+                                   comentarios: str = "", pdf_path: str = "") -> bool:
+        """Guarda una propuesta de compensación."""
+        try:
+            from datetime import datetime
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                now = datetime.now().isoformat()
+
+                cursor.execute(
+                    """
+                    INSERT INTO compensation_proposals (
+                        rut, empleado_nombre, fecha_propuesta,
+                        actual_base_salary, actual_target_rentas, actual_nivel_hay, actual_mercado, actual_annual_comp,
+                        propuesta_base_salary, propuesta_target_rentas, propuesta_nivel_hay, propuesta_mercado, propuesta_annual_comp,
+                        cambio_comp, cambio_comp_pct, comentarios, pdf_path,
+                        fecha_creacion, fecha_actualizacion
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        rut, empleado_nombre, now,
+                        actual.get("base_salary"), actual.get("target_rentas"),
+                        actual.get("nivel_hay"), actual.get("mercado"), actual.get("annual_compensation"),
+                        propuesta.get("base_salary"), propuesta.get("target_rentas"),
+                        propuesta.get("nivel_hay"), propuesta.get("mercado"), propuesta.get("annual_compensation"),
+                        cambio_comp, cambio_comp_pct, comentarios, pdf_path,
+                        now, now
+                    )
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error guardando propuesta de compensación: {e}")
+            return False
+
+    def get_compensation_proposals(self, rut: str = None) -> List[Dict[str, Any]]:
+        """Obtiene propuestas de compensación."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                if rut:
+                    cursor.execute(
+                        "SELECT * FROM compensation_proposals WHERE rut = ? ORDER BY fecha_creacion DESC",
+                        (rut,)
+                    )
+                else:
+                    cursor.execute(
+                        "SELECT * FROM compensation_proposals ORDER BY fecha_creacion DESC"
+                    )
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error obteniendo propuestas: {e}")
             return []

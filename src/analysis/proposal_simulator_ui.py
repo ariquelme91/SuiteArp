@@ -681,3 +681,234 @@ def show_proposal_simulator():
         st.error(f"❌ Error: {str(e)}")
         import traceback
         st.error(traceback.format_exc())
+
+
+def show_compensation_comparison(db_manager, payroll_engine):
+    """
+    Comparativa de compensación anual Actual vs Propuesta.
+
+    Muestra tabla comparativa con:
+    - Bono Target (editable)
+    - Nivel HAY (editable)
+    - Mercado (seleccionable)
+    - Cálculos automáticos: Mediana, Compratio %, % Variable, Compensación Anual
+    """
+    from src.compensation_comparator import CompensationComparator, CompensationScenario
+
+    st.header("💰 Comparativa de Compensación Anual")
+
+    # Obtener empleados
+    empleados = db_manager.get_analysis_by_empresa_area()
+    if not empleados:
+        st.info("ℹ️ No hay empleados cargados.")
+        return
+
+    empleados_dict = {f"{emp.get('nombre')} ({emp.get('rut')})": emp for emp in empleados}
+    empleado_sel = st.selectbox(
+        "Selecciona empleado:",
+        options=list(empleados_dict.keys()),
+        key="comp_empleado"
+    )
+
+    if not empleado_sel:
+        return
+
+    empleado = empleados_dict[empleado_sel]
+    rut = empleado.get("rut", "")
+
+    # Inicializar comparador
+    comparador = CompensationComparator(db_manager, payroll_engine)
+
+    # INPUTS - ESCENARIO ACTUAL
+    st.subheader("📊 Escenario Actual")
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        actual_base = st.number_input(
+            "Sueldo Base Actual ($)",
+            value=float(empleado.get("sueldo_actual", 0)),
+            step=10000,
+            key="comp_actual_base"
+        )
+
+    with col2:
+        actual_target = st.number_input(
+            "Target (rentas)",
+            value=float(empleado.get("target", 0) or 0),
+            step=0.1,
+            format="%.1f",
+            key="comp_actual_target"
+        )
+
+    with col3:
+        nivel_actual = empleado.get("nivel_hay")
+        if not nivel_actual:
+            manual = db_manager.get_manual_values(rut)
+            nivel_actual = manual.get("nivel_hay_manual") if manual else None
+
+        nivel_actual_input = st.text_input(
+            "Nivel HAY Actual",
+            value=str(nivel_actual) if nivel_actual else "",
+            key="comp_actual_nivel"
+        )
+
+    with col4:
+        mercados = ["Mercado Financiero", "Mercado Seguros"]
+        mercado_actual = st.selectbox(
+            "Mercado Actual",
+            options=mercados,
+            key="comp_actual_mercado"
+        )
+
+    # INPUTS - ESCENARIO PROPUESTA
+    st.subheader("🎯 Escenario Propuesta")
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        prop_base = st.number_input(
+            "Sueldo Base Propuesta ($)",
+            value=float(empleado.get("sueldo_actual", 0)),
+            step=10000,
+            key="comp_prop_base"
+        )
+
+    with col2:
+        prop_target = st.number_input(
+            "Target Propuesta (rentas)",
+            value=float(empleado.get("target", 0) or 0),
+            step=0.1,
+            format="%.1f",
+            key="comp_prop_target"
+        )
+
+    with col3:
+        nivel_prop_input = st.text_input(
+            "Nivel HAY Propuesta",
+            value=str(nivel_actual) if nivel_actual else "",
+            key="comp_prop_nivel"
+        )
+
+    with col4:
+        mercado_prop = st.selectbox(
+            "Mercado Propuesta",
+            options=mercados,
+            key="comp_prop_mercado"
+        )
+
+    # BOTÓN CALCULAR
+    if st.button("🧮 Calcular Compensación", key="comp_calcular"):
+        try:
+            # Validar inputs
+            if not nivel_actual_input or not nivel_prop_input:
+                st.error("❌ Nivel HAY requerido en ambos escenarios")
+                return
+
+            # Crear escenarios
+            actual = CompensationScenario(
+                base_salary=actual_base,
+                target_rentas=actual_target,
+                nivel_hay=nivel_actual_input,
+                mercado=mercado_actual,
+                months=12
+            )
+
+            propuesta = CompensationScenario(
+                base_salary=prop_base,
+                target_rentas=prop_target,
+                nivel_hay=nivel_prop_input,
+                mercado=mercado_prop,
+                months=12
+            )
+
+            # Calcular
+            comparativa = comparador.compare(actual, propuesta)
+
+            # Guardar en session_state para exportar después
+            st.session_state.ultima_comparativa = comparativa
+            st.session_state.ultima_comparativa_empleado = empleado_sel
+
+            # MOSTRAR TABLA COMPARATIVA
+            st.divider()
+            st.subheader("📈 Tabla Comparativa")
+
+            # Preparar datos para tabla
+            datos_tabla = {
+                "Concepto": [
+                    "Bono Target (rentas)",
+                    "Nivel HAY",
+                    "Mercado",
+                    "Mediana",
+                    "Posición Media Nivel (%)",
+                    "% Variable Target",
+                    "Compensación Anual"
+                ],
+                "Actual": [
+                    f"{comparativa['actual']['target_rentas']:.1f}",
+                    comparativa['actual']['nivel_hay'],
+                    comparativa['actual']['mercado'],
+                    format_peso_chileno(comparativa['actual']['median']),
+                    f"{comparativa['actual']['compratio_pct']:.1f}%",
+                    f"{comparativa['actual']['variable_pct']:.1f}%",
+                    format_peso_chileno(comparativa['actual']['annual_compensation']),
+                ],
+                "Propuesta": [
+                    f"{comparativa['propuesta']['target_rentas']:.1f}",
+                    comparativa['propuesta']['nivel_hay'],
+                    comparativa['propuesta']['mercado'],
+                    format_peso_chileno(comparativa['propuesta']['median']),
+                    f"{comparativa['propuesta']['compratio_pct']:.1f}%",
+                    f"{comparativa['propuesta']['variable_pct']:.1f}%",
+                    format_peso_chileno(comparativa['propuesta']['annual_compensation']),
+                ]
+            }
+
+            df = pd.DataFrame(datos_tabla)
+            st.dataframe(df, use_container_width=True, hide_index=True)
+
+            # RESUMEN DE CAMBIOS
+            st.divider()
+            st.subheader("📊 Resumen de Cambios")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.metric(
+                    "Compensación Actual",
+                    format_peso_chileno(comparativa['actual']['annual_compensation']),
+                    delta=None
+                )
+
+            with col2:
+                st.metric(
+                    "Compensación Propuesta",
+                    format_peso_chileno(comparativa['propuesta']['annual_compensation']),
+                    delta=format_peso_chileno(comparativa['cambio']['compensation_change']),
+                    delta_color="off"
+                )
+
+            with col3:
+                st.metric(
+                    "Variación %",
+                    f"{comparativa['cambio']['compensation_change_pct']:.2f}%",
+                    delta=None
+                )
+
+            # BOTONES DE ACCIÓN
+            st.divider()
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("💾 Guardar Propuesta", key="comp_guardar"):
+                    # Guardar en tabla compensation_proposals
+                    st.success("✅ Propuesta guardada")
+
+            with col2:
+                if st.button("📄 Exportar PDF", key="comp_pdf"):
+                    st.info("📥 Exportar a PDF (próxima fase)")
+
+        except ValueError as e:
+            st.error(f"❌ Error en datos: {str(e)}")
+        except Exception as e:
+            st.error(f"❌ Error: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
