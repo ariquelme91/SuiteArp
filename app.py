@@ -774,87 +774,23 @@ def comparison_section(payroll_engine=None):
 
     st.divider()
 
-    # Compensación Anual - CON BOTÓN Y CACHING
+    # Compensación Anual - DESHABILITADO TEMPORALMENTE (causa bloqueos)
+    # TODO: Optimizar calculate_compensation_metrics para que no bloquee
     if "compensation_data" in st.session_state and (st.session_state.compensation_data.get("nivel_hay_actual") or st.session_state.compensation_data.get("nivel_hay_propuesta")):
         st.subheader("💰 Análisis de Compensación Anual")
 
-        # Botón para calcular
-        if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", use_container_width=True):
-            st.session_state.show_compensation = True
+        comp_data = st.session_state.compensation_data
 
-        # Mostrar resultados si se presionó el botón
-        if st.session_state.get("show_compensation", False):
-            with st.spinner("Calculando métricas de compensación..."):
-                comp_data = st.session_state.compensation_data
+        # Mostrar resumen simple sin bloqueos
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Nivel HAY Actual", comp_data.get("nivel_hay_actual", "—"))
+        with col2:
+            st.metric("Target Actual", f"{comp_data.get('target_actual', 0.0):.1f} rentas")
+        with col3:
+            st.metric("Mercado", comp_data.get("mercado", "—"))
 
-                comparativa = calculate_compensation_metrics(
-                    base_salary_actual=comparison.current.base_salary,
-                    base_salary_proposal=comparison.proposal.base_salary,
-                    target_actual=comp_data.get("target_actual", 0.0),
-                    target_propuesta=comp_data.get("target_propuesta", 0.0),
-                    nivel_hay_actual=comp_data.get("nivel_hay_actual", ""),
-                    nivel_hay_propuesta=comp_data.get("nivel_hay_propuesta", ""),
-                    mercado=comp_data.get("mercado", "Mercado Financiero")
-                )
-
-                if comparativa:
-                    # Tabla comparativa
-                    comp_table_data = {
-                        "Métrica": [
-                            "Bono Target (rentas)",
-                            "Nivel HAY",
-                            "Mercado",
-                            "Mediana",
-                            "Compratio %",
-                            "% Variable",
-                            "Comp. Anual"
-                        ],
-                        "Actual": [
-                            f"{comparativa['actual']['target_rentas']:.1f}",
-                            comparativa['actual']['nivel_hay'],
-                            comparativa['actual']['mercado'],
-                            format_peso_chileno(comparativa['actual']['median']),
-                            f"{comparativa['actual']['compratio_pct']:.1f}%",
-                            f"{comparativa['actual']['variable_pct']:.1f}%",
-                            format_peso_chileno(comparativa['actual']['annual_compensation']),
-                        ],
-                        "Propuesta": [
-                            f"{comparativa['propuesta']['target_rentas']:.1f}",
-                            comparativa['propuesta']['nivel_hay'],
-                            comparativa['propuesta']['mercado'],
-                            format_peso_chileno(comparativa['propuesta']['median']),
-                            f"{comparativa['propuesta']['compratio_pct']:.1f}%",
-                            f"{comparativa['propuesta']['variable_pct']:.1f}%",
-                            format_peso_chileno(comparativa['propuesta']['annual_compensation']),
-                        ]
-                    }
-
-                    df_comp = pd.DataFrame(comp_table_data)
-                    st.dataframe(df_comp, use_container_width=True, hide_index=True)
-
-                    # Resumen de cambios
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric(
-                            "Comp. Actual",
-                            format_peso_chileno(comparativa['actual']['annual_compensation']),
-                            delta=None
-                        )
-                    with col2:
-                        st.metric(
-                            "Comp. Propuesta",
-                            format_peso_chileno(comparativa['propuesta']['annual_compensation']),
-                            delta=format_peso_chileno(comparativa['cambio']['compensation_change']),
-                            delta_color="off"
-                        )
-                    with col3:
-                        st.metric(
-                            "Cambio %",
-                            f"{comparativa['cambio']['compensation_change_pct']:.2f}%",
-                            delta=None
-                        )
-                else:
-                    st.error("❌ No se pudo calcular la compensación. Verifica los datos ingresados.")
+        st.info("ℹ️ El análisis detallado de Compratio y Mediana está en desarrollo para optimizar el rendimiento.")
 
         st.divider()
 
