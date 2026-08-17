@@ -604,3 +604,117 @@ class PDFExporter:
                 ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#E8E8E8")),
             ]))
             story.append(summary_table)
+
+    def export_compensation_comparison(self, empleado_nombre: str, comparativa: dict,
+                                       filename: str = None) -> str:
+        """
+        Exporta comparativa de compensación anual a PDF.
+
+        Args:
+            empleado_nombre: Nombre del empleado
+            comparativa: Dict con datos de comparativa de CompensationComparator
+            filename: Nombre del archivo (default: auto-generated)
+
+        Returns:
+            Ruta del archivo generado
+        """
+        from datetime import datetime
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"comparativa_compensacion_{timestamp}.pdf"
+
+        doc = SimpleDocTemplate(filename, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        story = []
+        styles = getSampleStyleSheet()
+
+        # Encabezado
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor("#1F4E78"),
+            spaceAfter=12,
+            alignment=1
+        )
+
+        story.append(Paragraph("💰 Comparativa de Compensación Anual", title_style))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Información del empleado
+        info_style = ParagraphStyle(
+            'Info',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=colors.HexColor("#333333")
+        )
+
+        story.append(Paragraph(f"<b>Empleado:</b> {empleado_nombre}", info_style))
+        story.append(Paragraph(f"<b>Fecha:</b> {datetime.now().strftime('%d/%m/%Y')}", info_style))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Tabla comparativa
+        table_data = [
+            ["Concepto", "Actual", "Propuesta"],
+            ["Bono Target (rentas)",
+             f"{comparativa['actual']['target_rentas']:.1f}",
+             f"{comparativa['propuesta']['target_rentas']:.1f}"],
+            ["Nivel HAY",
+             comparativa['actual']['nivel_hay'],
+             comparativa['propuesta']['nivel_hay']],
+            ["Mercado",
+             comparativa['actual']['mercado'],
+             comparativa['propuesta']['mercado']],
+            ["Mediana",
+             f"${comparativa['actual']['median']:,.0f}",
+             f"${comparativa['propuesta']['median']:,.0f}"],
+            ["Posición Media Nivel (%)",
+             f"{comparativa['actual']['compratio_pct']:.1f}%",
+             f"{comparativa['propuesta']['compratio_pct']:.1f}%"],
+            ["% Variable Target",
+             f"{comparativa['actual']['variable_pct']:.1f}%",
+             f"{comparativa['propuesta']['variable_pct']:.1f}%"],
+            ["Compensación Anual",
+             f"${comparativa['actual']['annual_compensation']:,.0f}",
+             f"${comparativa['propuesta']['annual_compensation']:,.0f}"],
+        ]
+
+        comp_table = Table(table_data, colWidths=[2.5*inch, 2*inch, 2*inch])
+        comp_table.setStyle(TableStyle([
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#E8E8E8")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("ALIGN", (0, 0), (0, -1), "LEFT"),
+            ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+        ]))
+
+        story.append(comp_table)
+        story.append(Spacer(1, 0.2*inch))
+
+        # Resumen de cambios
+        cambio = comparativa['cambio']['compensation_change']
+        cambio_pct = comparativa['cambio']['compensation_change_pct']
+
+        cambio_color = "#228B22" if cambio >= 0 else "#DC143C"
+        story.append(Paragraph(
+            f"<b>Cambio en Compensación Anual:</b> "
+            f"<font color='{cambio_color}'>${cambio:,.0f} ({cambio_pct:+.2f}%)</font>",
+            info_style
+        ))
+
+        # Generar PDF
+        doc.build(story)
+        return filename
