@@ -249,12 +249,14 @@ class PDFExporter:
             story.append(comp_table)
             story.append(Spacer(1, 0.1 * inch))
 
-            # Sueldo líquido
+            # Sueldo líquido (neto después de otros descuentos como estacionamiento)
+            current_net_after_other = comparison.current.net_salary - comparison.current_parking_discount
+            proposal_net_after_other = comparison.proposal.net_salary - comparison.proposal_parking_discount
             liquid_data = [
-                ["Sueldo liquido App", f"${comparison.current.net_salary:,.0f}",
-                 f"${comparison.proposal.net_salary:,.0f}",
-                 f"${comparison.proposal.net_salary - comparison.current.net_salary:,.0f}",
-                 f"{self._calc_percent(comparison.current.net_salary, comparison.proposal.net_salary):.1f}%"],
+                ["Sueldo liquido App", f"${current_net_after_other:,.0f}",
+                 f"${proposal_net_after_other:,.0f}",
+                 f"${proposal_net_after_other - current_net_after_other:,.0f}",
+                 f"{self._calc_percent(current_net_after_other, proposal_net_after_other):.1f}%"],
             ]
 
             liquid_table = Table(liquid_data, colWidths=[1.2 * inch, 1 * inch, 1 * inch, 1 * inch, 0.8 * inch])
