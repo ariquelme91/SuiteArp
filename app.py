@@ -147,44 +147,55 @@ def calculate_compensation_metrics(base_salary_actual, base_salary_proposal,
                                     nivel_hay_actual, nivel_hay_propuesta, mercado):
     """Calcula métricas de compensación anual."""
     try:
+        # Convertir a float si es necesario
+        base_salary_actual = float(base_salary_actual) if base_salary_actual else 0
+        base_salary_proposal = float(base_salary_proposal) if base_salary_proposal else 0
+        target_actual = float(target_actual) if target_actual else 0
+        target_propuesta = float(target_propuesta) if target_propuesta else 0
+
         # Actual
         annual_salary_actual = base_salary_actual * 12
-        bonus_annual_actual = target_actual * base_salary_actual if target_actual else 0
+        bonus_annual_actual = target_actual * base_salary_actual
         total_annual_actual = annual_salary_actual + bonus_annual_actual
 
         # Propuesta
         annual_salary_proposal = base_salary_proposal * 12
-        bonus_annual_proposal = target_propuesta * base_salary_proposal if target_propuesta else 0
+        bonus_annual_proposal = target_propuesta * base_salary_proposal
         total_annual_proposal = annual_salary_proposal + bonus_annual_proposal
 
         # Obtener mediana
         median = get_median_from_db(nivel_hay_actual, mercado)
+        if not median:
+            median = 100000000  # Valor por defecto si no hay mediana
 
         # Calcular Compratio
-        compratio_actual = (total_annual_actual / median * 100) if median and median > 0 else 0
-        compratio_proposal = (total_annual_proposal / median * 100) if median and median > 0 else 0
+        compratio_actual = (total_annual_actual / median * 100) if median > 0 else 0
+        compratio_proposal = (total_annual_proposal / median * 100) if median > 0 else 0
 
         # Calcular % variable
         variable_pct_actual = (bonus_annual_actual / total_annual_actual * 100) if total_annual_actual > 0 else 0
         variable_pct_proposal = (bonus_annual_proposal / total_annual_proposal * 100) if total_annual_proposal > 0 else 0
 
-        return {
+        result = {
             'actual': {
                 'annual_compensation': total_annual_actual,
-                'median': median or 0,
+                'median': median,
                 'compratio_pct': compratio_actual,
                 'variable_pct': variable_pct_actual,
                 'bonus_annual': bonus_annual_actual
             },
             'propuesta': {
                 'annual_compensation': total_annual_proposal,
-                'median': median or 0,
+                'median': median,
                 'compratio_pct': compratio_proposal,
                 'variable_pct': variable_pct_proposal,
                 'bonus_annual': bonus_annual_proposal
             }
         }
+        return result
     except Exception as e:
+        import logging
+        logging.error(f"Error en calculate_compensation_metrics: {e}")
         return None
 
 
