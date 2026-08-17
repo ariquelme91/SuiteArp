@@ -372,9 +372,8 @@ def proposal_section():
         nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
         if nivel_actual_sistema:
             st.metric("Nivel HAY", nivel_actual_sistema)
-            st.session_state.nivel_hay_actual = str(nivel_actual_sistema)
         else:
-            st.session_state.nivel_hay_actual = st.text_input(
+            st.text_input(
                 "Nivel HAY",
                 value="",
                 placeholder="Ej: 16, 18, 20",
@@ -386,9 +385,8 @@ def proposal_section():
         target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
         if target_actual_sistema and target_actual_sistema > 0:
             st.metric("Target (rentas)", f"{target_actual_sistema:.1f}")
-            st.session_state.target_actual_input = float(target_actual_sistema)
         else:
-            st.session_state.target_actual_input = st.number_input(
+            st.number_input(
                 "Target en rentas",
                 value=0.0,
                 min_value=0.0,
@@ -533,19 +531,21 @@ def proposal_section():
         st.divider()
         st.caption("**Información de Compensación Propuesta**")
 
-        # Nivel HAY Propuesta
-        st.session_state.nivel_hay_propuesta = st.text_input(
+        # Nivel HAY Propuesta (prefill con actual si existe)
+        default_nivel = st.session_state.get("nivel_hay_actual_input", "")
+        st.text_input(
             "Nivel HAY Propuesta",
-            value=st.session_state.get("nivel_hay_actual", ""),
+            value=default_nivel,
             placeholder="Ej: 16, 18, 20",
             key="nivel_hay_prop_input",
             help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
         )
 
-        # Target Propuesta
-        st.session_state.target_propuesta = st.number_input(
+        # Target Propuesta (prefill con actual si existe)
+        default_target = st.session_state.get("target_actual_input", 0.0)
+        st.number_input(
             "Target Propuesta (rentas)",
-            value=st.session_state.get("target_actual_input", 0.0),
+            value=default_target,
             min_value=0.0,
             step=0.1,
             key="target_prop_input",
