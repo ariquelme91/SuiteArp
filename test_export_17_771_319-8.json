@@ -1,0 +1,491 @@
+{
+  "rut": "17.771.319-8",
+  "nombre": "Angel De Jesus Riquelme Pincheira",
+  "empresa_actual": "Inversiones Dercorp S.A.",
+  "cargo_actual": "Jefe de Remuneraciones y Compensaciones",
+  "sueldo_actual": 2809461.0,
+  "job_history": [
+    {
+      "start_date": "2026-07-01",
+      "end_date": null,
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2809461
+    },
+    {
+      "start_date": "2026-04-01",
+      "end_date": "2026-06-30",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2743614
+    },
+    {
+      "start_date": "2026-03-01",
+      "end_date": "2026-03-31",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2743614
+    },
+    {
+      "start_date": "2026-02-01",
+      "end_date": "2026-02-28",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2729964
+    },
+    {
+      "start_date": "2025-11-01",
+      "end_date": "2026-01-31",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2729964
+    },
+    {
+      "start_date": "2025-07-01",
+      "end_date": "2025-10-31",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2692272
+    },
+    {
+      "start_date": "2025-03-01",
+      "end_date": "2025-06-30",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2678878
+    },
+    {
+      "start_date": "2025-02-01",
+      "end_date": "2025-02-28",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2639289
+    },
+    {
+      "start_date": "2025-01-01",
+      "end_date": "2025-01-31",
+      "job_title": "Jefe de Remuneraciones y Compensaciones",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2639289
+    },
+    {
+      "start_date": "2024-11-01",
+      "end_date": "2024-12-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2639289
+    },
+    {
+      "start_date": "2024-07-01",
+      "end_date": "2024-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2585004
+    },
+    {
+      "start_date": "2024-05-01",
+      "end_date": "2024-06-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2556878
+    },
+    {
+      "start_date": "2024-04-01",
+      "end_date": "2024-04-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2435122
+    },
+    {
+      "start_date": "2024-03-01",
+      "end_date": "2024-03-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2435122
+    },
+    {
+      "start_date": "2024-02-01",
+      "end_date": "2024-02-29",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2398899
+    },
+    {
+      "start_date": "2023-11-01",
+      "end_date": "2024-01-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2265249
+    },
+    {
+      "start_date": "2023-07-01",
+      "end_date": "2023-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2229576
+    },
+    {
+      "start_date": "2023-03-01",
+      "end_date": "2023-06-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2198793
+    },
+    {
+      "start_date": "2022-11-01",
+      "end_date": "2023-02-28",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 2014654
+    },
+    {
+      "start_date": "2022-07-01",
+      "end_date": "2022-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1936609
+    },
+    {
+      "start_date": "2022-04-01",
+      "end_date": "2022-06-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1835648
+    },
+    {
+      "start_date": "2022-03-01",
+      "end_date": "2022-03-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1730497
+    },
+    {
+      "start_date": "2021-11-01",
+      "end_date": "2022-02-28",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1683363
+    },
+    {
+      "start_date": "2021-07-01",
+      "end_date": "2021-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1622831
+    },
+    {
+      "start_date": "2021-06-01",
+      "end_date": "2021-06-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1605174
+    },
+    {
+      "start_date": "2021-03-01",
+      "end_date": "2021-05-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1605174
+    },
+    {
+      "start_date": "2020-11-01",
+      "end_date": "2021-02-28",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1587709
+    },
+    {
+      "start_date": "2020-03-01",
+      "end_date": "2020-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1564245
+    },
+    {
+      "start_date": "2020-02-01",
+      "end_date": "2020-02-29",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1547226
+    },
+    {
+      "start_date": "2019-11-01",
+      "end_date": "2020-01-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1547226
+    },
+    {
+      "start_date": "2019-10-01",
+      "end_date": "2019-10-31",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 1531907
+    },
+    {
+      "start_date": "2019-05-22",
+      "end_date": "2019-09-30",
+      "job_title": "Analista Senior De Remuneracion Y Compensacion",
+      "company_name": null,
+      "company_id": null,
+      "area_name": null,
+      "base_wage": 301000
+    }
+  ],
+  "salary_history": [
+    {
+      "start_date": "2026-07-01",
+      "end_date": null,
+      "base_wage": 2809461,
+      "company_id": 1
+    },
+    {
+      "start_date": "2026-04-01",
+      "end_date": "2026-06-30",
+      "base_wage": 2743614,
+      "company_id": 1
+    },
+    {
+      "start_date": "2026-03-01",
+      "end_date": "2026-03-31",
+      "base_wage": 2743614,
+      "company_id": 1
+    },
+    {
+      "start_date": "2026-02-01",
+      "end_date": "2026-02-28",
+      "base_wage": 2729964,
+      "company_id": 1
+    },
+    {
+      "start_date": "2025-11-01",
+      "end_date": "2026-01-31",
+      "base_wage": 2729964,
+      "company_id": 1
+    },
+    {
+      "start_date": "2025-07-01",
+      "end_date": "2025-10-31",
+      "base_wage": 2692272,
+      "company_id": 1
+    },
+    {
+      "start_date": "2025-03-01",
+      "end_date": "2025-06-30",
+      "base_wage": 2678878,
+      "company_id": 1
+    },
+    {
+      "start_date": "2025-02-01",
+      "end_date": "2025-02-28",
+      "base_wage": 2639289,
+      "company_id": 1
+    },
+    {
+      "start_date": "2025-01-01",
+      "end_date": "2025-01-31",
+      "base_wage": 2639289,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-11-01",
+      "end_date": "2024-12-31",
+      "base_wage": 2639289,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-07-01",
+      "end_date": "2024-10-31",
+      "base_wage": 2585004,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-05-01",
+      "end_date": "2024-06-30",
+      "base_wage": 2556878,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-04-01",
+      "end_date": "2024-04-30",
+      "base_wage": 2435122,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-03-01",
+      "end_date": "2024-03-31",
+      "base_wage": 2435122,
+      "company_id": 1
+    },
+    {
+      "start_date": "2024-02-01",
+      "end_date": "2024-02-29",
+      "base_wage": 2398899,
+      "company_id": 1
+    },
+    {
+      "start_date": "2023-11-01",
+      "end_date": "2024-01-31",
+      "base_wage": 2265249,
+      "company_id": 1
+    },
+    {
+      "start_date": "2023-07-01",
+      "end_date": "2023-10-31",
+      "base_wage": 2229576,
+      "company_id": 1
+    },
+    {
+      "start_date": "2023-03-01",
+      "end_date": "2023-06-30",
+      "base_wage": 2198793,
+      "company_id": 1
+    },
+    {
+      "start_date": "2022-11-01",
+      "end_date": "2023-02-28",
+      "base_wage": 2014654,
+      "company_id": 1
+    },
+    {
+      "start_date": "2022-07-01",
+      "end_date": "2022-10-31",
+      "base_wage": 1936609,
+      "company_id": 1
+    },
+    {
+      "start_date": "2022-04-01",
+      "end_date": "2022-06-30",
+      "base_wage": 1835648,
+      "company_id": 1
+    },
+    {
+      "start_date": "2022-03-01",
+      "end_date": "2022-03-31",
+      "base_wage": 1730497,
+      "company_id": 1
+    },
+    {
+      "start_date": "2021-11-01",
+      "end_date": "2022-02-28",
+      "base_wage": 1683363,
+      "company_id": 1
+    },
+    {
+      "start_date": "2021-07-01",
+      "end_date": "2021-10-31",
+      "base_wage": 1622831,
+      "company_id": 1
+    },
+    {
+      "start_date": "2021-06-01",
+      "end_date": "2021-06-30",
+      "base_wage": 1605174,
+      "company_id": 1
+    },
+    {
+      "start_date": "2021-03-01",
+      "end_date": "2021-05-31",
+      "base_wage": 1605174,
+      "company_id": 1
+    },
+    {
+      "start_date": "2020-11-01",
+      "end_date": "2021-02-28",
+      "base_wage": 1587709,
+      "company_id": 1
+    },
+    {
+      "start_date": "2020-03-01",
+      "end_date": "2020-10-31",
+      "base_wage": 1564245,
+      "company_id": 1
+    },
+    {
+      "start_date": "2020-02-01",
+      "end_date": "2020-02-29",
+      "base_wage": 1547226,
+      "company_id": 1
+    },
+    {
+      "start_date": "2019-11-01",
+      "end_date": "2020-01-31",
+      "base_wage": 1547226,
+      "company_id": 1
+    },
+    {
+      "start_date": "2019-10-01",
+      "end_date": "2019-10-31",
+      "base_wage": 1531907,
+      "company_id": 1
+    },
+    {
+      "start_date": "2019-05-22",
+      "end_date": "2019-09-30",
+      "base_wage": 301000,
+      "company_id": 1
+    }
+  ]
+}

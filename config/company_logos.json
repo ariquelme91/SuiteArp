@@ -1,0 +1,12 @@
+{
+  "company_logos": {
+    "Inversiones Dercorp S.A.": "assets/logos/dercorp.png",
+    "4Life Crédito Hipotecario S.A.": "assets/logos/4life.png",
+    "4Life Seguros de Vida S.A.": "assets/logos/4life.png",
+    "Sociedad de rentas Comerciales S.A.": "assets/logos/default.png",
+    "Fundacion Emprepolis": "assets/logos/fundacion.png",
+    "DT D y D SPA": "assets/logos/default.png",
+    "Agricola Tres Rios Spa": "assets/logos/default.png",
+    "default": "assets/logos/default.png"
+  }
+}

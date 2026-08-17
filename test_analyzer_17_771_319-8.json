@@ -1,0 +1,28 @@
+{
+  "analisis": {
+    "rut": "17.771.319-8",
+    "nombre": "Angel De Jesus Riquelme Pincheira",
+    "empresa": "Inversiones Dercorp S.A.",
+    "cargo_actual": "Jefe de Remuneraciones y Compensaciones",
+    "fecha_ingreso": "2019-05-22",
+    "meses_en_empresa": 87,
+    "sueldo_inicial": 301000,
+    "sueldo_actual": 2809461,
+    "aumento_total": 2508461,
+    "aumento_total_pct": 833.3757475083056,
+    "cambios_salariales": 31
+  },
+  "periodos": [
+    {
+      "cargo": "Sin dato de cargo",
+      "fecha_inicio": "2019-05-22",
+      "fecha_fin": null,
+      "sueldo_inicial": 301000,
+      "sueldo_final": 2809461,
+      "aumento": 2508461,
+      "aumento_pct": 833.3757475083056,
+      "meses": 32,
+      "cambios": 31
+    }
+  ]
+}

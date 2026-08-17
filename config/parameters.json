@@ -1,0 +1,67 @@
+{
+  "periodo": "2026-08",
+  "uf_value": 40873.77,
+  "utm_value": 71649,
+  "imm_value": 553553,
+  "tope_afp_uf": 90.0,
+  "tope_afc_uf": 135.2,
+  "afp_percent": 10.0,
+  "salud_percent": 7.0,
+  "afc_trabajador_indefinido": 0.6,
+  "afc_trabajador_plazo_fijo": 0.0,
+  "afc_empleador_indefinido": 2.4,
+  "afc_empleador_plazo_fijo": 3.0,
+  "sis_percent": 1.49,
+  "tasa_mutual_base": 0.93,
+  "gratificacion_max_percent": 25.0,
+  "tabla_impuesto_unico": [
+    {
+      "desde_utm": 0.0,
+      "hasta_utm": 13.49,
+      "factor": 0.0,
+      "rebaja_utm": 0.0
+    },
+    {
+      "desde_utm": 13.49,
+      "hasta_utm": 30.0,
+      "factor": 4.0,
+      "rebaja_utm": 0.5429
+    },
+    {
+      "desde_utm": 30.0,
+      "hasta_utm": 50.0,
+      "factor": 8.0,
+      "rebaja_utm": 1.7384
+    },
+    {
+      "desde_utm": 50.0,
+      "hasta_utm": 70.0,
+      "factor": 13.5,
+      "rebaja_utm": 4.4889
+    },
+    {
+      "desde_utm": 70.0,
+      "hasta_utm": 90.0,
+      "factor": 23.0,
+      "rebaja_utm": 11.1362
+    },
+    {
+      "desde_utm": 90.0,
+      "hasta_utm": 128.0,
+      "factor": 30.4,
+      "rebaja_utm": 17.7978
+    },
+    {
+      "desde_utm": 128.0,
+      "hasta_utm": 309.0,
+      "factor": 35.0,
+      "rebaja_utm": 23.3066
+    },
+    {
+      "desde_utm": 309.0,
+      "hasta_utm": 999999999.0,
+      "factor": 40.0,
+      "rebaja_utm": 38.8070
+    }
+  ]
+}

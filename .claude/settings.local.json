@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext \"/tmp/MicrosoftEdgeDownloads/21e9e90a-13d9-4dc6-8e28-9b025503b80c/Liquidacion_20260815_161746.pdf\" -)",
+      "Bash(sleep 2 && find ~ -name \"Liquidacion*.pdf\" -type f -mmin -3 2>/dev/null | head -1)",
+      "Bash(pdftotext \"/c/Users/ariquelme/Downloads/Liquidacion_20260815_162357.pdf\" -)",
+      "Bash(awk '{print $NF}')",
+      "Bash(find /tmp/MicrosoftEdgeDownloads -name \"Liquidacion_*.pdf\" -type f -mmin -3 2>/dev/null | sort -r | head -1)",
+      "Bash(pdftotext /tmp/tmptag52jon.pdf -)",
+      "Bash(xargs ls -lt)",
+      "Bash(pdftotext /tmp/tmpeqiuwhps.pdf -)",
+      "Bash(xargs pdftotext)",
+      "PowerShell(cd \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\"; if \\(-not \\(Test-Path \"src\\\\analysis\"\\)\\) { New-Item -ItemType Directory \"src\\\\analysis\" | Out-Null }; New-Item \"src\\\\analysis\\\\__init__.py\" -Force | Out-Null; python test_analyzer.py)",
+      "Bash(python test_employee_fields.py)",
+      "Bash(python -c \"from dotenv import load_dotenv; import os; load_dotenv\\(\\); print\\(f'Token: {os.getenv\\(\\\\\"BUK_AUTH_TOKEN\\\\\"\\)[:20] if os.getenv\\(\\\\\"BUK_AUTH_TOKEN\\\\\"\\) else \\\\\"NONE\\\\\"}'\\); print\\(f'Subdomain: {os.getenv\\(\\\\\"BUK_SUBDOMAIN\\\\\"\\)}'\\)\")",
+      "Bash(python test_areas.py)",
+      "Bash(python test_load.py)",
+      "Bash(python test_excel_export.py)",
+      "Bash(cd \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\" && rm -f test_export_*.xlsx test_excel_export.py)",
+      "Bash(python)",
+      "Bash(python load_ipc_data.py)",
+      "Bash(cd \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\" && rm -f load_ipc_data.py test_*.py debug.py check*.py inspect_api.py explore_*.py find_*.py get_*.py run_safe.py)",
+      "Bash(grep -E \"\\\\.py$|pages\")",
+      "Bash(sqlite3 \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\data\\\\analysis.db\" \"SELECT mes, valor_ipc FROM ipc_history ORDER BY mes DESC LIMIT 15;\")",
+      "Bash(python3)",
+      "Bash(python obtener_json_raw.py)",
+      "mcp__visualize__read_me",
+      "mcp__visualize__show_widget",
+      "Bash(xargs grep -l \"Calculadora de Sueldos\\\\|calculator_section\")",
+      "Bash(sqlite3 \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\data\\\\analysis.db\" \"SELECT mes, valor FROM uf WHERE mes LIKE '2026-08%' LIMIT 1;\")"
+    ]
+  }
+}
