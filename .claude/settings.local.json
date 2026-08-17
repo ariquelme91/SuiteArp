@@ -33,7 +33,9 @@
       "Bash(git push *)",
       "Bash(grep -E \"\\\\.\\(py\\)$\")",
       "Bash(git commit -m ' *)",
-      "Bash(python -m py_compile app.py)"
+      "Bash(python -m py_compile app.py)",
+      "Bash(git reset *)",
+      "Bash(mcp__Claude_Browser__preview_start --name propuestas-renta-streamlit)"
     ]
   }
 }

@@ -108,6 +108,86 @@ def get_payroll_engine():
     return PayrollEngine(parameters)
 
 
+@st.cache_data(ttl=3600)
+def get_median_from_db(nivel_hay, mercado):
+    """Obtiene mediana de la BD con caching - sin bloqueos."""
+    if not nivel_hay:
+        return None
+
+    try:
+        import sqlite3
+        import os
+
+        # Ruta de la BD
+        db_path = os.path.join(os.path.dirname(__file__), "src", "analysis", "data", "compensation.db")
+
+        if not os.path.exists(db_path):
+            return None
+
+        mercado_key = "mercado_financiero" if "Financiero" in str(mercado) else "mercado_seguros"
+
+        conn = sqlite3.connect(db_path, timeout=2)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute(
+            f"SELECT {mercado_key} FROM compensation_levels WHERE nivel = ?",
+            (str(nivel_hay),)
+        )
+        result = cursor.fetchone()
+        conn.close()
+
+        return float(result[0]) if result and result[0] else None
+    except Exception as e:
+        return None
+
+
+def calculate_compensation_metrics(base_salary_actual, base_salary_proposal,
+                                    target_actual, target_propuesta,
+                                    nivel_hay_actual, nivel_hay_propuesta, mercado):
+    """Calcula métricas de compensación anual."""
+    try:
+        # Actual
+        annual_salary_actual = base_salary_actual * 12
+        bonus_annual_actual = target_actual * base_salary_actual if target_actual else 0
+        total_annual_actual = annual_salary_actual + bonus_annual_actual
+
+        # Propuesta
+        annual_salary_proposal = base_salary_proposal * 12
+        bonus_annual_proposal = target_propuesta * base_salary_proposal if target_propuesta else 0
+        total_annual_proposal = annual_salary_proposal + bonus_annual_proposal
+
+        # Obtener mediana
+        median = get_median_from_db(nivel_hay_actual, mercado)
+
+        # Calcular Compratio
+        compratio_actual = (total_annual_actual / median * 100) if median and median > 0 else 0
+        compratio_proposal = (total_annual_proposal / median * 100) if median and median > 0 else 0
+
+        # Calcular % variable
+        variable_pct_actual = (bonus_annual_actual / total_annual_actual * 100) if total_annual_actual > 0 else 0
+        variable_pct_proposal = (bonus_annual_proposal / total_annual_proposal * 100) if total_annual_proposal > 0 else 0
+
+        return {
+            'actual': {
+                'annual_compensation': total_annual_actual,
+                'median': median or 0,
+                'compratio_pct': compratio_actual,
+                'variable_pct': variable_pct_actual,
+                'bonus_annual': bonus_annual_actual
+            },
+            'propuesta': {
+                'annual_compensation': total_annual_proposal,
+                'median': median or 0,
+                'compratio_pct': compratio_proposal,
+                'variable_pct': variable_pct_proposal,
+                'bonus_annual': bonus_annual_proposal
+            }
+        }
+    except Exception as e:
+        return None
+
+
 def get_company_logo(company_name: str):
     """Obtiene la ruta del logo según la empresa."""
     try:
@@ -781,16 +861,123 @@ def comparison_section(payroll_engine=None):
 
         comp_data = st.session_state.compensation_data
 
-        # Mostrar resumen simple sin bloqueos
+        # Mostrar resumen de datos ingresados
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Nivel HAY Actual", comp_data.get("nivel_hay_actual", "—"))
+            st.metric("Nivel HAY Actual", comp_data.get("nivel_hay_actual_input", "—"))
         with col2:
             st.metric("Target Actual", f"{comp_data.get('target_actual', 0.0):.1f} rentas")
         with col3:
             st.metric("Mercado", comp_data.get("mercado", "—"))
 
-        st.info("ℹ️ El análisis detallado de Compratio y Mediana está en desarrollo para optimizar el rendimiento.")
+        # Botón para calcular compensación
+        if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", use_container_width=True):
+            st.session_state.show_compensation = True
+
+        # Mostrar análisis si se presionó el botón
+        if st.session_state.get("show_compensation", False):
+            with st.spinner("Calculando métricas de compensación..."):
+                # Obtener datos para el cálculo
+                base_salary_actual = comparison.current.base_salary
+                base_salary_proposal = comparison.proposal.base_salary
+                target_actual = comp_data.get("target_actual", 0.0)
+                target_propuesta = comp_data.get("target_propuesta_input", 0.0)
+                nivel_hay_actual = comp_data.get("nivel_hay_actual_input", "")
+                nivel_hay_propuesta = comp_data.get("nivel_hay_prop_input", nivel_hay_actual)
+                mercado = comp_data.get("mercado", "Mercado Financiero")
+
+                # Calcular métricas
+                metrics = calculate_compensation_metrics(
+                    base_salary_actual, base_salary_proposal,
+                    target_actual, target_propuesta,
+                    nivel_hay_actual, nivel_hay_propuesta, mercado
+                )
+
+                if metrics:
+                    # Tabla comparativa
+                    st.divider()
+                    st.subheader("📊 Análisis de Compratio y Mediana")
+
+                    comp_table_data = {
+                        "Métrica": [
+                            "Compensación Anual",
+                            "Mediana Mercado",
+                            "Compratio %",
+                            "% Variable",
+                            "Bonus Anual"
+                        ],
+                        "Actual": [
+                            format_peso_chileno(metrics['actual']['annual_compensation']),
+                            format_peso_chileno(metrics['actual']['median']),
+                            f"{metrics['actual']['compratio_pct']:.1f}%",
+                            f"{metrics['actual']['variable_pct']:.1f}%",
+                            format_peso_chileno(metrics['actual']['bonus_annual']),
+                        ],
+                        "Propuesta": [
+                            format_peso_chileno(metrics['propuesta']['annual_compensation']),
+                            format_peso_chileno(metrics['propuesta']['median']),
+                            f"{metrics['propuesta']['compratio_pct']:.1f}%",
+                            f"{metrics['propuesta']['variable_pct']:.1f}%",
+                            format_peso_chileno(metrics['propuesta']['bonus_annual']),
+                        ]
+                    }
+
+                    df_comp = pd.DataFrame(comp_table_data)
+                    st.dataframe(df_comp, use_container_width=True, hide_index=True)
+
+                    # Resumen de cambios
+                    st.divider()
+                    st.subheader("⚖️ Análisis de Cambios")
+
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric(
+                            "Comp. Actual",
+                            format_peso_chileno(metrics['actual']['annual_compensation']),
+                            delta=None
+                        )
+                    with col2:
+                        delta_comp = metrics['propuesta']['annual_compensation'] - metrics['actual']['annual_compensation']
+                        st.metric(
+                            "Comp. Propuesta",
+                            format_peso_chileno(metrics['propuesta']['annual_compensation']),
+                            delta=format_peso_chileno(delta_comp) if delta_comp != 0 else "Sin cambio",
+                            delta_color="off"
+                        )
+                    with col3:
+                        delta_compratio = metrics['propuesta']['compratio_pct'] - metrics['actual']['compratio_pct']
+                        st.metric(
+                            "Cambio Compratio",
+                            f"{metrics['propuesta']['compratio_pct']:.1f}%",
+                            delta=f"{delta_compratio:+.1f}%" if delta_compratio != 0 else "Sin cambio",
+                            delta_color="off"
+                        )
+
+                    # Análisis de equidad
+                    st.divider()
+                    st.subheader("📈 Posicionamiento en Mercado")
+
+                    if metrics['actual']['median'] > 0:
+                        actual_compratio = metrics['actual']['compratio_pct']
+                        if actual_compratio < 80:
+                            st.warning(f"⚠️ Compensación BAJO mercado (Compratio {actual_compratio:.1f}%)")
+                        elif actual_compratio < 100:
+                            st.info(f"ℹ️ Compensación en RANGO BAJO (Compratio {actual_compratio:.1f}%)")
+                        elif actual_compratio < 120:
+                            st.success(f"✅ Compensación COMPETITIVA (Compratio {actual_compratio:.1f}%)")
+                        else:
+                            st.error(f"⚠️ Compensación SOBRE mercado (Compratio {actual_compratio:.1f}%)")
+
+                        # Análisis de la propuesta
+                        proposal_compratio = metrics['propuesta']['compratio_pct']
+                        if proposal_compratio > actual_compratio:
+                            st.success(f"✅ Propuesta MEJORA equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
+                        elif proposal_compratio == actual_compratio:
+                            st.info("ℹ️ Propuesta MANTIENE equidad actual")
+                        else:
+                            st.warning(f"⚠️ Propuesta REDUCE equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
+                else:
+                    st.error("❌ No se pudo calcular la compensación. Verifica que Nivel HAY esté completado.")
 
         st.divider()
 
