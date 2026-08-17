@@ -372,9 +372,9 @@ def proposal_section():
         nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
         if nivel_actual_sistema:
             st.metric("Nivel HAY", nivel_actual_sistema)
-            nivel_hay_actual = str(nivel_actual_sistema)
+            st.session_state.nivel_hay_actual = str(nivel_actual_sistema)
         else:
-            nivel_hay_actual = st.text_input(
+            st.session_state.nivel_hay_actual = st.text_input(
                 "Nivel HAY",
                 value="",
                 placeholder="Ej: 16, 18, 20",
@@ -386,9 +386,9 @@ def proposal_section():
         target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
         if target_actual_sistema and target_actual_sistema > 0:
             st.metric("Target (rentas)", f"{target_actual_sistema:.1f}")
-            target_actual_input = float(target_actual_sistema)
+            st.session_state.target_actual_input = float(target_actual_sistema)
         else:
-            target_actual_input = st.number_input(
+            st.session_state.target_actual_input = st.number_input(
                 "Target en rentas",
                 value=0.0,
                 min_value=0.0,
@@ -534,18 +534,18 @@ def proposal_section():
         st.caption("**Información de Compensación Propuesta**")
 
         # Nivel HAY Propuesta
-        nivel_prop_input = st.text_input(
+        st.session_state.nivel_hay_propuesta = st.text_input(
             "Nivel HAY Propuesta",
-            value=nivel_hay_actual if 'nivel_hay_actual' in locals() else "",
+            value=st.session_state.get("nivel_hay_actual", ""),
             placeholder="Ej: 16, 18, 20",
             key="nivel_hay_prop_input",
             help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
         )
 
         # Target Propuesta
-        target_prop_input = st.number_input(
+        st.session_state.target_propuesta = st.number_input(
             "Target Propuesta (rentas)",
-            value=target_actual_input if 'target_actual_input' in locals() else 0.0,
+            value=st.session_state.get("target_actual_input", 0.0),
             min_value=0.0,
             step=0.1,
             key="target_prop_input",
@@ -599,10 +599,10 @@ def proposal_section():
 
             # Guardar datos de compensación
             st.session_state.compensation_data = {
-                "nivel_hay_actual": nivel_hay_actual if 'nivel_hay_actual' in locals() else "",
-                "nivel_hay_propuesta": nivel_prop_input if 'nivel_prop_input' in locals() else "",
-                "target_actual": target_actual_input if 'target_actual_input' in locals() else 0.0,
-                "target_propuesta": target_prop_input if 'target_prop_input' in locals() else 0.0,
+                "nivel_hay_actual": st.session_state.get("nivel_hay_actual", ""),
+                "nivel_hay_propuesta": st.session_state.get("nivel_hay_propuesta", ""),
+                "target_actual": st.session_state.get("target_actual_input", 0.0),
+                "target_propuesta": st.session_state.get("target_propuesta", 0.0),
                 "mercado": mercado_comparacion
             }
 
