@@ -679,10 +679,10 @@ def proposal_section():
 
             # Guardar datos de compensación (usar keys correctas de los widgets)
             st.session_state.compensation_data = {
-                "nivel_hay_actual": st.session_state.get("nivel_hay_actual_input", ""),
-                "nivel_hay_propuesta": st.session_state.get("nivel_hay_prop_input", ""),
+                "nivel_hay_actual_input": st.session_state.get("nivel_hay_actual_input", ""),
+                "nivel_hay_prop_input": st.session_state.get("nivel_hay_prop_input", ""),
                 "target_actual": st.session_state.get("target_actual_input", 0.0),
-                "target_propuesta": st.session_state.get("target_prop_input", 0.0),
+                "target_propuesta_input": st.session_state.get("target_prop_input", 0.0),
                 "mercado": mercado_comparacion
             }
 
@@ -854,9 +854,8 @@ def comparison_section(payroll_engine=None):
 
     st.divider()
 
-    # Compensación Anual - DESHABILITADO TEMPORALMENTE (causa bloqueos)
-    # TODO: Optimizar calculate_compensation_metrics para que no bloquee
-    if "compensation_data" in st.session_state and (st.session_state.compensation_data.get("nivel_hay_actual") or st.session_state.compensation_data.get("nivel_hay_propuesta")):
+    # Compensación Anual - Mostrar si hay datos disponibles
+    if "compensation_data" in st.session_state:
         st.subheader("💰 Análisis de Compensación Anual")
 
         comp_data = st.session_state.compensation_data
