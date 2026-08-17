@@ -1832,8 +1832,24 @@ def main():
 
     with tab5:
         # === TAB SIMULADOR (test) ===
-        from src.analysis.proposal_simulator_ui import show_proposal_simulator
-        show_proposal_simulator()
+        from src.analysis.proposal_simulator_ui import show_proposal_simulator, show_compensation_comparison
+
+        # Subtab para seleccionar entre simulador clásico y comparativa de compensación
+        simulador_subtab = st.radio(
+            "Selecciona tipo de análisis:",
+            ["Propuesta Tradicional", "Comparativa de Compensación Anual"],
+            horizontal=True,
+            key="simulador_tipo"
+        )
+
+        if simulador_subtab == "Propuesta Tradicional":
+            show_proposal_simulator()
+        else:
+            # Comparativa de compensación anual
+            from src.analysis.db_manager import AnalysisDBManager
+            db_manager = AnalysisDBManager()
+            engine = get_payroll_engine()
+            show_compensation_comparison(db_manager, engine)
 
     with tab6:
         # === TAB CONFIGURACIÓN ===
