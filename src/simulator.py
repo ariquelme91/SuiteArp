@@ -13,6 +13,8 @@ class ComparisonResult:
     change_date: str
     employee_name: str
     employee_rut: str
+    current_parking_discount: float = 0.0
+    proposal_parking_discount: float = 0.0
 
     def get_comparison_items(self) -> Dict[str, Dict[str, any]]:
         """Retorna diccionario con items comparables."""
@@ -61,13 +63,17 @@ class ComparisonResult:
                 "actual": self.current.income_tax,
                 "proposal": self.proposal.income_tax,
             },
-            "Total Descuentos": {
-                "actual": self.current.total_discounts,
-                "proposal": self.proposal.total_discounts,
+            "Estacionamiento": {
+                "actual": self.current_parking_discount,
+                "proposal": self.proposal_parking_discount,
             },
-            "Sueldo Líquido": {
-                "actual": self.current.net_salary,
-                "proposal": self.proposal.net_salary,
+            "Total Descuentos": {
+                "actual": self.current.total_discounts + self.current_parking_discount,
+                "proposal": self.proposal.total_discounts + self.proposal_parking_discount,
+            },
+            "Sueldo Líquido Neto": {
+                "actual": self.current.net_salary - self.current_parking_discount,
+                "proposal": self.proposal.net_salary - self.proposal_parking_discount,
             },
             "Costo Empresa": {
                 "actual": self.current.total_employer_cost,
@@ -125,6 +131,8 @@ class Simulator:
         proposal_other_taxable: Optional[float] = None,
         proposal_other_non_taxable: Optional[float] = None,
         pension_fund: Optional[str] = None,
+        current_parking_discount: float = 0,
+        proposal_parking_discount: float = 0,
     ) -> ComparisonResult:
         """
         Compara situación actual vs propuesta.
@@ -180,6 +188,8 @@ class Simulator:
             change_date=change_date,
             employee_name=employee_name,
             employee_rut=employee_rut,
+            current_parking_discount=current_parking_discount,
+            proposal_parking_discount=proposal_parking_discount,
         )
 
     def get_impact_summary(self, comparison: ComparisonResult) -> Dict[str, Tuple[float, float]]:

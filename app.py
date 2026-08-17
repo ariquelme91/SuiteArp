@@ -471,24 +471,29 @@ def proposal_section():
         base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
         has_parking = st.session_state.get("has_parking", False) if "has_parking" in st.session_state else False
 
-        # Si tiene estacionamiento, descontar de movilización
-        parking_discount = 0
-        if has_parking and base_mobility > 0:
-            parking_discount = base_mobility  # Descuento total de movilización si tiene estacionamiento
+        # Calcular descuentos de estacionamiento
+        current_parking_discount = 0
+        if has_parking and current_mobility > 0:
+            current_parking_discount = current_mobility  # Descuento total de movilización si tiene estacionamiento
 
         with col1:
             st.caption("Colación")
             proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
         with col2:
-            mobility_label = "Movilización" + (" (con descuento estacionamiento)" if has_parking else "")
+            mobility_label = "Movilización" + (" (menos estacionamiento)" if proposal_has_parking else "")
             st.caption(mobility_label)
-            proposal_mobility = st.number_input("Movilización", value=max(0, int(base_mobility - parking_discount)), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
+            proposal_mobility = st.number_input("Movilización", value=int(base_mobility), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
         with col3:
             st.caption("Otros imponibles")
             proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
 
         # Checkbox para estacionamiento en propuesta
         proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
+
+        # Calcular descuento de estacionamiento propuesto
+        proposal_parking_discount = 0
+        if proposal_has_parking and proposal_mobility > 0:
+            proposal_parking_discount = proposal_mobility  # Descuento total de movilización si tendrá estacionamiento
 
     st.divider()
 
@@ -530,6 +535,8 @@ def proposal_section():
                 proposal_mobility=proposal_mobility,
                 proposal_other_taxable=proposal_other_taxable,
                 pension_fund=employee.pension_fund,
+                current_parking_discount=current_parking_discount,
+                proposal_parking_discount=proposal_parking_discount,
             )
 
             # Calcular propuestas estándar
