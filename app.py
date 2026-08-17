@@ -490,10 +490,10 @@ def proposal_section():
         # Checkbox para estacionamiento en propuesta
         proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
 
-        # Calcular descuento de estacionamiento propuesto
+        # Calcular descuento de estacionamiento propuesto (basado en movilización ORIGINAL, no la modificada)
         proposal_parking_discount = 0
-        if proposal_has_parking and proposal_mobility > 0:
-            proposal_parking_discount = proposal_mobility  # Descuento total de movilización si tendrá estacionamiento
+        if proposal_has_parking and base_mobility > 0:
+            proposal_parking_discount = base_mobility  # Descuento total de movilización si tendrá estacionamiento
 
     st.divider()
 
