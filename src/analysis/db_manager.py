@@ -165,6 +165,20 @@ class AnalysisDBManager:
                     """
                 )
 
+                # Tabla de valores manuales de Nivel HAY y Target
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS employee_manual_values (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        rut TEXT UNIQUE NOT NULL,
+                        nivel_hay_manual TEXT,
+                        target_manual TEXT,
+                        fecha_creacion TEXT,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
                 conn.commit()
                 logger.info(f"Base de datos inicializada: {self.db_path}")
 
@@ -532,3 +546,56 @@ class AnalysisDBManager:
         except Exception as e:
             logger.error(f"Error obteniendo promedio de compensación: {e}")
             return None
+
+    def save_manual_values(self, rut: str, nivel_hay: Optional[str], target: Optional[str]) -> bool:
+        """Guarda valores manuales de Nivel HAY y Target para un empleado."""
+        try:
+            from datetime import datetime
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                now = datetime.now().isoformat()
+
+                cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO employee_manual_values (
+                        rut, nivel_hay_manual, target_manual, fecha_creacion, fecha_actualizacion
+                    ) VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (rut, nivel_hay, target, now, now)
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error guardando valores manuales: {e}")
+            return False
+
+    def get_manual_values(self, rut: str) -> Optional[Dict[str, Any]]:
+        """Obtiene valores manuales de un empleado."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT rut, nivel_hay_manual, target_manual FROM employee_manual_values WHERE rut = ?",
+                    (rut,)
+                )
+                result = cursor.fetchone()
+                return dict(result) if result else None
+        except Exception as e:
+            logger.error(f"Error obteniendo valores manuales: {e}")
+            return None
+
+    def get_all_manual_values(self) -> List[Dict[str, Any]]:
+        """Obtiene todos los valores manuales guardados."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT rut, nivel_hay_manual, target_manual, fecha_actualizacion FROM employee_manual_values ORDER BY fecha_actualizacion DESC"
+                )
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error obteniendo valores manuales: {e}")
+            return []

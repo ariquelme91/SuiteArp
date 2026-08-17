@@ -197,6 +197,79 @@ def show_analysis_section(buk_client: BukClient):
         st.write("**Antigüedad del Último Aumento:**")
         st.write(f"- Promedio: {advanced_metrics.get('antigüedad_promedio_meses_ultimo_aumento', 0):.1f} meses")
 
+    # SECCIÓN 2B: Configurar Nivel HAY y Target manuales
+    st.divider()
+    st.subheader("2B️⃣ Configurar Nivel HAY y Target Manuales")
+    st.caption("Ingresa valores manuales para empleados sin Nivel HAY o Target en el sistema")
+
+    # Obtener lista de empleados sin filtros
+    all_empleados = db_manager.get_analysis_by_empresa_area()
+
+    if all_empleados:
+        empleados_dict = {f"{emp.get('nombre')} ({emp.get('rut')})": emp for emp in all_empleados}
+        empleado_manual = st.selectbox(
+            "Selecciona empleado:",
+            options=list(empleados_dict.keys()),
+            key="manual_empleado_selector"
+        )
+
+        if empleado_manual:
+            emp_data = empleados_dict[empleado_manual]
+            rut = emp_data.get("rut", "")
+
+            # Obtener valores manuales existentes
+            manual_values = db_manager.get_manual_values(rut)
+            nivel_hay_existente = manual_values.get("nivel_hay_manual") if manual_values else None
+            target_existente = manual_values.get("target_manual") if manual_values else None
+
+            col1, col2, col3 = st.columns([2, 2, 1])
+
+            with col1:
+                nivel_hay_input = st.text_input(
+                    "Nivel HAY:",
+                    value=nivel_hay_existente or emp_data.get("nivel_hay") or "",
+                    placeholder="Ej: 400, 450-500",
+                    key=f"nivel_hay_{rut}"
+                )
+
+            with col2:
+                target_input = st.text_input(
+                    "Target (# de rentas):",
+                    value=target_existente or emp_data.get("target") or "",
+                    placeholder="Ej: 1.5, 2, 2.5",
+                    key=f"target_{rut}"
+                )
+
+            with col3:
+                if st.button("💾 Guardar", key=f"btn_save_{rut}"):
+                    if nivel_hay_input or target_input:
+                        if db_manager.save_manual_values(rut, nivel_hay_input or None, target_input or None):
+                            st.success("✅ Valores guardados correctamente")
+                            st.rerun()
+                        else:
+                            st.error("❌ Error al guardar")
+                    else:
+                        st.warning("⚠️ Ingresa al menos un valor")
+
+        # Mostrar tabla de valores guardados
+        manual_data = db_manager.get_all_manual_values()
+        if manual_data:
+            st.divider()
+            st.subheader("📋 Valores Configurados Manualmente")
+
+            # Enriquecer datos con información de empleados
+            for record in manual_data:
+                emp = next((e for e in all_empleados if e.get("rut") == record["rut"]), None)
+                if emp:
+                    record["nombre"] = emp.get("nombre", "")
+                    record["cargo"] = emp.get("cargo_actual", "")
+
+            df_manual = pd.DataFrame(manual_data)
+            df_manual = df_manual[["rut", "nombre", "cargo", "nivel_hay_manual", "target_manual", "fecha_actualizacion"]]
+            df_manual.columns = ["RUT", "Nombre", "Cargo", "Nivel HAY", "Target", "Última Actualización"]
+
+            st.dataframe(df_manual, use_container_width=True, hide_index=True)
+
     # Gráficos
     st.divider()
     st.subheader("📊 Visualizaciones")

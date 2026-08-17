@@ -84,13 +84,42 @@ def show_compensations_section(buk_client: BukClient):
     # Segunda fila: Nivel HAY, Target y Mercado
     col3, col4, col5 = st.columns(3)
 
+    rut_empleado = empleado.get("rut", "")
+    nivel_base = empleado.get("nivel_hay")
+    target_base = empleado.get("target")
+
+    # Obtener valores manuales si existen
+    manual_values = db_manager.get_manual_values(rut_empleado)
+    nivel_manual = manual_values.get("nivel_hay_manual") if manual_values else None
+    target_manual = manual_values.get("target_manual") if manual_values else None
+
+    # Usar valores manuales si existen, sino los de la BD
+    nivel_actual = nivel_manual or nivel_base
+    target = target_manual or target_base
+
     with col3:
-        nivel_actual = empleado.get("nivel_hay")
-        st.metric("Nivel HAY", nivel_actual if nivel_actual else "-")
+        if nivel_actual:
+            st.metric("Nivel HAY", nivel_actual)
+        else:
+            nivel_input = st.text_input(
+                "Nivel HAY:",
+                value="",
+                placeholder="Ej: 400, 450-500",
+                key=f"nivel_hay_comp_{rut_empleado}"
+            )
+            nivel_actual = nivel_input if nivel_input else None
 
     with col4:
-        target = empleado.get("target")
-        st.metric("Target", f"{target} Rentas" if target else "-")
+        if target:
+            st.metric("Target", f"{target} Rentas")
+        else:
+            target_input = st.text_input(
+                "Target (# rentas):",
+                value="",
+                placeholder="Ej: 1.5, 2, 2.5",
+                key=f"target_comp_{rut_empleado}"
+            )
+            target = target_input if target_input else None
 
     with col5:
         mercado_seleccionado = st.selectbox(
@@ -99,12 +128,23 @@ def show_compensations_section(buk_client: BukClient):
             key="mercado_selector"
         )
 
+    # Botón para guardar valores manuales si fue necesario ingresarlos
+    if (not nivel_base or not target_base) and (nivel_actual or target):
+        col_save1, col_save2 = st.columns([4, 1])
+        with col_save2:
+            if st.button("💾 Guardar valores", key=f"save_comp_{rut_empleado}"):
+                if db_manager.save_manual_values(rut_empleado, nivel_actual, target):
+                    st.success("✅ Valores guardados")
+                    st.rerun()
+                else:
+                    st.error("❌ Error al guardar")
+
     # SECCIÓN 3: Cálculo de Compensación
     st.divider()
     st.subheader("3️⃣ Cálculo de Compensación")
 
     if not nivel_actual or not target:
-        st.warning("⚠️ El empleado no tiene Nivel HAY o Target definido.")
+        st.warning("⚠️ El empleado no tiene Nivel HAY o Target definido. Ingresa los valores arriba.")
         return
 
     try:
