@@ -477,6 +477,9 @@ def proposal_section():
         if has_parking and current_mobility > 0:
             current_parking_discount = current_mobility  # Descuento total de movilización si tiene estacionamiento
 
+        # Checkbox para estacionamiento en propuesta (ANTES de usarlo en labels)
+        proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
+
         with col1:
             st.caption("Colación")
             proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
@@ -487,9 +490,6 @@ def proposal_section():
         with col3:
             st.caption("Otros imponibles")
             proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
-
-        # Checkbox para estacionamiento en propuesta
-        proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
 
         # Calcular descuento de estacionamiento propuesto (basado en movilización ORIGINAL, no la modificada)
         proposal_parking_discount = 0
