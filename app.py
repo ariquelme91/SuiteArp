@@ -364,6 +364,39 @@ def proposal_section():
         # Checkbox para estacionamiento
         has_parking = st.checkbox("¿Tiene Estacionamiento?", key="has_parking", value=False)
 
+        # Nivel HAY y Target Actual
+        st.divider()
+        st.caption("**Información de Compensación Actual**")
+
+        # Nivel HAY
+        nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
+        if nivel_actual_sistema:
+            st.metric("Nivel HAY", nivel_actual_sistema)
+            nivel_hay_actual = str(nivel_actual_sistema)
+        else:
+            nivel_hay_actual = st.text_input(
+                "Nivel HAY",
+                value="",
+                placeholder="Ej: 16, 18, 20",
+                key="nivel_hay_actual_input",
+                help="No hay Nivel HAY en el sistema. Ingresa manualmente."
+            )
+
+        # Target Actual
+        target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
+        if target_actual_sistema and target_actual_sistema > 0:
+            st.metric("Target (rentas)", f"{target_actual_sistema:.1f}")
+            target_actual_input = float(target_actual_sistema)
+        else:
+            target_actual_input = st.number_input(
+                "Target en rentas",
+                value=0.0,
+                min_value=0.0,
+                step=0.1,
+                key="target_actual_input",
+                help="No hay Target en el sistema. Ingresa manualmente (Ej: 2.8)."
+            )
+
     with col_right:
         st.subheader("📊 Haberes Propuestos")
 
@@ -496,38 +529,39 @@ def proposal_section():
         if proposal_has_parking and base_mobility > 0:
             proposal_parking_discount = base_mobility  # Descuento total de movilización si tendrá estacionamiento
 
+        # Nivel HAY y Target Propuesta
+        st.divider()
+        st.caption("**Información de Compensación Propuesta**")
+
+        # Nivel HAY Propuesta
+        nivel_prop_input = st.text_input(
+            "Nivel HAY Propuesta",
+            value=nivel_hay_actual if 'nivel_hay_actual' in locals() else "",
+            placeholder="Ej: 16, 18, 20",
+            key="nivel_hay_prop_input",
+            help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
+        )
+
+        # Target Propuesta
+        target_prop_input = st.number_input(
+            "Target Propuesta (rentas)",
+            value=target_actual_input if 'target_actual_input' in locals() else 0.0,
+            min_value=0.0,
+            step=0.1,
+            key="target_prop_input",
+            help="Target en rentas para la propuesta (Ej: 2.8, 3.0, etc.)."
+        )
+
     st.divider()
 
-    # Información de Compensación
-    st.subheader("💼 Información de Compensación")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        nivel_hay_input = st.text_input(
-            "Nivel HAY",
-            value="",
-            placeholder="Ej: 16, 18, 20",
-            key="prop_nivel_hay_input",
-            help="Ingrese el nivel HAY del empleado"
-        )
-
-    with col2:
-        target_rentas = st.number_input(
-            "Target (en rentas)",
-            min_value=0.0,
-            value=0.0,
-            step=0.1,
-            key="prop_target_rentas",
-            help="Bono variable como múltiplo del sueldo base (Ej: 2.8)"
-        )
-
-    with col3:
-        mercado_compensacion = st.selectbox(
-            "Mercado",
-            options=["Mercado Financiero", "Mercado Seguros"],
-            key="prop_mercado_comp",
-            help="Seleccione el mercado para comparativa de compensación"
-        )
+    # Mercado para Comparativa
+    st.subheader("📊 Comparativa de Mercado")
+    mercado_comparacion = st.selectbox(
+        "Tipo de Mercado",
+        options=["Mercado Financiero", "Mercado Seguros"],
+        key="mercado_comparacion_main",
+        help="Selecciona el mercado para comparar la compensación."
+    )
 
     st.divider()
 
@@ -565,9 +599,11 @@ def proposal_section():
 
             # Guardar datos de compensación
             st.session_state.compensation_data = {
-                "nivel_hay": nivel_hay_input,
-                "target_rentas": target_rentas,
-                "mercado": mercado_compensacion
+                "nivel_hay_actual": nivel_hay_actual if 'nivel_hay_actual' in locals() else "",
+                "nivel_hay_propuesta": nivel_prop_input if 'nivel_prop_input' in locals() else "",
+                "target_actual": target_actual_input if 'target_actual_input' in locals() else 0.0,
+                "target_propuesta": target_prop_input if 'target_prop_input' in locals() else 0.0,
+                "mercado": mercado_comparacion
             }
 
             # Crear comparativa
@@ -612,7 +648,7 @@ def proposal_section():
 
 
 @st.cache_data
-def calculate_compensation_metrics(base_salary_actual, base_salary_proposal, target_rentas, nivel_hay, mercado):
+def calculate_compensation_metrics(base_salary_actual, base_salary_proposal, target_actual, target_propuesta, nivel_hay_actual, nivel_hay_propuesta, mercado):
     """Calcula métricas de compensación con caching."""
     try:
         from src.analysis.db_manager import AnalysisDBManager
@@ -624,16 +660,16 @@ def calculate_compensation_metrics(base_salary_actual, base_salary_proposal, tar
 
         actual = CompensationScenario(
             base_salary=base_salary_actual,
-            target_rentas=target_rentas,
-            nivel_hay=nivel_hay,
+            target_rentas=float(target_actual) if target_actual else 0.0,
+            nivel_hay=str(nivel_hay_actual) if nivel_hay_actual else "0",
             mercado=mercado,
             months=12
         )
 
         propuesta = CompensationScenario(
             base_salary=base_salary_proposal,
-            target_rentas=target_rentas,
-            nivel_hay=nivel_hay,
+            target_rentas=float(target_propuesta) if target_propuesta else 0.0,
+            nivel_hay=str(nivel_hay_propuesta) if nivel_hay_propuesta else str(nivel_hay_actual) if nivel_hay_actual else "0",
             mercado=mercado,
             months=12
         )
@@ -739,7 +775,7 @@ def comparison_section(payroll_engine=None):
     st.divider()
 
     # Compensación Anual - CON BOTÓN Y CACHING
-    if "compensation_data" in st.session_state and st.session_state.compensation_data.get("nivel_hay"):
+    if "compensation_data" in st.session_state and (st.session_state.compensation_data.get("nivel_hay_actual") or st.session_state.compensation_data.get("nivel_hay_propuesta")):
         st.subheader("💰 Análisis de Compensación Anual")
 
         # Botón para calcular
@@ -754,8 +790,10 @@ def comparison_section(payroll_engine=None):
                 comparativa = calculate_compensation_metrics(
                     base_salary_actual=comparison.current.base_salary,
                     base_salary_proposal=comparison.proposal.base_salary,
-                    target_rentas=comp_data.get("target_rentas", 0.0),
-                    nivel_hay=comp_data.get("nivel_hay", ""),
+                    target_actual=comp_data.get("target_actual", 0.0),
+                    target_propuesta=comp_data.get("target_propuesta", 0.0),
+                    nivel_hay_actual=comp_data.get("nivel_hay_actual", ""),
+                    nivel_hay_propuesta=comp_data.get("nivel_hay_propuesta", ""),
                     mercado=comp_data.get("mercado", "Mercado Financiero")
                 )
 
