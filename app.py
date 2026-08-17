@@ -597,12 +597,12 @@ def proposal_section():
             # Guardar estacionamiento propuesto
             st.session_state.proposal_has_parking = proposal_has_parking
 
-            # Guardar datos de compensación
+            # Guardar datos de compensación (usar keys correctas de los widgets)
             st.session_state.compensation_data = {
-                "nivel_hay_actual": st.session_state.get("nivel_hay_actual", ""),
-                "nivel_hay_propuesta": st.session_state.get("nivel_hay_propuesta", ""),
+                "nivel_hay_actual": st.session_state.get("nivel_hay_actual_input", ""),
+                "nivel_hay_propuesta": st.session_state.get("nivel_hay_prop_input", ""),
                 "target_actual": st.session_state.get("target_actual_input", 0.0),
-                "target_propuesta": st.session_state.get("target_propuesta", 0.0),
+                "target_propuesta": st.session_state.get("target_prop_input", 0.0),
                 "mercado": mercado_comparacion
             }
 
