@@ -889,13 +889,15 @@ def comparison_section(payroll_engine=None):
             with st.spinner("Calculando métricas de compensación..."):
                 try:
                     # Obtener datos para el cálculo
-                    base_salary_actual = comparison.current.base_salary
-                    base_salary_proposal = comparison.proposal.base_salary
-                    target_actual = comp_data.get("target_actual", 0.0)
-                    target_propuesta = comp_data.get("target_propuesta_input", 0.0)
-                    nivel_hay_actual = comp_data.get("nivel_hay_actual_input", "")
-                    nivel_hay_propuesta = comp_data.get("nivel_hay_prop_input", nivel_hay_actual)
-                    mercado = comp_data.get("mercado", "Mercado Financiero")
+                    base_salary_actual = float(comparison.current.base_salary)
+                    base_salary_proposal = float(comparison.proposal.base_salary)
+                    target_actual = float(comp_data.get("target_actual", 0.0))
+                    target_propuesta = float(comp_data.get("target_propuesta_input", 0.0))
+                    nivel_hay_actual = str(comp_data.get("nivel_hay_actual_input", ""))
+                    nivel_hay_propuesta = str(comp_data.get("nivel_hay_prop_input", nivel_hay_actual))
+                    mercado = str(comp_data.get("mercado", "Mercado Financiero"))
+
+                    st.info(f"🔍 Debug: Calculando con datos: Base={base_salary_actual}, Target={target_actual}, Nivel={nivel_hay_actual}, Mercado={mercado}")
 
                     # Calcular métricas
                     metrics = calculate_compensation_metrics(
@@ -904,7 +906,9 @@ def comparison_section(payroll_engine=None):
                         nivel_hay_actual, nivel_hay_propuesta, mercado
                     )
 
-                    if metrics:
+                    if metrics is None:
+                        st.error("❌ Metrics es None - función de cálculo falló")
+                    elif metrics:
                         # Tabla comparativa
                         st.divider()
                         st.subheader("📊 Análisis de Compratio y Mediana")
