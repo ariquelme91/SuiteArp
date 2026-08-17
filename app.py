@@ -611,8 +611,11 @@ def proposal_section():
             st.rerun()
 
 
-def comparison_section():
+def comparison_section(payroll_engine=None):
     """Sección de visualización de comparativa."""
+    if payroll_engine is None:
+        payroll_engine = get_payroll_engine()
+
     if not st.session_state.comparison:
         st.info("ℹ️ Cree una propuesta primero")
         return
