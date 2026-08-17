@@ -898,13 +898,58 @@ def show_compensation_comparison(db_manager, payroll_engine):
             col1, col2 = st.columns(2)
 
             with col1:
+                comentarios = st.text_area(
+                    "Comentarios (opcional)",
+                    value="",
+                    height=100,
+                    key="comp_comentarios"
+                )
+
                 if st.button("💾 Guardar Propuesta", key="comp_guardar"):
                     # Guardar en tabla compensation_proposals
-                    st.success("✅ Propuesta guardada")
+                    cambio = comparativa['cambio']['compensation_change']
+                    cambio_pct = comparativa['cambio']['compensation_change_pct']
+
+                    success = db_manager.save_compensation_proposal(
+                        rut=rut,
+                        empleado_nombre=empleado_sel,
+                        actual=comparativa['actual'],
+                        propuesta=comparativa['propuesta'],
+                        cambio_comp=cambio,
+                        cambio_comp_pct=cambio_pct,
+                        comentarios=comentarios,
+                        pdf_path=""
+                    )
+
+                    if success:
+                        st.success("✅ Propuesta guardada en base de datos")
+                    else:
+                        st.error("❌ Error al guardar propuesta")
 
             with col2:
                 if st.button("📄 Exportar PDF", key="comp_pdf"):
-                    st.info("📥 Exportar a PDF (próxima fase)")
+                    try:
+                        from src.pdf_exporter import PDFExporter
+
+                        pdf_exporter = PDFExporter()
+                        pdf_path = pdf_exporter.export_compensation_comparison(
+                            empleado_nombre=empleado_sel,
+                            comparativa=comparativa
+                        )
+
+                        # Leer archivo PDF para descarga
+                        with open(pdf_path, "rb") as pdf_file:
+                            st.download_button(
+                                label="📥 Descargar PDF",
+                                data=pdf_file,
+                                file_name=pdf_path.split("/")[-1],
+                                mime="application/pdf",
+                                key="comp_pdf_download"
+                            )
+
+                        st.success(f"✅ PDF generado: {pdf_path}")
+                    except Exception as e:
+                        st.error(f"❌ Error al generar PDF: {str(e)}")
 
         except ValueError as e:
             st.error(f"❌ Error en datos: {str(e)}")
