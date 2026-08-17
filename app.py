@@ -502,6 +502,15 @@ def proposal_section():
     col1, col2 = st.columns([1, 4])
     with col1:
         change_date = st.date_input("Fecha aplicación", value=datetime.now(), label_visibility="collapsed")
+
+    # Mostrar fecha en formato visual "Mes Año"
+    meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    mes_nombre = meses[change_date.month - 1]
+    fecha_visual = f"{mes_nombre} {change_date.year}"
+
+    with col2:
+        st.write(f"**{fecha_visual}**")
+
     change_date_str = change_date.strftime("%d/%m/%Y")
 
     st.divider()
