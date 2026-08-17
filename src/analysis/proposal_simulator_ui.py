@@ -8,6 +8,7 @@ from datetime import datetime
 from src.analysis.db_manager import AnalysisDBManager
 from src.analysis.compensation_calculator import CompensationCalculator
 from src.analysis.proposal_pdf_exporter import ProposalPDFExporter
+from src.payroll_engine import PayrollEngine
 from src.utils.formatters import format_peso_chileno
 import json
 
@@ -160,6 +161,28 @@ def show_proposal_simulator():
             "Mercado Comparación",
             options=["Mercado Financiero", "Mercado Seguros"],
             key="prop_mercado"
+        )
+
+    # Descuentos voluntarios
+    st.write("**Descuentos**")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        estacionamiento = st.number_input(
+            "Estacionamiento",
+            min_value=0,
+            value=0,
+            step=10000,
+            key="prop_estacionamiento"
+        )
+
+    with col2:
+        otros_descuentos = st.number_input(
+            "Otros descuentos",
+            min_value=0,
+            value=0,
+            step=10000,
+            key="prop_otros_descuentos"
         )
 
     # Nivel HAY (en caso de cambio de cargo)
@@ -360,6 +383,9 @@ def show_proposal_simulator():
             "Variación (%)": f"{var_total_hab_pct:.1f}%"
         })
 
+        # Inicializar PayrollEngine para calcular impuesto a la renta
+        payroll_engine = PayrollEngine(params)
+
         # Descuentos (aproximados basados en %s estándar)
         afp_pct = 0.10  # 10%
         salud_pct = 0.07  # 7%
@@ -402,6 +428,77 @@ def show_proposal_simulator():
             "Propuesta": format_peso_chileno(desc_afc_propuesta),
             "Variación ($)": format_peso_chileno(var_afc),
             "Variación (%)": f"{var_afc_pct:.1f}%"
+        })
+
+        # Impuesto a la Renta
+        impuesto_actual = payroll_engine._calculate_income_tax(total_imponible_actual * 12)
+        impuesto_propuesta = payroll_engine._calculate_income_tax(total_imponible_propuesto * 12)
+        var_impuesto = impuesto_propuesta - impuesto_actual
+        var_impuesto_pct = (var_impuesto / impuesto_actual * 100) if impuesto_actual > 0 else 0
+
+        comparativo_data.append({
+            "Concepto": "Impuesto a la Renta",
+            "Actual": format_peso_chileno(impuesto_actual / 12),
+            "Propuesta": format_peso_chileno(impuesto_propuesta / 12),
+            "Variación ($)": format_peso_chileno(var_impuesto / 12),
+            "Variación (%)": f"{var_impuesto_pct:.1f}%" if impuesto_actual > 0 else "—"
+        })
+
+        # Estacionamiento
+        estacionamiento_actual = comp_actual.get('estacionamiento', 0)
+        estacionamiento_propuesta = estacionamiento
+        var_estacionamiento = estacionamiento_propuesta - estacionamiento_actual
+        var_estacionamiento_pct = (var_estacionamiento / estacionamiento_actual * 100) if estacionamiento_actual > 0 else 0
+
+        comparativo_data.append({
+            "Concepto": "Estacionamiento",
+            "Actual": format_peso_chileno(estacionamiento_actual),
+            "Propuesta": format_peso_chileno(estacionamiento_propuesta),
+            "Variación ($)": format_peso_chileno(var_estacionamiento),
+            "Variación (%)": f"{var_estacionamiento_pct:.1f}%" if estacionamiento_actual > 0 else "—"
+        })
+
+        # Otros descuentos
+        otros_desc_actual = 0
+        otros_desc_propuesta = otros_descuentos
+        var_otros_desc = otros_desc_propuesta - otros_desc_actual
+        var_otros_desc_pct = (var_otros_desc / otros_desc_actual * 100) if otros_desc_actual > 0 else 0
+
+        if otros_descuentos > 0:
+            comparativo_data.append({
+                "Concepto": "Otros Descuentos",
+                "Actual": format_peso_chileno(otros_desc_actual),
+                "Propuesta": format_peso_chileno(otros_desc_propuesta),
+                "Variación ($)": format_peso_chileno(var_otros_desc),
+                "Variación (%)": "—"
+            })
+
+        # Total Descuentos
+        total_desc_actual = desc_afp_actual + desc_salud_actual + desc_afc_actual + (impuesto_actual / 12) + estacionamiento_actual + otros_desc_actual
+        total_desc_propuesta = desc_afp_propuesta + desc_salud_propuesta + desc_afc_propuesta + (impuesto_propuesta / 12) + estacionamiento_propuesta + otros_desc_propuesta
+        var_total_desc = total_desc_propuesta - total_desc_actual
+        var_total_desc_pct = (var_total_desc / total_desc_actual * 100) if total_desc_actual > 0 else 0
+
+        comparativo_data.append({
+            "Concepto": "Total Descuentos",
+            "Actual": format_peso_chileno(total_desc_actual),
+            "Propuesta": format_peso_chileno(total_desc_propuesta),
+            "Variación ($)": format_peso_chileno(var_total_desc),
+            "Variación (%)": f"{var_total_desc_pct:.1f}%"
+        })
+
+        # Sueldo Líquido Neto (Total Haberes - Total Descuentos)
+        sueldo_liquido_neto_actual = total_haberes_actual - total_desc_actual
+        sueldo_liquido_neto_propuesto = total_haberes_propuesto - total_desc_propuesta
+        var_liquido_neto = sueldo_liquido_neto_propuesto - sueldo_liquido_neto_actual
+        var_liquido_neto_pct = (var_liquido_neto / sueldo_liquido_neto_actual * 100) if sueldo_liquido_neto_actual > 0 else 0
+
+        comparativo_data.append({
+            "Concepto": "Sueldo Líquido Neto",
+            "Actual": format_peso_chileno(sueldo_liquido_neto_actual),
+            "Propuesta": format_peso_chileno(sueldo_liquido_neto_propuesto),
+            "Variación ($)": format_peso_chileno(var_liquido_neto),
+            "Variación (%)": f"{var_liquido_neto_pct:.1f}%"
         })
 
         df_comparativo = pd.DataFrame(comparativo_data)
