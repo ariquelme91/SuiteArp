@@ -18,6 +18,7 @@ def show_proposal_simulator():
 
     st.header("🎯 Simulador de Propuestas de Renta")
     st.subheader("Simula incrementos y compara posición vs mercado")
+    # Updated: Add estacionamiento descuento
 
     db_manager = AnalysisDBManager()
 

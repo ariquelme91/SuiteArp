@@ -29,7 +29,8 @@
       "Bash(xargs grep -l \"Calculadora de Sueldos\\\\|calculator_section\")",
       "Bash(sqlite3 \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\data\\\\analysis.db\" \"SELECT mes, valor FROM uf WHERE mes LIKE '2026-08%' LIMIT 1;\")",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }
