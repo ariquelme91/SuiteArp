@@ -63,7 +63,7 @@ class ComparisonResult:
                 "actual": self.current.income_tax,
                 "proposal": self.proposal.income_tax,
             },
-            "Estacionamiento": {
+            "Otros Descuentos": {
                 "actual": self.current_parking_discount,
                 "proposal": self.proposal_parking_discount,
             },
