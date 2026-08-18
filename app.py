@@ -398,36 +398,6 @@ def proposal_section():
 
     st.divider()
 
-    # Cambios organizacionales - Inline
-    st.subheader("📋 Cambios Organizacionales")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        change_company = st.checkbox("¿Cambiará de empresa?", key="change_company")
-    with col2:
-        change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
-    with col3:
-        change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
-
-    new_company = employee.company_name
-    new_position = employee.job_title
-    new_supervisor = employee.supervisor
-
-    if change_company:
-        buk_client = get_buk_client()
-        companies = buk_client.get_companies()
-        if companies:
-            company_names = [c['name'] for c in companies]
-            new_company = st.selectbox("Seleccione nueva empresa", company_names, label_visibility="collapsed")
-
-    if change_position:
-        new_position = st.text_input("Nuevo cargo", value=employee.job_title or "", label_visibility="collapsed")
-
-    if change_supervisor:
-        new_supervisor = st.text_input("Nuevo nombre de jefe", value=employee.supervisor or "", label_visibility="collapsed")
-
-    st.divider()
-
     # Layout: Motivo de la Propuesta (izq) | Analizador de Renta (der)
     col_motivo, col_analizador = st.columns([1, 1])
 
