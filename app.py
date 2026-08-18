@@ -373,6 +373,11 @@ def proposal_section():
     with col_check_header:
         st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
 
+    # Debug: mostrar estado del checkbox
+    debug_enabled = st.session_state.get("enable_compensation_analysis", False)
+    with col_empty:
+        st.caption(f"Estado: {'✅ Habilitado' if debug_enabled else '⭕ Deshabilitado'}")
+
     st.divider()
 
     # Mostrar header con logo si existe
