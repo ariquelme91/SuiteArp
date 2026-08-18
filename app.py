@@ -448,6 +448,29 @@ def proposal_section():
 
     st.divider()
 
+    # Mostrar Información de Compensación si está habilitada y hay datos
+    if st.session_state.get("enable_compensation_analysis", False):
+        st.subheader("📊 Información de Compensación")
+        col_c1, col_c2, col_c3, col_c4 = st.columns(4)
+
+        with col_c1:
+            hay_actual = st.session_state.get("nivel_hay_actual_input", "")
+            st.metric("Nivel HAY Actual", hay_actual if hay_actual else "—")
+
+        with col_c2:
+            hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
+            st.metric("Nivel HAY Propuesta", hay_propuesta if hay_propuesta else "—")
+
+        with col_c3:
+            target_actual = st.session_state.get("target_actual_input", "")
+            st.metric("Target Actual", target_actual if target_actual else "—")
+
+        with col_c4:
+            target_propuesta = st.session_state.get("target_propuesta_input", "")
+            st.metric("Target Propuesta", target_propuesta if target_propuesta else "—")
+
+        st.divider()
+
     # Datos organizados en dos columnas
     col_left, col_right = st.columns(2)
 
