@@ -35,7 +35,8 @@
       "Bash(git commit -m ' *)",
       "Bash(python -m py_compile app.py)",
       "Bash(git reset *)",
-      "Bash(mcp__Claude_Browser__preview_start --name propuestas-renta-streamlit)"
+      "Bash(mcp__Claude_Browser__preview_start --name propuestas-renta-streamlit)",
+      "Bash(streamlit run *)"
     ]
   }
 }
