@@ -294,13 +294,6 @@ def search_employee_section():
         st.header("⚙️ Extras")
         enable_comp = st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis", value=False)
 
-        if enable_comp:
-            st.subheader("Ingresa Datos de Compensación")
-            st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_input")
-            st.text_input("Nivel HAY Propuesta", placeholder="Ej: 18, 20", key="nivel_hay_propuesta_input")
-            st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_input")
-            st.text_input("Target Propuesta (rentas)", placeholder="Ej: 2, 2.5", key="target_propuesta_input")
-
     st.divider()
 
     # Mostrar resultados de búsqueda por apellido
