@@ -484,6 +484,13 @@ def proposal_section():
     # Haberes Actuales y Propuestos (lado a lado)
     st.subheader("📊 Haberes Actuales vs Propuestos")
 
+    # Obtener UF para valores sugeridos
+    from src.analysis.db_manager import AnalysisDBManager
+    db_mgr = AnalysisDBManager()
+    mes_actual = datetime.now().strftime("%Y-%m")
+    uf_valor = db_mgr.get_uf(mes_actual) or 40873.77
+    movilizacion_sugerida = int(2.44 * uf_valor)
+
     col_actual, col_propuesto = st.columns(2)
 
     # HABERES ACTUALES
@@ -515,10 +522,10 @@ def proposal_section():
         base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
 
         st.text("Colación")
-        proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
+        proposal_collation = st.number_input("Colación", value=int(base_collation) if base_collation > 0 else 130000, min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
 
         st.text("Movilización")
-        proposal_mobility = st.number_input("Movilización", value=int(base_mobility), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
+        proposal_mobility = st.number_input("Movilización", value=int(base_mobility) if base_mobility > 0 else movilizacion_sugerida, min_value=0, label_visibility="collapsed", key="mob_prop", step=1000, help=f"Sugerencia: 2.44 × UF = ${movilizacion_sugerida:,.0f}")
 
         st.text("Otros imponibles")
         proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
