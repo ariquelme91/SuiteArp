@@ -498,11 +498,11 @@ def proposal_section():
         st.caption("💰 Haberes Actuales")
 
         st.text("Colación")
-        current_collation = st.number_input("Colación", value=0, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
+        current_collation = st.number_input("Colación", value=130000, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
         st.session_state.current_collation = current_collation
 
         st.text("Movilización")
-        current_mobility = st.number_input("Movilización", value=0, min_value=0, label_visibility="collapsed", key="mob_actual", step=1000)
+        current_mobility = st.number_input("Movilización", value=movilizacion_sugerida, min_value=0, label_visibility="collapsed", key="mob_actual", step=1000, help=f"Sugerencia: 2.44 × UF = ${movilizacion_sugerida:,.0f}")
         st.session_state.current_mobility = current_mobility
 
         st.text("Otros imponibles")
@@ -516,19 +516,14 @@ def proposal_section():
     with col_propuesto:
         st.caption("📈 Haberes Propuestos")
 
-        # Leer valores de session_state
-        base_collation = st.session_state.get("current_collation", current_collation)
-        base_mobility = st.session_state.get("current_mobility", current_mobility)
-        base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
-
         st.text("Colación")
-        proposal_collation = st.number_input("Colación", value=int(base_collation) if base_collation > 0 else 130000, min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
+        proposal_collation = st.number_input("Colación", value=130000, min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
 
         st.text("Movilización")
-        proposal_mobility = st.number_input("Movilización", value=int(base_mobility) if base_mobility > 0 else movilizacion_sugerida, min_value=0, label_visibility="collapsed", key="mob_prop", step=1000, help=f"Sugerencia: 2.44 × UF = ${movilizacion_sugerida:,.0f}")
+        proposal_mobility = st.number_input("Movilización", value=movilizacion_sugerida, min_value=0, label_visibility="collapsed", key="mob_prop", step=1000, help=f"Sugerencia: 2.44 × UF = ${movilizacion_sugerida:,.0f}")
 
         st.text("Otros imponibles")
-        proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
+        proposal_other_taxable = st.number_input("Otros imponibles", value=0, min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
 
         # Checkbox para estacionamiento en propuesta
         proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
