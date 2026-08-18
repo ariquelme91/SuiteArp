@@ -1775,9 +1775,16 @@ def calculator_section():
         st.caption("Haberes adicionales")
         col1, col2, col3 = st.columns(3)
         with col1:
-            collation = st.number_input("Colación", value=0, min_value=0, step=1000, key="calc_col")
+            collation = st.number_input("Colación", value=0, min_value=0, step=1000, key="calc_col", placeholder="130000")
         with col2:
-            mobility = st.number_input("Movilización", value=0, min_value=0, step=1000, key="calc_mob")
+            # Movilización con sugerencia de 2.44*UF
+            st.text("Movilización")
+            mobility_input = st.text_input("", value="", placeholder="2.44 * UF", key="calc_mob_text", label_visibility="collapsed")
+            # Convertir entrada a número (si es vacío, usar 0)
+            try:
+                mobility = float(mobility_input) if mobility_input and mobility_input.replace(".", "").replace(",", "").isdigit() else 0
+            except:
+                mobility = 0
         with col3:
             other_taxable = st.number_input("Otros Imp.", value=0, min_value=0, step=1000, key="calc_other")
 
