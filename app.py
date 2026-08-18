@@ -1225,6 +1225,37 @@ def configuration_section():
             format="%.1f"
         )
 
+    st.divider()
+
+    # Porcentajes de AFP por fondo
+    st.subheader("💳 Tasas AFP (Fondo + Comisión)")
+    afp_rates = parameters.get("afp_rates", {
+        "capital": 11.44,
+        "cuprum": 11.44,
+        "habitat": 11.27,
+        "planvital": 11.16,
+        "provida": 11.45,
+        "modelo": 10.58,
+        "uno": 10.46
+    })
+
+    col_afp1, col_afp2, col_afp3, col_afp4 = st.columns(4)
+
+    with col_afp1:
+        afp_capital = st.number_input("Capital %", value=float(afp_rates.get("capital", 11.44)), step=0.01, format="%.2f", key="afp_capital")
+        afp_habitat = st.number_input("Habitat %", value=float(afp_rates.get("habitat", 11.27)), step=0.01, format="%.2f", key="afp_habitat")
+
+    with col_afp2:
+        afp_cuprum = st.number_input("Cuprum %", value=float(afp_rates.get("cuprum", 11.44)), step=0.01, format="%.2f", key="afp_cuprum")
+        afp_planvital = st.number_input("PlanVital %", value=float(afp_rates.get("planvital", 11.16)), step=0.01, format="%.2f", key="afp_planvital")
+
+    with col_afp3:
+        afp_provida = st.number_input("ProVida %", value=float(afp_rates.get("provida", 11.45)), step=0.01, format="%.2f", key="afp_provida")
+        afp_modelo = st.number_input("Modelo %", value=float(afp_rates.get("modelo", 10.58)), step=0.01, format="%.2f", key="afp_modelo")
+
+    with col_afp4:
+        afp_uno = st.number_input("Uno %", value=float(afp_rates.get("uno", 10.46)), step=0.01, format="%.2f", key="afp_uno")
+
     # Botón para guardar cambios
     if st.button("💾 Guardar Cambios", use_container_width=True, type="primary"):
         # Actualizar parámetros
@@ -1236,6 +1267,15 @@ def configuration_section():
         parameters["afp_percent"] = afp_percent
         parameters["salud_percent"] = salud_percent
         parameters["afc_trabajador_indefinido"] = afc_indefinido
+        parameters["afp_rates"] = {
+            "capital": afp_capital,
+            "cuprum": afp_cuprum,
+            "habitat": afp_habitat,
+            "planvital": afp_planvital,
+            "provida": afp_provida,
+            "modelo": afp_modelo,
+            "uno": afp_uno
+        }
 
         # Guardar en archivo
         with open("config/parameters.json", "w") as f:
