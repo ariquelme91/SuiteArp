@@ -368,15 +368,15 @@ def proposal_section():
 
     employee = st.session_state.current_employee
 
-    # Checkbox para habilitar análisis de compensación (visible aquí también)
-    col_check_header, col_empty = st.columns([1, 4])
-    with col_check_header:
-        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
-
-    # Debug: mostrar estado del checkbox
-    debug_enabled = st.session_state.get("enable_compensation_analysis", False)
-    with col_empty:
-        st.caption(f"Estado: {'✅ Habilitado' if debug_enabled else '⭕ Deshabilitado'}")
+    # Checkbox para habilitar análisis de compensación (FUERA de columnas para mejor sincronización)
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        enable_analysis = st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
+    with col2:
+        if enable_analysis:
+            st.caption("✅ Habilitado")
+        else:
+            st.caption("⭕ Deshabilitado")
 
     st.divider()
 
