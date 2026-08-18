@@ -652,6 +652,14 @@ def proposal_section():
 
     # INFORMACIÓN DE COMPENSACIÓN ACTUAL vs PROPUESTA (solo si está habilitado el Analizador)
     if st.session_state.get("enable_compensation_analysis", False):
+        # Inicializar valores en session_state si no existen
+        if "nivel_hay_prop_input" not in st.session_state:
+            st.session_state.nivel_hay_prop_input = ""
+        if "target_prop_input" not in st.session_state:
+            st.session_state.target_prop_input = 0.0
+        if "mercado_comparacion_main" not in st.session_state:
+            st.session_state.mercado_comparacion_main = "Mercado Financiero"
+
         st.subheader("💡 Información de Compensación")
 
         col_comp_actual, col_comp_propuesta = st.columns(2)
@@ -679,7 +687,7 @@ def proposal_section():
             st.text("Nivel HAY")
             st.text_input(
                 "Nivel HAY Propuesta",
-                value=st.session_state.get("nivel_hay_prop_input", ""),
+                value=st.session_state.nivel_hay_prop_input,
                 placeholder="Ej: 18, 20",
                 label_visibility="collapsed",
                 key="nivel_hay_prop_input",
@@ -689,7 +697,7 @@ def proposal_section():
             st.text("Target (rentas)")
             st.number_input(
                 "Target Propuesta",
-                value=st.session_state.get("target_prop_input", 0.0),
+                value=st.session_state.target_prop_input,
                 min_value=0.0,
                 step=0.1,
                 label_visibility="collapsed",
