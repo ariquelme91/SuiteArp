@@ -473,117 +473,111 @@ def proposal_section():
     st.divider()
 
     # Haberes Actuales y Propuestos (lado a lado)
-    col_left, col_right = st.columns(2)
+    st.subheader("📊 Haberes Actuales vs Propuestos")
 
-    with col_left:
-        st.subheader("💵 Haberes Actuales")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.caption("Colación")
-            current_collation = st.number_input("Colación", value=0, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
-            # Guardar en session_state para que otros campos lo lean
-            st.session_state.current_collation = current_collation
-        with col2:
-            st.caption("Movilización")
-            current_mobility = st.number_input("Movilización", value=0, min_value=0, label_visibility="collapsed", key="mob_actual", step=1000)
-            st.session_state.current_mobility = current_mobility
-        with col3:
-            st.caption("Otros imponibles")
-            current_other_taxable = st.number_input("Otros imponibles", value=0, min_value=0, label_visibility="collapsed", key="other_actual", step=1000)
-            st.session_state.current_other_taxable = current_other_taxable
+    col_actual, col_propuesto = st.columns(2)
+
+    # HABERES ACTUALES
+    with col_actual:
+        st.caption("💰 Haberes Actuales")
+
+        current_collation = st.number_input("Colación", value=0, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
+        st.session_state.current_collation = current_collation
+
+        current_mobility = st.number_input("Movilización", value=0, min_value=0, label_visibility="collapsed", key="mob_actual", step=1000)
+        st.session_state.current_mobility = current_mobility
+
+        current_other_taxable = st.number_input("Otros imponibles", value=0, min_value=0, label_visibility="collapsed", key="other_actual", step=1000)
+        st.session_state.current_other_taxable = current_other_taxable
 
         # Checkbox para estacionamiento
         has_parking = st.checkbox("¿Tiene Estacionamiento?", key="has_parking", value=False)
 
-    with col_right:
-        st.subheader("📊 Haberes Propuestos")
+    # HABERES PROPUESTOS
+    with col_propuesto:
+        st.caption("📈 Haberes Propuestos")
 
-        payroll_engine = get_payroll_engine()
+        # Leer valores de session_state
+        base_collation = st.session_state.get("current_collation", current_collation)
+        base_mobility = st.session_state.get("current_mobility", current_mobility)
+        base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
 
-        # Opciones de entrada de sueldo
-        input_type = st.radio(
-            "¿Cómo ingresar el nuevo sueldo?",
-            [
-                "Sueldo base",
-                "% sobre el sueldo base",
-                "Sueldo Líquido",
-                "% sobre el sueldo líquido"
-            ],
-            horizontal=True
+        proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
+
+        proposal_mobility = st.number_input("Movilización", value=int(base_mobility), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
+
+        proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
+
+        # Checkbox para estacionamiento en propuesta
+        proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
+
+    st.divider()
+
+    # NUEVO SUELDO BASE
+    st.subheader("💼 Cómo ingresar el nuevo sueldo")
+
+    payroll_engine = get_payroll_engine()
+
+    # Opciones de entrada de sueldo
+    input_type = st.radio(
+        "¿Cómo ingresar el nuevo sueldo?",
+        [
+            "Sueldo base",
+            "% sobre el sueldo base",
+            "Sueldo Líquido",
+            "% sobre el sueldo líquido"
+        ],
+        horizontal=True
+    )
+
+    # Calcular líquido actual para referencias
+    mobility_for_calc = current_mobility
+    if has_parking and mobility_for_calc > 0:
+        mobility_for_calc = 0
+
+    current_payroll = payroll_engine.calculate(
+        base_salary=employee.base_salary,
+        collation=current_collation,
+        mobility=mobility_for_calc,
+        other_taxable=current_other_taxable,
+        contract_type=employee.contract_type,
+        pension_fund=employee.pension_fund,
+    )
+    current_liquid = current_payroll.net_salary
+
+    if input_type == "Sueldo base":
+        st.caption("Nuevo Sueldo Base")
+        proposal_base_salary = st.number_input(
+            "Nuevo Sueldo Base",
+            value=int(employee.base_salary),
+            min_value=0,
+            label_visibility="collapsed",
+            key="base_direct"
         )
 
-        # Calcular líquido actual para referencias
-        # Ajustar movilidad si tiene estacionamiento
-        mobility_for_calc = current_mobility
-        if has_parking and mobility_for_calc > 0:
-            mobility_for_calc = 0  # Descuento total de movilización si tiene estacionamiento
-
-        current_payroll = payroll_engine.calculate(
-            base_salary=employee.base_salary,
-            collation=current_collation,
-            mobility=mobility_for_calc,
-            other_taxable=current_other_taxable,
-            contract_type=employee.contract_type,
-            pension_fund=employee.pension_fund,
+    elif input_type == "% sobre el sueldo base":
+        st.caption("Porcentaje de aumento sobre Sueldo Base")
+        porcentaje_aumento = st.number_input(
+            "Porcentaje (%)",
+            value=0.0,
+            min_value=0.0,
+            step=0.1,
+            label_visibility="collapsed",
+            key="percent_base"
         )
-        current_liquid = current_payroll.net_salary
+        proposal_base_salary = int(employee.base_salary * (1 + porcentaje_aumento / 100))
+        st.info(f"**Base actual:** ${employee.base_salary:,.0f} → **Nueva base:** ${proposal_base_salary:,.0f}")
 
-        if input_type == "Sueldo base":
-            st.caption("Nuevo Sueldo Base")
-            proposal_base_salary = st.number_input(
-                "Nuevo Sueldo Base",
-                value=int(employee.base_salary),
-                min_value=0,
-                label_visibility="collapsed",
-                key="base_direct"
-            )
-
-        elif input_type == "% sobre el sueldo base":
-            st.caption("Porcentaje de aumento sobre Sueldo Base")
-            porcentaje_aumento = st.number_input(
-                "Porcentaje (%)",
-                value=0.0,
-                min_value=0.0,
-                step=0.1,
-                label_visibility="collapsed",
-                key="percent_base"
-            )
-            proposal_base_salary = int(employee.base_salary * (1 + porcentaje_aumento / 100))
-            st.info(f"**Base actual:** ${employee.base_salary:,.0f} → **Nueva base:** ${proposal_base_salary:,.0f}")
-
-        elif input_type == "Sueldo Líquido":
-            st.caption("Sueldo Líquido a Recibir")
-            target_liquid = st.number_input(
-                "Sueldo Líquido ($)",
-                value=int(current_liquid),
-                min_value=0,
-                label_visibility="collapsed",
-                key="target_liquid"
-            )
-            if target_liquid > 0:
-                proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
-                    target_net_salary=target_liquid,
-                    collation=current_collation,
-                    mobility=current_mobility,
-                    contract_type=employee.contract_type,
-                    pension_fund=employee.pension_fund,
-                    has_parking=has_parking,
-                )
-            else:
-                proposal_base_salary = employee.base_salary
-            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
-
-        else:  # % sobre el sueldo líquido
-            st.caption("Porcentaje de aumento sobre Sueldo Líquido")
-            porcentaje_liquido = st.number_input(
-                "Porcentaje (%)",
-                value=0.0,
-                min_value=0.0,
-                step=0.1,
-                label_visibility="collapsed",
-                key="percent_liquid"
-            )
-            target_liquid = current_liquid * (1 + porcentaje_liquido / 100)
+    elif input_type == "Sueldo Líquido":
+        st.caption("Sueldo Líquido a Recibir")
+        target_liquid = st.number_input(
+            "Sueldo Líquido ($)",
+            value=int(current_liquid),
+            min_value=0,
+            label_visibility="collapsed",
+            key="target_liquid"
+        )
+        if target_liquid > 0:
             proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
                 target_net_salary=target_liquid,
                 collation=current_collation,
@@ -592,46 +586,40 @@ def proposal_section():
                 pension_fund=employee.pension_fund,
                 has_parking=has_parking,
             )
-            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
+        else:
+            proposal_base_salary = employee.base_salary
+        st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
 
-        st.caption("Base tomada del lado izquierdo (modificar si es necesario)")
-        col1, col2, col3 = st.columns(3)
+    else:  # % sobre el sueldo líquido
+        st.caption("Porcentaje de aumento sobre Sueldo Líquido")
+        porcentaje_liquido = st.number_input(
+            "Porcentaje (%)",
+            value=0.0,
+            min_value=0.0,
+            step=0.1,
+            label_visibility="collapsed",
+            key="percent_liquid"
+        )
+        target_liquid = current_liquid * (1 + porcentaje_liquido / 100)
+        proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
+            target_net_salary=target_liquid,
+            collation=current_collation,
+            mobility=current_mobility,
+            contract_type=employee.contract_type,
+            pension_fund=employee.pension_fund,
+            has_parking=has_parking,
+        )
+        st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
 
-        # Leer valores de session_state para mantener sincronización
-        base_collation = st.session_state.get("current_collation", current_collation)
-        base_mobility = st.session_state.get("current_mobility", current_mobility)
-        base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
-        has_parking = st.session_state.get("has_parking", False) if "has_parking" in st.session_state else False
+    st.divider()
 
-        # Calcular descuentos de estacionamiento
-        current_parking_discount = 0
-        if has_parking and current_mobility > 0:
-            current_parking_discount = current_mobility  # Descuento total de movilización si tiene estacionamiento
+    # INFORMACIÓN DE COMPENSACIÓN PROPUESTA
+    st.subheader("💡 Información de Compensación Propuesta")
 
-        # Checkbox para estacionamiento en propuesta (ANTES de usarlo en labels)
-        proposal_has_parking = st.checkbox("¿Tendrá Estacionamiento?", key="proposal_parking", value=has_parking)
+    col_info1, col_info2 = st.columns(2)
 
-        with col1:
-            st.caption("Colación")
-            proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
-        with col2:
-            mobility_label = "Movilización" + (" (menos estacionamiento)" if proposal_has_parking else "")
-            st.caption(mobility_label)
-            proposal_mobility = st.number_input("Movilización", value=int(base_mobility), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
-        with col3:
-            st.caption("Otros imponibles")
-            proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
-
-        # Calcular descuento de estacionamiento propuesto (basado en movilización ORIGINAL, no la modificada)
-        proposal_parking_discount = 0
-        if proposal_has_parking and base_mobility > 0:
-            proposal_parking_discount = base_mobility  # Descuento total de movilización si tendrá estacionamiento
-
-        # Nivel HAY y Target Propuesta
-        st.divider()
-        st.caption("**Información de Compensación Propuesta**")
-
-        # Nivel HAY Propuesta (prefill con actual si existe)
+    with col_info1:
+        # Nivel HAY Propuesta
         default_nivel = st.session_state.get("nivel_hay_actual_input", "")
         st.text_input(
             "Nivel HAY Propuesta",
@@ -641,7 +629,8 @@ def proposal_section():
             help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
         )
 
-        # Target Propuesta (prefill con actual si existe)
+    with col_info2:
+        # Target Propuesta
         default_target = st.session_state.get("target_actual_input", 0.0)
         st.number_input(
             "Target Propuesta (rentas)",
@@ -686,6 +675,15 @@ def proposal_section():
     if st.button("✅ Crear Propuesta", use_container_width=True, type="primary"):
         with st.spinner("Calculando propuesta..."):
             simulator = Simulator(payroll_engine)
+
+            # Calcular descuentos de estacionamiento
+            current_parking_discount = 0
+            if has_parking and current_mobility > 0:
+                current_parking_discount = current_mobility
+
+            proposal_parking_discount = 0
+            if proposal_has_parking and proposal_mobility > 0:
+                proposal_parking_discount = proposal_mobility
 
             # Guardar datos organizacionales
             st.session_state.org_changes = {
