@@ -37,7 +37,9 @@
       "Bash(git reset *)",
       "Bash(mcp__Claude_Browser__preview_start --name propuestas-renta-streamlit)",
       "Bash(streamlit run *)",
-      "Bash(rm -rf ~/.streamlit/cache && echo \"✅ Cache limpiado\")"
+      "Bash(rm -rf ~/.streamlit/cache && echo \"✅ Cache limpiado\")",
+      "Bash(git pull *)",
+      "Bash(python -m streamlit run app.py --logger.level=error)"
     ]
   }
 }

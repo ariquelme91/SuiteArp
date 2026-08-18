@@ -1739,8 +1739,11 @@ def calculator_section():
 
     st.divider()
 
-    # Método de entrada
-    payroll_engine = get_payroll_engine()
+    # Método de entrada - Cargar parámetros actuales cada vez
+    # Leer parámetros del archivo para asegurar valores actuales
+    with open("config/parameters.json") as f:
+        current_params = json.load(f)
+    payroll_engine = PayrollEngine(current_params)
 
     col_left, col_right = st.columns(2)
 
