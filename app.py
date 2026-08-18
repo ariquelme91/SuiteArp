@@ -294,14 +294,7 @@ def search_employee_section():
 
     with col_extras:
         st.header("⚙️ Extras")
-        # Ensure checkbox value is properly synced with session_state
-        checkbox_val = st.checkbox(
-            "📊 Habilitar Analizador de Renta",
-            key="enable_compensation_analysis",
-            value=st.session_state.get("enable_compensation_analysis", False)
-        )
-        # Explicitly update session state to ensure persistence
-        st.session_state.enable_compensation_analysis = checkbox_val
+        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
 
     st.divider()
 
