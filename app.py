@@ -425,22 +425,26 @@ def proposal_section():
         change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
         change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
 
-    new_company = employee.company_name
-    new_position = employee.job_title
-    new_supervisor = employee.supervisor
+        new_company = employee.company_name
+        new_position = employee.job_title
+        new_supervisor = employee.supervisor
 
-    if change_company:
-        buk_client = get_buk_client()
-        companies = buk_client.get_companies()
-        if companies:
-            company_names = [c['name'] for c in companies]
-            new_company = st.selectbox("Seleccione nueva empresa", company_names, label_visibility="collapsed")
+        if change_company:
+            try:
+                buk_client = get_buk_client()
+                companies = buk_client.get_companies()
+                if companies:
+                    company_names = [c['name'] for c in companies]
+                    new_company = st.selectbox("Seleccione nueva empresa", company_names, label_visibility="collapsed", key="new_company_select")
+            except:
+                st.warning("No se pudieron cargar empresas")
+                new_company = st.text_input("Nombre de empresa", value=employee.company_name, label_visibility="collapsed")
 
-    if change_position:
-        new_position = st.text_input("Nuevo cargo", value=employee.job_title or "", label_visibility="collapsed")
+        if change_position:
+            new_position = st.text_input("Nuevo cargo", value=employee.job_title or "", label_visibility="collapsed", key="new_position_input")
 
-    if change_supervisor:
-        new_supervisor = st.text_input("Nuevo nombre de jefe", value=employee.supervisor or "", label_visibility="collapsed")
+        if change_supervisor:
+            new_supervisor = st.text_input("Nuevo nombre de jefe", value=employee.supervisor or "", label_visibility="collapsed", key="new_supervisor_input")
 
     st.divider()
 
