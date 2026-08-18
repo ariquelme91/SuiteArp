@@ -368,17 +368,6 @@ def proposal_section():
 
     employee = st.session_state.current_employee
 
-    # Checkbox para habilitar análisis de compensación (FUERA de columnas para mejor sincronización)
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        enable_analysis = st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
-    with col2:
-        if enable_analysis:
-            st.caption("✅ Habilitado")
-        else:
-            st.caption("⭕ Deshabilitado")
-
-    st.divider()
 
     # Mostrar header con logo si existe
     col_logo, col_title = st.columns([1, 4])
