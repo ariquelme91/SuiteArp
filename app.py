@@ -745,9 +745,23 @@ def proposal_section():
             st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
             st.divider()
 
-            # Mostrar Media del Nivel
+            # Mostrar valores de Mercado y Promedio Interno
             if nivel_hay_actual_str:
-                st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
+                try:
+                    from src.analysis.db_manager import AnalysisDBManager
+                    db_manager = AnalysisDBManager()
+
+                    # Obtener datos de mercado y promedio
+                    comp_data = db_manager.get_compensation_by_level(int(nivel_hay_actual_str))
+                    avg_data = db_manager.get_compensation_average_by_level(nivel_hay_actual_str)
+
+                    mercado_val = comp_data.get('mercado_financiero', 0) if comp_data else 0
+                    promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
+
+                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
+                    st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
+                except:
+                    st.caption(f"📊 Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
             else:
                 st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
 
@@ -776,22 +790,33 @@ def proposal_section():
             nivel_hay_prop_str = st.session_state.get("nivel_hay_prop_input", "")
             target_prop_input = st.session_state.get("target_prop_input", 0.0)
 
+            # Siempre mostrar Bono Target
+            bono_target_prop = target_prop_input * sal_base_prop
+            st.metric("💰 Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
+
+            total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop
+            st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
+            st.divider()
+
+            # Mostrar valores de Mercado y Promedio Interno
             if nivel_hay_prop_str:
-                # Buscar monto en BD
-                monto_nivel_prop = get_median_from_db(nivel_hay_prop_str, st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")) or 0
-                # Bono = Target × Sueldo Base
-                bono_target_prop = target_prop_input * sal_base_prop
+                try:
+                    from src.analysis.db_manager import AnalysisDBManager
+                    db_manager = AnalysisDBManager()
 
-                st.metric("💰 Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
+                    # Obtener datos de mercado y promedio
+                    comp_data = db_manager.get_compensation_by_level(int(nivel_hay_prop_str))
+                    avg_data = db_manager.get_compensation_average_by_level(nivel_hay_prop_str)
 
-                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop
-                st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
-                st.divider()
-                st.caption(f"📊 Media Nivel {nivel_hay_prop_str} ({st.session_state.get('mercado_comparacion_info_prop', 'Mercado Financiero')}): **${monto_nivel_prop:,.0f}**")
+                    mercado_val = comp_data.get('mercado_financiero', 0) if comp_data else 0
+                    promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
+
+                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, Mercado Financiero): **${mercado_val:,.0f}**")
+                    st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
+                except:
+                    st.caption(f"📊 Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
             else:
-                st.warning("Ingresa Nivel HAY Propuesto para calcular")
-                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop
-                st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
+                st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
 
     st.divider()
 
