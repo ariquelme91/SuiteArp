@@ -448,26 +448,30 @@ def proposal_section():
 
     st.divider()
 
-    # Mostrar Información de Compensación si está habilitada y hay datos
+    # Mostrar Analizador de Renta si está habilitado
     if st.session_state.get("enable_compensation_analysis", False):
-        st.subheader("📊 Información de Compensación")
-        col_c1, col_c2, col_c3, col_c4 = st.columns(4)
+        st.header("💼 Analizador de renta")
+        col_c1, col_c2 = st.columns(2)
 
         with col_c1:
-            hay_actual = st.session_state.get("nivel_hay_actual_input", "")
-            st.metric("Nivel HAY Actual", hay_actual if hay_actual else "—")
+            st.subheader("Información Actual")
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                hay_actual = st.session_state.get("nivel_hay_actual_input", "")
+                st.metric("Nivel HAY", hay_actual if hay_actual else "—")
+            with col_a2:
+                target_actual = st.session_state.get("target_actual_input", "")
+                st.metric("Target", target_actual if target_actual else "—")
 
         with col_c2:
-            hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
-            st.metric("Nivel HAY Propuesta", hay_propuesta if hay_propuesta else "—")
-
-        with col_c3:
-            target_actual = st.session_state.get("target_actual_input", "")
-            st.metric("Target Actual", target_actual if target_actual else "—")
-
-        with col_c4:
-            target_propuesta = st.session_state.get("target_propuesta_input", "")
-            st.metric("Target Propuesta", target_propuesta if target_propuesta else "—")
+            st.subheader("Información Propuesta")
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
+                st.metric("Nivel HAY", hay_propuesta if hay_propuesta else "—")
+            with col_p2:
+                target_propuesta = st.session_state.get("target_propuesta_input", "")
+                st.metric("Target", target_propuesta if target_propuesta else "—")
 
         st.divider()
 
