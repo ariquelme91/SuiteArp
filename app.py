@@ -432,6 +432,36 @@ def proposal_section():
 
     st.divider()
 
+    # Sección de Análisis de Compensación (solo si está habilitado)
+    if st.session_state.get("enable_compensation_analysis", False):
+        st.subheader("📊 Información de Compensación")
+        col_comp1, col_comp2, col_comp3 = st.columns(3)
+
+        # Nivel HAY Actual
+        with col_comp1:
+            st.caption("Nivel HAY Actual")
+            nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
+            if nivel_actual_sistema:
+                st.metric("", nivel_actual_sistema)
+            else:
+                st.text_input("Nivel HAY Actual", value="", placeholder="Ej: 16, 18", key="nivel_hay_actual_input")
+
+        # Target Actual
+        with col_comp2:
+            st.caption("Target Actual (rentas)")
+            target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
+            if target_actual_sistema and target_actual_sistema > 0:
+                st.metric("", f"{target_actual_sistema:.1f}")
+            else:
+                st.text_input("Target Actual", value="", placeholder="Ej: 1.5, 2", key="target_actual_input")
+
+        # Mercado
+        with col_comp3:
+            st.caption("Mercado")
+            st.selectbox("Mercado", ["Tecnología", "Financiero", "Retail", "Manufactura"], key="mercado_input")
+
+        st.divider()
+
     # Datos organizados en dos columnas
     col_left, col_right = st.columns(2)
 
@@ -454,37 +484,6 @@ def proposal_section():
 
         # Checkbox para estacionamiento
         has_parking = st.checkbox("¿Tiene Estacionamiento?", key="has_parking", value=False)
-
-        # Nivel HAY y Target Actual
-        st.divider()
-        st.caption("**Información de Compensación Actual**")
-
-        # Nivel HAY
-        nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
-        if nivel_actual_sistema:
-            st.metric("Nivel HAY", nivel_actual_sistema)
-        else:
-            st.text_input(
-                "Nivel HAY",
-                value="",
-                placeholder="Ej: 16, 18, 20",
-                key="nivel_hay_actual_input",
-                help="No hay Nivel HAY en el sistema. Ingresa manualmente."
-            )
-
-        # Target Actual
-        target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
-        if target_actual_sistema and target_actual_sistema > 0:
-            st.metric("Target (rentas)", f"{target_actual_sistema:.1f}")
-        else:
-            st.number_input(
-                "Target en rentas",
-                value=0.0,
-                min_value=0.0,
-                step=0.1,
-                key="target_actual_input",
-                help="No hay Target en el sistema. Ingresa manualmente (Ej: 2.8)."
-            )
 
     with col_right:
         st.subheader("📊 Haberes Propuestos")
