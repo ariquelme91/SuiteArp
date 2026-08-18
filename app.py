@@ -432,6 +432,17 @@ def proposal_section():
 
     st.divider()
 
+    # Sección de Análisis de Compensación
+    st.subheader("📊 Análisis de Compensación")
+    enable_compensation_analysis = st.checkbox(
+        "¿Deseas analizar con HAY y Target (Compratio y Mediana)?",
+        key="enable_compensation_analysis",
+        value=False
+    )
+    st.session_state.enable_compensation_analysis = enable_compensation_analysis
+
+    st.divider()
+
     # Datos organizados en dos columnas
     col_left, col_right = st.columns(2)
 
@@ -865,8 +876,8 @@ def comparison_section(payroll_engine=None):
 
     st.divider()
 
-    # Compensación Anual - Mostrar si hay datos disponibles
-    if "compensation_data" in st.session_state:
+    # Compensación Anual - Mostrar solo si el usuario habilitó el análisis
+    if st.session_state.get("enable_compensation_analysis", False) and "compensation_data" in st.session_state:
         st.subheader("💰 Análisis de Compensación Anual")
 
         comp_data = st.session_state.compensation_data
