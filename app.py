@@ -398,8 +398,8 @@ def proposal_section():
 
     st.divider()
 
-    # Layout: Motivo de la Propuesta (izq) | Analizador de Renta (der)
-    col_motivo, col_analizador = st.columns([1, 1])
+    # Layout: Motivo (izq) | Cambios Org. (der) SIEMPRE al lado
+    col_motivo, col_cambios = st.columns([1, 1])
 
     with col_motivo:
         st.subheader("🎯 Motivo de la Propuesta")
@@ -419,36 +419,10 @@ def proposal_section():
             placeholder="Elija uno o más motivos..."
         )
 
-    with col_analizador:
-        if st.session_state.get("enable_compensation_analysis", False):
-            st.subheader("💼 Analizador de renta")
-            col_c1, col_c2 = st.columns(2)
-
-            with col_c1:
-                st.caption("Información Actual")
-                hay_actual = st.session_state.get("nivel_hay_actual_input", "")
-                st.metric("Nivel HAY", hay_actual if hay_actual else "—")
-                target_actual = st.session_state.get("target_actual_input", "")
-                st.metric("Target", target_actual if target_actual else "—")
-
-            with col_c2:
-                st.caption("Información Propuesta")
-                hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
-                st.metric("Nivel HAY", hay_propuesta if hay_propuesta else "—")
-                target_propuesta = st.session_state.get("target_propuesta_input", "")
-                st.metric("Target", target_propuesta if target_propuesta else "—")
-
-    st.divider()
-
-    # Cambios Organizacionales (full width)
-    st.subheader("📋 Cambios Organizacionales")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
+    with col_cambios:
+        st.subheader("📋 Cambios Organizacionales")
         change_company = st.checkbox("¿Cambiará de empresa?", key="change_company")
-    with col2:
         change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
-    with col3:
         change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
 
     new_company = employee.company_name
@@ -467,6 +441,29 @@ def proposal_section():
 
     if change_supervisor:
         new_supervisor = st.text_input("Nuevo nombre de jefe", value=employee.supervisor or "", label_visibility="collapsed")
+
+    st.divider()
+
+    # Analizador de Renta (si está habilitado)
+    if st.session_state.get("enable_compensation_analysis", False):
+        st.subheader("💼 Analizador de renta")
+        col_c1, col_c2 = st.columns(2)
+
+        with col_c1:
+            st.caption("Información Actual")
+            hay_actual = st.session_state.get("nivel_hay_actual_input", "")
+            st.metric("Nivel HAY", hay_actual if hay_actual else "—")
+            target_actual = st.session_state.get("target_actual_input", "")
+            st.metric("Target", target_actual if target_actual else "—")
+
+        with col_c2:
+            st.caption("Información Propuesta")
+            hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
+            st.metric("Nivel HAY", hay_propuesta if hay_propuesta else "—")
+            target_propuesta = st.session_state.get("target_propuesta_input", "")
+            st.metric("Target", target_propuesta if target_propuesta else "—")
+
+        st.divider()
 
     st.divider()
 
