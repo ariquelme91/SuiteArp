@@ -432,36 +432,6 @@ def proposal_section():
 
     st.divider()
 
-    # Sección de Análisis de Compensación (solo si está habilitado)
-    if st.session_state.get("enable_compensation_analysis", False):
-        st.subheader("📊 Información de Compensación")
-        col_comp1, col_comp2, col_comp3 = st.columns(3)
-
-        # Nivel HAY Actual
-        with col_comp1:
-            st.caption("Nivel HAY Actual")
-            nivel_actual_sistema = employee.get("nivel_hay") if isinstance(employee, dict) else getattr(employee, "nivel_hay", None)
-            if nivel_actual_sistema:
-                st.metric("", nivel_actual_sistema)
-            else:
-                st.text_input("Nivel HAY Actual", value="", placeholder="Ej: 16, 18", key="nivel_hay_actual_input")
-
-        # Target Actual
-        with col_comp2:
-            st.caption("Target Actual (rentas)")
-            target_actual_sistema = employee.get("target") if isinstance(employee, dict) else getattr(employee, "target", None)
-            if target_actual_sistema and target_actual_sistema > 0:
-                st.metric("", f"{target_actual_sistema:.1f}")
-            else:
-                st.text_input("Target Actual", value="", placeholder="Ej: 1.5, 2", key="target_actual_input")
-
-        # Mercado
-        with col_comp3:
-            st.caption("Mercado")
-            st.selectbox("Mercado", ["Tecnología", "Financiero", "Retail", "Manufactura"], key="mercado_input")
-
-        st.divider()
-
     # Datos organizados en dos columnas
     col_left, col_right = st.columns(2)
 
@@ -2112,12 +2082,24 @@ def main():
         # === TAB PROPUESTAS ===
         # Sección de Análisis de Compensación (siempre visible)
         st.subheader("📊 Análisis de Compensación")
-        st.checkbox(
+        enable_comp = st.checkbox(
             "¿Deseas analizar con HAY y Target (Compratio y Mediana)?",
             key="enable_compensation_analysis",
             value=False
         )
         st.divider()
+
+        # Mostrar campos de compensación si está habilitado
+        if enable_comp:
+            st.subheader("📊 Información de Compensación")
+            col_h1, col_h2, col_h3 = st.columns(3)
+            with col_h1:
+                st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_simple")
+            with col_h2:
+                st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_simple")
+            with col_h3:
+                st.selectbox("Mercado", ["Tecnología", "Financiero", "Retail", "Manufactura", "Otro"], key="mercado_simple")
+            st.divider()
 
         # Detectar si hay empleado seleccionado desde ANÁLISIS
         if "empleado_para_propuesta" in st.session_state and st.session_state.empleado_para_propuesta:
