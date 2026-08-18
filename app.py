@@ -738,22 +738,18 @@ def proposal_section():
             # Calcular bono si hay target (incluso sin nivel HAY)
             bono_target_actual = target_actual_input * sal_base_actual if target_actual_input > 0 else 0
 
-            if bono_target_actual > 0 or nivel_hay_actual_str:
-                if bono_target_actual > 0:
-                    st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
+            # Siempre mostrar Bono Target (aunque sea $0)
+            st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
 
-                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
-                st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
-                st.divider()
+            total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
+            st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
+            st.divider()
 
-                if nivel_hay_actual_str:
-                    st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
-                else:
-                    st.caption("⚠️ Ingresa Nivel HAY para ver la media de compensación")
+            # Mostrar Media del Nivel
+            if nivel_hay_actual_str:
+                st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
             else:
-                st.info("Ingresa Nivel HAY y/o Target Actual para calcular compensación")
-                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual
-                st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
+                st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
 
         with col_calc_prop:
             st.caption("📈 PROPUESTO")
