@@ -251,59 +251,57 @@ def get_all_active_employees():
 
 def search_employee_section():
     """Sección de búsqueda de empleados."""
-    # Checkbox para análisis de compensación al lado de buscar colaborador
-    col_title, col_check = st.columns([3, 1])
-    with col_title:
+    # Dos columnas: Buscar a la izquierda, Análisis a la derecha
+    col_search, col_extras = st.columns([1, 1])
+
+    with col_search:
         st.header("🔍 Buscar Colaborador")
-    with col_check:
-        st.write("")  # Espaciador para alinear
-        enable_comp = st.checkbox("📊 Análisis HAY/Target", key="enable_compensation_analysis", value=False)
+        search_by = st.radio("Buscar por:", ["RUT", "Ver Todos"], horizontal=True)
 
-    search_by = st.radio("Buscar por:", ["RUT", "Ver Todos"], horizontal=True)
+        search_input = ""
+        if search_by == "RUT":
+            search_input = st.text_input("Ingrese RUT (ej: 12.345.678-9)").strip()
 
-    # Mostrar campos de compensación si está habilitado
-    if enable_comp:
-        st.subheader("📊 Información de Compensación")
-        col_h1, col_h2 = st.columns(2)
-        with col_h1:
+        if st.button("🔎 Buscar", use_container_width=True) or search_by == "Ver Todos":
+            if search_by != "Ver Todos" and not search_input:
+                st.warning("Por favor ingrese un valor para buscar")
+                return
+
+            with st.spinner("Cargando colaboradores..."):
+                buk_client = get_buk_client()
+
+                if search_by == "RUT":
+                    # Búsqueda por RUT - resultado único
+                    employee = buk_client.search_employee(rut=search_input)
+                    if employee:
+                        st.session_state.current_employee = employee
+                        st.success(f"✅ Colaborador encontrado: {employee.full_name}")
+                        # Auto-navegar a Crear Propuesta
+                        st.session_state.propuestas_subtab = "propuesta"
+                        st.rerun()
+                    else:
+                        st.error("❌ Colaborador no encontrado")
+                elif search_by == "Ver Todos":
+                    # Obtener todos los empleados activos (cacheado por 1 hora)
+                    employees_sorted = get_all_active_employees()
+                    if employees_sorted:
+                        st.session_state.search_results = employees_sorted
+                        st.success(f"✅ Total de {len(employees_sorted)} colaborador(es) activo(s) (datos en caché)")
+                    else:
+                        st.error("❌ No se encontraron colaboradores")
+
+    with col_extras:
+        st.header("⚙️ Extras")
+        enable_comp = st.checkbox("📊 Análisis de Compensación (HAY/Target)", key="enable_compensation_analysis", value=False)
+
+        if enable_comp:
+            st.subheader("Información de Compensación")
             st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_input")
             st.text_input("Nivel HAY Propuesta", placeholder="Ej: 18, 20", key="nivel_hay_propuesta_input")
-        with col_h2:
             st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_input")
             st.text_input("Target Propuesta (rentas)", placeholder="Ej: 2, 2.5", key="target_propuesta_input")
-        st.divider()
 
-    search_input = ""
-    if search_by == "RUT":
-        search_input = st.text_input("Ingrese RUT (ej: 12.345.678-9)").strip()
-
-    if st.button("🔎 Buscar", use_container_width=True) or search_by == "Ver Todos":
-        if search_by != "Ver Todos" and not search_input:
-            st.warning("Por favor ingrese un valor para buscar")
-            return
-
-        with st.spinner("Cargando colaboradores..."):
-            buk_client = get_buk_client()
-
-            if search_by == "RUT":
-                # Búsqueda por RUT - resultado único
-                employee = buk_client.search_employee(rut=search_input)
-                if employee:
-                    st.session_state.current_employee = employee
-                    st.success(f"✅ Colaborador encontrado: {employee.full_name}")
-                    # Auto-navegar a Crear Propuesta
-                    st.session_state.propuestas_subtab = "propuesta"
-                    st.rerun()
-                else:
-                    st.error("❌ Colaborador no encontrado")
-            elif search_by == "Ver Todos":
-                # Obtener todos los empleados activos (cacheado por 1 hora)
-                employees_sorted = get_all_active_employees()
-                if employees_sorted:
-                    st.session_state.search_results = employees_sorted
-                    st.success(f"✅ Total de {len(employees_sorted)} colaborador(es) activo(s) (datos en caché)")
-                else:
-                    st.error("❌ No se encontraron colaboradores")
+    st.divider()
 
     # Mostrar resultados de búsqueda por apellido
     if st.session_state.search_results:
