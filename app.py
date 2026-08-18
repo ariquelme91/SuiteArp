@@ -729,20 +729,29 @@ def proposal_section():
             nivel_hay_actual_str = st.session_state.get("nivel_hay_actual_input", "")
             target_actual_input = st.session_state.get("target_actual_input", 0.0)
 
+            # Buscar monto en BD si existe nivel
             if nivel_hay_actual_str:
-                # Buscar monto en BD
                 monto_nivel_actual = get_median_from_db(nivel_hay_actual_str, mercado_actual_comp) or 0
-                # Bono = Target × Sueldo Base
-                bono_target_actual = target_actual_input * sal_base_actual
+            else:
+                monto_nivel_actual = 0
 
-                st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
+            # Calcular bono si hay target (incluso sin nivel HAY)
+            bono_target_actual = target_actual_input * sal_base_actual if target_actual_input > 0 else 0
+
+            if bono_target_actual > 0 or nivel_hay_actual_str:
+                if bono_target_actual > 0:
+                    st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
 
                 total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
                 st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
                 st.divider()
-                st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
+
+                if nivel_hay_actual_str:
+                    st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
+                else:
+                    st.caption("⚠️ Ingresa Nivel HAY para ver la media de compensación")
             else:
-                st.warning("Ingresa Nivel HAY Actual para calcular")
+                st.info("Ingresa Nivel HAY y/o Target Actual para calcular compensación")
                 total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual
                 st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
 
