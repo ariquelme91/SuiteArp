@@ -6,6 +6,15 @@
   "tope_afp_uf": 90.0,
   "tope_afc_uf": 135.2,
   "afp_percent": 10.0,
+  "afp_rates": {
+    "capital": 11.44,
+    "cuprum": 11.44,
+    "habitat": 11.27,
+    "planvital": 11.16,
+    "provida": 11.45,
+    "modelo": 10.58,
+    "uno": 10.46
+  },
   "salud_percent": 7.0,
   "afc_trabajador_indefinido": 0.6,
   "afc_trabajador_plazo_fijo": 0.0,
