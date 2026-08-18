@@ -692,6 +692,71 @@ def proposal_section():
 
         st.divider()
 
+        # CALCULADOR DE COMPENSACIÓN REAL
+        st.subheader("💰 Compensación Real Anualizada")
+
+        col_calc_actual, col_calc_prop = st.columns(2)
+
+        with col_calc_actual:
+            st.caption("📊 Actual (x12)")
+
+            # Obtener valores de Haberes Actuales
+            sal_base_actual = employee.base_salary
+            grat_actual = payroll_engine.calculate(base_salary=sal_base_actual).gratification
+            col_actual_hab = st.session_state.get("col_actual", 130000)
+            mob_actual_hab = st.session_state.get("mob_actual", 0)
+
+            # Calcular anualizados
+            sal_base_anual = sal_base_actual * 12
+            grat_anual = grat_actual * 12
+            col_anual = col_actual_hab * 12
+            mob_anual = mob_actual_hab * 12
+
+            st.metric("Sueldo Base x12", f"${sal_base_anual:,.0f}")
+            st.metric("Gratificación x12", f"${grat_anual:,.0f}")
+            st.metric("Colación x12", f"${col_anual:,.0f}")
+            st.metric("Movilización x12", f"${mob_anual:,.0f}")
+
+            # Input para Target multiplier
+            st.text("Target Factor")
+            target_factor_actual = st.number_input("¿Cuántos meses de target?", value=0.0, step=0.1, key="target_factor_actual", min_value=0.0)
+            target_comp_actual = target_actual_comp * target_factor_actual if target_actual_comp else 0.0
+            st.metric("Compensación Target", f"${target_comp_actual:,.0f}")
+
+            total_actual = sal_base_anual + grat_anual + col_anual + mob_anual + target_comp_actual
+            st.divider()
+            st.metric("TOTAL ANUALIZADO", f"${total_actual:,.0f}", delta_color="off")
+
+        with col_calc_prop:
+            st.caption("📊 Propuesto (x12)")
+
+            # Obtener valores de Haberes Propuestos
+            sal_base_prop = int(proposal_base_salary) if 'proposal_base_salary' in locals() else sal_base_actual
+            grat_prop = payroll_engine.calculate(base_salary=sal_base_prop).gratification
+            col_prop_hab = st.session_state.get("col_prop", 130000)
+            mob_prop_hab = st.session_state.get("mob_prop", 0)
+
+            # Calcular anualizados
+            sal_base_anual_prop = sal_base_prop * 12
+            grat_anual_prop = grat_prop * 12
+            col_anual_prop = col_prop_hab * 12
+            mob_anual_prop = mob_prop_hab * 12
+
+            st.metric("Sueldo Base x12", f"${sal_base_anual_prop:,.0f}")
+            st.metric("Gratificación x12", f"${grat_anual_prop:,.0f}")
+            st.metric("Colación x12", f"${col_anual_prop:,.0f}")
+            st.metric("Movilización x12", f"${mob_anual_prop:,.0f}")
+
+            # Input para Target multiplier
+            st.text("Target Factor")
+            target_factor_prop = st.number_input("¿Cuántos meses de target?", value=target_factor_actual, step=0.1, key="target_factor_prop", min_value=0.0)
+            target_comp_prop = st.session_state.get("target_prop_input", 0.0) * target_factor_prop if st.session_state.get("target_prop_input", 0.0) else 0.0
+            st.metric("Compensación Target", f"${target_comp_prop:,.0f}")
+
+            total_prop = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + target_comp_prop
+            st.divider()
+            st.metric("TOTAL ANUALIZADO", f"${total_prop:,.0f}", delta_color="off")
+
     st.divider()
 
     # Fecha de aplicación
