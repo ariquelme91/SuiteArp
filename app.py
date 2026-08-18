@@ -692,51 +692,62 @@ def proposal_section():
 
         st.divider()
 
-        # CALCULADOR DE COMPENSACIÓN REAL
-        st.subheader("💰 Compensación Real Anualizada")
+        # CALCULADOR DE COMPENSACIÓN REAL basado en Nivel HAY × Target
+        st.subheader("💰 Compensación Real por Nivel HAY")
 
         col_calc_actual, col_calc_prop = st.columns(2)
 
+        # Obtener valores actuales de Haberes
+        sal_base_actual = employee.base_salary
+        grat_actual = payroll_engine.calculate(base_salary=sal_base_actual).gratification
+        col_actual_hab = st.session_state.get("col_actual", 130000)
+        mob_actual_hab = st.session_state.get("mob_actual", 0)
+
+        # Anualizados
+        sal_base_anual = sal_base_actual * 12
+        grat_anual = grat_actual * 12
+        col_anual = col_actual_hab * 12
+        mob_anual = mob_actual_hab * 12
+
         with col_calc_actual:
-            st.caption("📊 Actual (x12)")
-
-            # Obtener valores de Haberes Actuales
-            sal_base_actual = employee.base_salary
-            grat_actual = payroll_engine.calculate(base_salary=sal_base_actual).gratification
-            col_actual_hab = st.session_state.get("col_actual", 130000)
-            mob_actual_hab = st.session_state.get("mob_actual", 0)
-
-            # Calcular anualizados
-            sal_base_anual = sal_base_actual * 12
-            grat_anual = grat_actual * 12
-            col_anual = col_actual_hab * 12
-            mob_anual = mob_actual_hab * 12
+            st.caption("💰 ACTUAL")
 
             st.metric("Sueldo Base x12", f"${sal_base_anual:,.0f}")
             st.metric("Gratificación x12", f"${grat_anual:,.0f}")
             st.metric("Colación x12", f"${col_anual:,.0f}")
             st.metric("Movilización x12", f"${mob_anual:,.0f}")
 
-            # Input para Target multiplier
-            st.text("Target Factor")
-            target_factor_actual = st.number_input("¿Cuántos meses de target?", value=0.0, step=0.1, key="target_factor_actual", min_value=0.0)
-            target_comp_actual = target_actual_comp * target_factor_actual if target_actual_comp else 0.0
-            st.metric("Compensación Target", f"${target_comp_actual:,.0f}")
-
-            total_actual = sal_base_anual + grat_anual + col_anual + mob_anual + target_comp_actual
             st.divider()
-            st.metric("TOTAL ANUALIZADO", f"${total_actual:,.0f}", delta_color="off")
+            st.text("**Compensación por Nivel HAY**")
+
+            # Obtener nivel HAY actual
+            nivel_hay_actual_str = st.session_state.get("nivel_hay_actual_input", "")
+            if nivel_hay_actual_str:
+                # Buscar monto en BD
+                monto_actual = get_median_from_db(nivel_hay_actual_str, mercado_actual_comp) or 0
+                target_actual_multiplicador = st.session_state.get("target_actual_input", 0.0)
+                comp_target_actual = monto_actual * target_actual_multiplicador if target_actual_multiplicador else 0
+
+                st.write(f"Nivel: **{nivel_hay_actual_str}** | Monto: ${monto_actual:,.0f}")
+                st.metric(f"Compensación (Nivel × Target {target_actual_multiplicador})", f"${comp_target_actual:,.0f}")
+
+                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + comp_target_actual
+            else:
+                st.warning("Ingresa Nivel HAY Actual para calcular")
+                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual
+
+            st.divider()
+            st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
 
         with col_calc_prop:
-            st.caption("📊 Propuesto (x12)")
+            st.caption("📈 PROPUESTO")
 
-            # Obtener valores de Haberes Propuestos
+            # Obtener valores propuestos
             sal_base_prop = int(proposal_base_salary) if 'proposal_base_salary' in locals() else sal_base_actual
             grat_prop = payroll_engine.calculate(base_salary=sal_base_prop).gratification
             col_prop_hab = st.session_state.get("col_prop", 130000)
             mob_prop_hab = st.session_state.get("mob_prop", 0)
 
-            # Calcular anualizados
             sal_base_anual_prop = sal_base_prop * 12
             grat_anual_prop = grat_prop * 12
             col_anual_prop = col_prop_hab * 12
@@ -747,15 +758,27 @@ def proposal_section():
             st.metric("Colación x12", f"${col_anual_prop:,.0f}")
             st.metric("Movilización x12", f"${mob_anual_prop:,.0f}")
 
-            # Input para Target multiplier
-            st.text("Target Factor")
-            target_factor_prop = st.number_input("¿Cuántos meses de target?", value=target_factor_actual, step=0.1, key="target_factor_prop", min_value=0.0)
-            target_comp_prop = st.session_state.get("target_prop_input", 0.0) * target_factor_prop if st.session_state.get("target_prop_input", 0.0) else 0.0
-            st.metric("Compensación Target", f"${target_comp_prop:,.0f}")
-
-            total_prop = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + target_comp_prop
             st.divider()
-            st.metric("TOTAL ANUALIZADO", f"${total_prop:,.0f}", delta_color="off")
+            st.text("**Compensación por Nivel HAY**")
+
+            # Obtener nivel HAY propuesto
+            nivel_hay_prop_str = st.session_state.get("nivel_hay_prop_input", "")
+            if nivel_hay_prop_str:
+                # Buscar monto en BD
+                monto_prop = get_median_from_db(nivel_hay_prop_str, st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")) or 0
+                target_prop_multiplicador = st.session_state.get("target_prop_input", 0.0)
+                comp_target_prop = monto_prop * target_prop_multiplicador if target_prop_multiplicador else 0
+
+                st.write(f"Nivel: **{nivel_hay_prop_str}** | Monto: ${monto_prop:,.0f}")
+                st.metric(f"Compensación (Nivel × Target {target_prop_multiplicador})", f"${comp_target_prop:,.0f}")
+
+                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + comp_target_prop
+            else:
+                st.warning("Ingresa Nivel HAY Propuesto para calcular")
+                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop
+
+            st.divider()
+            st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
 
     st.divider()
 
