@@ -295,6 +295,9 @@ def search_employee_section():
     with col_extras:
         st.header("⚙️ Extras")
         st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
+        # Debug: mostrar valor actual
+        current_value = st.session_state.get("enable_compensation_analysis", False)
+        st.caption(f"Estado: {current_value}")
 
     st.divider()
 
