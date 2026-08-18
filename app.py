@@ -709,6 +709,12 @@ def proposal_section():
         col_anual = col_actual_hab * 12
         mob_anual = mob_actual_hab * 12
 
+        # Variables para el bono
+        bono_target_actual = 0
+        monto_nivel_actual = 0
+        bono_target_prop = 0
+        monto_nivel_prop = 0
+
         with col_calc_actual:
             st.caption("💰 ACTUAL")
 
@@ -718,26 +724,27 @@ def proposal_section():
             st.metric("Movilización x12", f"${mob_anual:,.0f}")
 
             st.divider()
-            st.text("**Compensación por Nivel HAY**")
 
-            # Obtener nivel HAY actual
+            # Obtener nivel HAY actual y calcular bono
             nivel_hay_actual_str = st.session_state.get("nivel_hay_actual_input", "")
+            target_actual_input = st.session_state.get("target_actual_input", 0.0)
+
             if nivel_hay_actual_str:
                 # Buscar monto en BD
-                monto_actual = get_median_from_db(nivel_hay_actual_str, mercado_actual_comp) or 0
-                target_actual_multiplicador = st.session_state.get("target_actual_input", 0.0)
-                comp_target_actual = monto_actual * target_actual_multiplicador if target_actual_multiplicador else 0
+                monto_nivel_actual = get_median_from_db(nivel_hay_actual_str, mercado_actual_comp) or 0
+                # Bono = Target × Sueldo Base
+                bono_target_actual = target_actual_input * sal_base_actual
 
-                st.write(f"Nivel: **{nivel_hay_actual_str}** | Monto: ${monto_actual:,.0f}")
-                st.metric(f"Compensación (Nivel × Target {target_actual_multiplicador})", f"${comp_target_actual:,.0f}")
+                st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
 
-                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + comp_target_actual
+                total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
+                st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
+                st.divider()
+                st.caption(f"📊 Media Nivel {nivel_hay_actual_str} ({mercado_actual_comp}): **${monto_nivel_actual:,.0f}**")
             else:
                 st.warning("Ingresa Nivel HAY Actual para calcular")
                 total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual
-
-            st.divider()
-            st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
+                st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
 
         with col_calc_prop:
             st.caption("📈 PROPUESTO")
@@ -759,26 +766,27 @@ def proposal_section():
             st.metric("Movilización x12", f"${mob_anual_prop:,.0f}")
 
             st.divider()
-            st.text("**Compensación por Nivel HAY**")
 
-            # Obtener nivel HAY propuesto
+            # Obtener nivel HAY propuesto y calcular bono
             nivel_hay_prop_str = st.session_state.get("nivel_hay_prop_input", "")
+            target_prop_input = st.session_state.get("target_prop_input", 0.0)
+
             if nivel_hay_prop_str:
                 # Buscar monto en BD
-                monto_prop = get_median_from_db(nivel_hay_prop_str, st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")) or 0
-                target_prop_multiplicador = st.session_state.get("target_prop_input", 0.0)
-                comp_target_prop = monto_prop * target_prop_multiplicador if target_prop_multiplicador else 0
+                monto_nivel_prop = get_median_from_db(nivel_hay_prop_str, st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")) or 0
+                # Bono = Target × Sueldo Base
+                bono_target_prop = target_prop_input * sal_base_prop
 
-                st.write(f"Nivel: **{nivel_hay_prop_str}** | Monto: ${monto_prop:,.0f}")
-                st.metric(f"Compensación (Nivel × Target {target_prop_multiplicador})", f"${comp_target_prop:,.0f}")
+                st.metric("💰 Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
 
-                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + comp_target_prop
+                total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop
+                st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
+                st.divider()
+                st.caption(f"📊 Media Nivel {nivel_hay_prop_str} ({st.session_state.get('mercado_comparacion_info_prop', 'Mercado Financiero')}): **${monto_nivel_prop:,.0f}**")
             else:
                 st.warning("Ingresa Nivel HAY Propuesto para calcular")
                 total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop
-
-            st.divider()
-            st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
+                st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
 
     st.divider()
 
