@@ -368,6 +368,14 @@ def proposal_section():
 
     employee = st.session_state.current_employee
 
+    # Mostrar estado de Analizador de Renta al inicio
+    is_analysis_enabled = st.session_state.get("enable_compensation_analysis", False)
+    if is_analysis_enabled:
+        st.info("✅ **Analizador de Renta HABILITADO** - Las secciones de compensación aparecerán abajo")
+    else:
+        st.warning("⭕ **Analizador de Renta DESHABILITADO** - Marca el checkbox en 'Buscar Colaborador' para habilitar")
+
+    st.divider()
 
     # Mostrar header con logo si existe
     col_logo, col_title = st.columns([1, 4])
