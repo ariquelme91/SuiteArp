@@ -1773,18 +1773,21 @@ def calculator_section():
             base_salary = target_liquid if target_liquid > 0 else 800000
 
         st.caption("Haberes adicionales")
+
+        # Obtener valor de UF para Movilización
+        from src.analysis.db_manager import AnalysisDBManager
+        db_mgr = AnalysisDBManager()
+        mes_actual = datetime.now().strftime("%Y-%m")
+        uf_valor = db_mgr.get_uf(mes_actual) or 40873.77  # Valor por defecto
+
+        # Calcular sugerencia de movilización: 2.44 * UF
+        movilizacion_sugerida = int(2.44 * uf_valor)
+
         col1, col2, col3 = st.columns(3)
         with col1:
-            collation = st.number_input("Colación", value=0, min_value=0, step=1000, key="calc_col", placeholder="130000")
+            collation = st.number_input("Colación", value=130000, min_value=0, step=1000, key="calc_col")
         with col2:
-            # Movilización con sugerencia de 2.44*UF
-            st.text("Movilización")
-            mobility_input = st.text_input("", value="", placeholder="2.44 * UF", key="calc_mob_text", label_visibility="collapsed")
-            # Convertir entrada a número (si es vacío, usar 0)
-            try:
-                mobility = float(mobility_input) if mobility_input and mobility_input.replace(".", "").replace(",", "").isdigit() else 0
-            except:
-                mobility = 0
+            mobility = st.number_input("Movilización", value=movilizacion_sugerida, min_value=0, step=1000, key="calc_mob", help=f"Sugerencia: 2.44 × UF = ${movilizacion_sugerida:,.0f}")
         with col3:
             other_taxable = st.number_input("Otros Imp.", value=0, min_value=0, step=1000, key="calc_other")
 
