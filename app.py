@@ -292,10 +292,10 @@ def search_employee_section():
 
     with col_extras:
         st.header("⚙️ Extras")
-        enable_comp = st.checkbox("📊 Análisis de Compensación (HAY/Target)", key="enable_compensation_analysis", value=False)
+        enable_comp = st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis", value=False)
 
         if enable_comp:
-            st.subheader("Información de Compensación")
+            st.subheader("Ingresa Datos de Compensación")
             st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_input")
             st.text_input("Nivel HAY Propuesta", placeholder="Ej: 18, 20", key="nivel_hay_propuesta_input")
             st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_input")
@@ -428,54 +428,79 @@ def proposal_section():
 
     st.divider()
 
-    # Motivo de la propuesta
-    st.subheader("🎯 Motivo de la Propuesta")
-    motivos_options = [
-        "Mérito",
-        "Retención",
-        "Ascenso",
-        "Ampliación de responsabilidades",
-        "Ajuste por mercado",
-        "Equidad Interna"
-    ]
+    # Layout: Motivo de la Propuesta (izq) | Analizador de Renta (der)
+    col_motivo, col_analizador = st.columns([1, 1])
 
-    proposal_reasons = st.multiselect(
-        "Seleccione los motivos aplicables:",
-        motivos_options,
-        key="proposal_reasons",
-        placeholder="Elija uno o más motivos..."
-    )
+    with col_motivo:
+        st.subheader("🎯 Motivo de la Propuesta")
+        motivos_options = [
+            "Mérito",
+            "Retención",
+            "Ascenso",
+            "Ampliación de responsabilidades",
+            "Ajuste por mercado",
+            "Equidad Interna"
+        ]
 
-    st.divider()
+        proposal_reasons = st.multiselect(
+            "Seleccione los motivos aplicables:",
+            motivos_options,
+            key="proposal_reasons",
+            placeholder="Elija uno o más motivos..."
+        )
 
-    # Mostrar Analizador de Renta si está habilitado
-    if st.session_state.get("enable_compensation_analysis", False):
-        st.header("💼 Analizador de renta")
-        col_c1, col_c2 = st.columns(2)
+    with col_analizador:
+        if st.session_state.get("enable_compensation_analysis", False):
+            st.subheader("💼 Analizador de renta")
+            col_c1, col_c2 = st.columns(2)
 
-        with col_c1:
-            st.subheader("Información Actual")
-            col_a1, col_a2 = st.columns(2)
-            with col_a1:
+            with col_c1:
+                st.caption("Información Actual")
                 hay_actual = st.session_state.get("nivel_hay_actual_input", "")
                 st.metric("Nivel HAY", hay_actual if hay_actual else "—")
-            with col_a2:
                 target_actual = st.session_state.get("target_actual_input", "")
                 st.metric("Target", target_actual if target_actual else "—")
 
-        with col_c2:
-            st.subheader("Información Propuesta")
-            col_p1, col_p2 = st.columns(2)
-            with col_p1:
+            with col_c2:
+                st.caption("Información Propuesta")
                 hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
                 st.metric("Nivel HAY", hay_propuesta if hay_propuesta else "—")
-            with col_p2:
                 target_propuesta = st.session_state.get("target_propuesta_input", "")
                 st.metric("Target", target_propuesta if target_propuesta else "—")
 
-        st.divider()
+    st.divider()
 
-    # Datos organizados en dos columnas
+    # Cambios Organizacionales (full width)
+    st.subheader("📋 Cambios Organizacionales")
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        change_company = st.checkbox("¿Cambiará de empresa?", key="change_company")
+    with col2:
+        change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
+    with col3:
+        change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
+
+    new_company = employee.company_name
+    new_position = employee.job_title
+    new_supervisor = employee.supervisor
+
+    if change_company:
+        buk_client = get_buk_client()
+        companies = buk_client.get_companies()
+        if companies:
+            company_names = [c['name'] for c in companies]
+            new_company = st.selectbox("Seleccione nueva empresa", company_names, label_visibility="collapsed")
+
+    if change_position:
+        new_position = st.text_input("Nuevo cargo", value=employee.job_title or "", label_visibility="collapsed")
+
+    if change_supervisor:
+        new_supervisor = st.text_input("Nuevo nombre de jefe", value=employee.supervisor or "", label_visibility="collapsed")
+
+    st.divider()
+
+    # Haberes Actuales y Propuestos (lado a lado)
     col_left, col_right = st.columns(2)
 
     with col_left:
