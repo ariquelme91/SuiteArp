@@ -251,9 +251,27 @@ def get_all_active_employees():
 
 def search_employee_section():
     """Sección de búsqueda de empleados."""
-    st.header("🔍 Buscar Colaborador")
+    # Checkbox para análisis de compensación al lado de buscar colaborador
+    col_title, col_check = st.columns([3, 1])
+    with col_title:
+        st.header("🔍 Buscar Colaborador")
+    with col_check:
+        st.write("")  # Espaciador para alinear
+        enable_comp = st.checkbox("📊 Análisis HAY/Target", key="enable_compensation_analysis", value=False)
 
     search_by = st.radio("Buscar por:", ["RUT", "Ver Todos"], horizontal=True)
+
+    # Mostrar campos de compensación si está habilitado
+    if enable_comp:
+        st.subheader("📊 Información de Compensación")
+        col_h1, col_h2 = st.columns(2)
+        with col_h1:
+            st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_input")
+            st.text_input("Nivel HAY Propuesta", placeholder="Ej: 18, 20", key="nivel_hay_propuesta_input")
+        with col_h2:
+            st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_input")
+            st.text_input("Target Propuesta (rentas)", placeholder="Ej: 2, 2.5", key="target_propuesta_input")
+        st.divider()
 
     search_input = ""
     if search_by == "RUT":
@@ -2080,27 +2098,6 @@ def main():
 
     with tab3:
         # === TAB PROPUESTAS ===
-        # Sección de Análisis de Compensación (siempre visible)
-        st.subheader("📊 Análisis de Compensación")
-        enable_comp = st.checkbox(
-            "¿Deseas analizar con HAY y Target (Compratio y Mediana)?",
-            key="enable_compensation_analysis",
-            value=False
-        )
-        st.divider()
-
-        # Mostrar campos de compensación si está habilitado
-        if enable_comp:
-            st.subheader("📊 Información de Compensación")
-            col_h1, col_h2, col_h3 = st.columns(3)
-            with col_h1:
-                st.text_input("Nivel HAY Actual", placeholder="Ej: 16, 18, 20", key="nivel_hay_actual_simple")
-            with col_h2:
-                st.text_input("Target Actual (rentas)", placeholder="Ej: 1.5, 2", key="target_actual_simple")
-            with col_h3:
-                st.selectbox("Mercado", ["Tecnología", "Financiero", "Retail", "Manufactura", "Otro"], key="mercado_simple")
-            st.divider()
-
         # Detectar si hay empleado seleccionado desde ANÁLISIS
         if "empleado_para_propuesta" in st.session_state and st.session_state.empleado_para_propuesta:
             datos_emp = st.session_state.empleado_para_propuesta
