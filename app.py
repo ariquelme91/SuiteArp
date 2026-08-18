@@ -634,60 +634,63 @@ def proposal_section():
 
     st.divider()
 
-    # INFORMACIÓN DE COMPENSACIÓN ACTUAL vs PROPUESTA
-    st.subheader("💡 Información de Compensación")
+    # INFORMACIÓN DE COMPENSACIÓN ACTUAL vs PROPUESTA (solo si está habilitado el Analizador)
+    if st.session_state.get("enable_compensation_analysis", False):
+        st.subheader("💡 Información de Compensación")
 
-    col_comp_actual, col_comp_propuesta = st.columns(2)
+        col_comp_actual, col_comp_propuesta = st.columns(2)
 
-    # DATOS ACTUALES (readonly)
-    with col_comp_actual:
-        st.caption("💰 Datos Actuales")
+        # DATOS ACTUALES (readonly)
+        with col_comp_actual:
+            st.caption("💰 Datos Actuales")
 
-        st.text("Nivel HAY")
-        hay_actual_comp = st.session_state.get("nivel_hay_actual_input", "")
-        st.text_input("Nivel HAY Actual", value=hay_actual_comp, disabled=True, label_visibility="collapsed", key="comp_hay_actual")
+            st.text("Nivel HAY")
+            hay_actual_comp = st.session_state.get("nivel_hay_actual_input", "")
+            st.text_input("Nivel HAY Actual", value=hay_actual_comp, disabled=True, label_visibility="collapsed", key="comp_hay_actual")
 
-        st.text("Target (rentas)")
-        target_actual_comp = st.session_state.get("target_actual_input", 0.0)
-        st.number_input("Target Actual", value=float(target_actual_comp) if target_actual_comp else 0.0, disabled=True, label_visibility="collapsed", key="comp_target_actual", step=0.1)
+            st.text("Target (rentas)")
+            target_actual_comp = st.session_state.get("target_actual_input", 0.0)
+            st.number_input("Target Actual", value=float(target_actual_comp) if target_actual_comp else 0.0, disabled=True, label_visibility="collapsed", key="comp_target_actual", step=0.1)
 
-        st.text("Tipo de Mercado")
-        mercado_actual_comp = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
-        st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="comp_mercado_actual")
+            st.text("Tipo de Mercado")
+            mercado_actual_comp = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
+            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="comp_mercado_actual")
 
-    # DATOS PROPUESTOS (editable)
-    with col_comp_propuesta:
-        st.caption("📈 Datos Propuestos")
+        # DATOS PROPUESTOS (editable)
+        with col_comp_propuesta:
+            st.caption("📈 Datos Propuestos")
 
-        st.text("Nivel HAY")
-        st.text_input(
-            "Nivel HAY Propuesta",
-            value=st.session_state.get("nivel_hay_prop_input", ""),
-            placeholder="Ej: 18, 20",
-            label_visibility="collapsed",
-            key="nivel_hay_prop_input",
-            help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
-        )
+            st.text("Nivel HAY")
+            st.text_input(
+                "Nivel HAY Propuesta",
+                value=st.session_state.get("nivel_hay_prop_input", ""),
+                placeholder="Ej: 18, 20",
+                label_visibility="collapsed",
+                key="nivel_hay_prop_input",
+                help="Nivel HAY para la propuesta (puede ser igual al actual o diferente si hay promoción)."
+            )
 
-        st.text("Target (rentas)")
-        st.number_input(
-            "Target Propuesta",
-            value=st.session_state.get("target_prop_input", 0.0),
-            min_value=0.0,
-            step=0.1,
-            label_visibility="collapsed",
-            key="target_prop_input",
-            help="Target en rentas para la propuesta (Ej: 2.8, 3.0, etc.)."
-        )
+            st.text("Target (rentas)")
+            st.number_input(
+                "Target Propuesta",
+                value=st.session_state.get("target_prop_input", 0.0),
+                min_value=0.0,
+                step=0.1,
+                label_visibility="collapsed",
+                key="target_prop_input",
+                help="Target en rentas para la propuesta (Ej: 2.8, 3.0, etc.)."
+            )
 
-        st.text("Tipo de Mercado")
-        mercado_comparacion = st.selectbox(
-            "Tipo de Mercado",
-            options=["Mercado Financiero", "Mercado Seguros"],
-            key="mercado_comparacion_main",
-            label_visibility="collapsed",
-            help="Selecciona el mercado para comparar la compensación."
-        )
+            st.text("Tipo de Mercado")
+            mercado_comparacion = st.selectbox(
+                "Tipo de Mercado",
+                options=["Mercado Financiero", "Mercado Seguros"],
+                key="mercado_comparacion_main",
+                label_visibility="collapsed",
+                help="Selecciona el mercado para comparar la compensación."
+            )
+
+        st.divider()
 
     st.divider()
 
