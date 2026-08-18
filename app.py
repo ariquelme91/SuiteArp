@@ -670,6 +670,8 @@ def proposal_section():
             st.session_state.target_prop_input = 0.0
         if "mercado_comparacion_main" not in st.session_state:
             st.session_state.mercado_comparacion_main = "Mercado Financiero"
+        if "mercado_comparacion_info_prop" not in st.session_state:
+            st.session_state.mercado_comparacion_info_prop = "Mercado Financiero"
 
         st.subheader("💡 Información de Compensación")
 
@@ -720,7 +722,7 @@ def proposal_section():
             mercado_comparacion = st.selectbox(
                 "Tipo de Mercado",
                 options=["Mercado Financiero", "Mercado Seguros"],
-                key="mercado_comparacion_main",
+                key="mercado_comparacion_info_prop",
                 label_visibility="collapsed",
                 help="Selecciona el mercado para comparar la compensación."
             )
