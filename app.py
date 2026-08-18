@@ -87,6 +87,8 @@ def initialize_session_state():
         st.session_state.propuestas_subtab = "buscar"
     if "proposal_reasons" not in st.session_state:
         st.session_state.proposal_reasons = []
+    if "enable_compensation_analysis" not in st.session_state:
+        st.session_state.enable_compensation_analysis = False
 
 
 def get_buk_client():
@@ -292,7 +294,7 @@ def search_employee_section():
 
     with col_extras:
         st.header("⚙️ Extras")
-        enable_comp = st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis", value=False)
+        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
 
     st.divider()
 
@@ -369,7 +371,7 @@ def proposal_section():
     # Checkbox para habilitar análisis de compensación (visible aquí también)
     col_check_header, col_empty = st.columns([1, 4])
     with col_check_header:
-        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis", value=st.session_state.get("enable_compensation_analysis", False))
+        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
 
     st.divider()
 
