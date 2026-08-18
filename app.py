@@ -524,17 +524,21 @@ def proposal_section():
 
     payroll_engine = get_payroll_engine()
 
-    # Opciones de entrada de sueldo
-    input_type = st.radio(
-        "¿Cómo ingresar el nuevo sueldo?",
-        [
-            "Sueldo base",
-            "% sobre el sueldo base",
-            "Sueldo Líquido",
-            "% sobre el sueldo líquido"
-        ],
-        horizontal=True
-    )
+    col_opcion, col_valor = st.columns(2)
+
+    # COLUMNA IZQUIERDA: Opciones de entrada
+    with col_opcion:
+        st.caption("Tipo de Entrada")
+        input_type = st.radio(
+            "¿Cómo ingresar el nuevo sueldo?",
+            [
+                "Sueldo base",
+                "% sobre el sueldo base",
+                "Sueldo Líquido",
+                "% sobre el sueldo líquido"
+            ],
+            label_visibility="collapsed"
+        )
 
     # Calcular líquido actual para referencias
     mobility_for_calc = current_mobility
@@ -551,39 +555,64 @@ def proposal_section():
     )
     current_liquid = current_payroll.net_salary
 
-    if input_type == "Sueldo base":
-        st.caption("Nuevo Sueldo Base")
-        proposal_base_salary = st.number_input(
-            "Nuevo Sueldo Base",
-            value=int(employee.base_salary),
-            min_value=0,
-            label_visibility="collapsed",
-            key="base_direct"
-        )
+    # COLUMNA DERECHA: Valor a ingresar
+    with col_valor:
+        if input_type == "Sueldo base":
+            st.caption("Nuevo Sueldo Base")
+            proposal_base_salary = st.number_input(
+                "Nuevo Sueldo Base",
+                value=int(employee.base_salary),
+                min_value=0,
+                label_visibility="collapsed",
+                key="base_direct"
+            )
 
-    elif input_type == "% sobre el sueldo base":
-        st.caption("Porcentaje de aumento sobre Sueldo Base")
-        porcentaje_aumento = st.number_input(
-            "Porcentaje (%)",
-            value=0.0,
-            min_value=0.0,
-            step=0.1,
-            label_visibility="collapsed",
-            key="percent_base"
-        )
-        proposal_base_salary = int(employee.base_salary * (1 + porcentaje_aumento / 100))
-        st.info(f"**Base actual:** ${employee.base_salary:,.0f} → **Nueva base:** ${proposal_base_salary:,.0f}")
+        elif input_type == "% sobre el sueldo base":
+            st.caption("Porcentaje de aumento")
+            porcentaje_aumento = st.number_input(
+                "Porcentaje (%)",
+                value=0.0,
+                min_value=0.0,
+                step=0.1,
+                label_visibility="collapsed",
+                key="percent_base"
+            )
+            proposal_base_salary = int(employee.base_salary * (1 + porcentaje_aumento / 100))
+            st.info(f"**Base actual:** ${employee.base_salary:,.0f} → **Nueva base:** ${proposal_base_salary:,.0f}")
 
-    elif input_type == "Sueldo Líquido":
-        st.caption("Sueldo Líquido a Recibir")
-        target_liquid = st.number_input(
-            "Sueldo Líquido ($)",
-            value=int(current_liquid),
-            min_value=0,
-            label_visibility="collapsed",
-            key="target_liquid"
-        )
-        if target_liquid > 0:
+        elif input_type == "Sueldo Líquido":
+            st.caption("Sueldo Líquido a Recibir")
+            target_liquid = st.number_input(
+                "Sueldo Líquido ($)",
+                value=int(current_liquid),
+                min_value=0,
+                label_visibility="collapsed",
+                key="target_liquid"
+            )
+            if target_liquid > 0:
+                proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
+                    target_net_salary=target_liquid,
+                    collation=current_collation,
+                    mobility=current_mobility,
+                    contract_type=employee.contract_type,
+                    pension_fund=employee.pension_fund,
+                    has_parking=has_parking,
+                )
+            else:
+                proposal_base_salary = employee.base_salary
+            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
+
+        else:  # % sobre el sueldo líquido
+            st.caption("Porcentaje de aumento")
+            porcentaje_liquido = st.number_input(
+                "Porcentaje (%)",
+                value=0.0,
+                min_value=0.0,
+                step=0.1,
+                label_visibility="collapsed",
+                key="percent_liquid"
+            )
+            target_liquid = current_liquid * (1 + porcentaje_liquido / 100)
             proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
                 target_net_salary=target_liquid,
                 collation=current_collation,
@@ -592,30 +621,7 @@ def proposal_section():
                 pension_fund=employee.pension_fund,
                 has_parking=has_parking,
             )
-        else:
-            proposal_base_salary = employee.base_salary
-        st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
-
-    else:  # % sobre el sueldo líquido
-        st.caption("Porcentaje de aumento sobre Sueldo Líquido")
-        porcentaje_liquido = st.number_input(
-            "Porcentaje (%)",
-            value=0.0,
-            min_value=0.0,
-            step=0.1,
-            label_visibility="collapsed",
-            key="percent_liquid"
-        )
-        target_liquid = current_liquid * (1 + porcentaje_liquido / 100)
-        proposal_base_salary = payroll_engine.reverse_calculate_base_salary(
-            target_net_salary=target_liquid,
-            collation=current_collation,
-            mobility=current_mobility,
-            contract_type=employee.contract_type,
-            pension_fund=employee.pension_fund,
-            has_parking=has_parking,
-        )
-        st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
+            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
 
     st.divider()
 
