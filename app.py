@@ -451,22 +451,38 @@ def proposal_section():
 
     # Analizador de Renta (si está habilitado)
     if st.session_state.get("enable_compensation_analysis", False):
-        st.subheader("💼 Analizador de renta")
-        col_c1, col_c2 = st.columns(2)
+        st.subheader("📊 Analizador de Renta")
 
-        with col_c1:
-            st.caption("Información Actual")
-            hay_actual = st.session_state.get("nivel_hay_actual_input", "")
-            st.metric("Nivel HAY", hay_actual if hay_actual else "—")
-            target_actual = st.session_state.get("target_actual_input", "")
-            st.metric("Target", target_actual if target_actual else "—")
+        col_actual_anal, col_propuesto_anal = st.columns(2)
 
-        with col_c2:
-            st.caption("Información Propuesta")
-            hay_propuesta = st.session_state.get("nivel_hay_propuesta_input", "")
-            st.metric("Nivel HAY", hay_propuesta if hay_propuesta else "—")
-            target_propuesta = st.session_state.get("target_propuesta_input", "")
-            st.metric("Target", target_propuesta if target_propuesta else "—")
+        # DATOS ACTUALES (readonly)
+        with col_actual_anal:
+            st.caption("💰 Datos Actuales")
+
+            st.text("Nivel HAY")
+            hay_actual_val = st.session_state.get("nivel_hay_actual_input", "")
+            st.text_input("Nivel HAY Actual", value=hay_actual_val, disabled=True, label_visibility="collapsed", key="analyzer_hay_actual")
+
+            st.text("Target (rentas)")
+            target_actual_val = st.session_state.get("target_actual_input", 0.0)
+            st.number_input("Target Actual", value=float(target_actual_val) if target_actual_val else 0.0, disabled=True, label_visibility="collapsed", key="analyzer_target_actual", step=0.1)
+
+            st.text("Tipo de Mercado")
+            mercado_actual_val = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
+            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_val == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="analyzer_mercado_actual")
+
+        # DATOS PROPUESTOS (editable)
+        with col_propuesto_anal:
+            st.caption("📈 Datos Propuestos")
+
+            st.text("Nivel HAY")
+            st.text_input("Nivel HAY Propuesta", value=st.session_state.get("nivel_hay_prop_input", ""), label_visibility="collapsed", key="analyzer_hay_propuesta")
+
+            st.text("Target (rentas)")
+            st.number_input("Target Propuesta", value=st.session_state.get("target_prop_input", 0.0), label_visibility="collapsed", key="analyzer_target_propuesta", step=0.1)
+
+            st.text("Tipo de Mercado")
+            st.selectbox("Mercado Propuesto", options=["Mercado Financiero", "Mercado Seguros"], label_visibility="collapsed", key="mercado_comparacion_main")
 
         st.divider()
 
