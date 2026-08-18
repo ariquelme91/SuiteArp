@@ -36,7 +36,8 @@
       "Bash(python -m py_compile app.py)",
       "Bash(git reset *)",
       "Bash(mcp__Claude_Browser__preview_start --name propuestas-renta-streamlit)",
-      "Bash(streamlit run *)"
+      "Bash(streamlit run *)",
+      "Bash(rm -rf ~/.streamlit/cache && echo \"✅ Cache limpiado\")"
     ]
   }
 }

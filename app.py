@@ -2113,12 +2113,11 @@ def main():
         # === TAB PROPUESTAS ===
         # Sección de Análisis de Compensación (siempre visible)
         st.subheader("📊 Análisis de Compensación")
-        enable_compensation_analysis = st.checkbox(
+        st.checkbox(
             "¿Deseas analizar con HAY y Target (Compratio y Mediana)?",
             key="enable_compensation_analysis",
             value=False
         )
-        st.session_state.enable_compensation_analysis = enable_compensation_analysis
         st.divider()
 
         # Detectar si hay empleado seleccionado desde ANÁLISIS
