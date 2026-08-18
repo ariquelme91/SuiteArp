@@ -294,10 +294,7 @@ def search_employee_section():
 
     with col_extras:
         st.header("⚙️ Extras")
-        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis")
-        # Debug: mostrar valor actual
-        current_value = st.session_state.get("enable_compensation_analysis", False)
-        st.caption(f"Estado: {current_value}")
+        st.info("💡 Usa el checkbox en la barra lateral para habilitar el Analizador de Renta")
 
     st.divider()
 
@@ -2229,6 +2226,12 @@ def calculator_section():
 def main():
     """Función principal."""
     initialize_session_state()
+
+    # Sidebar: Checkbox global para Analizador de Renta
+    with st.sidebar:
+        st.header("⚙️ Opciones Globales")
+        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
+                   help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
     # Header
     st.markdown('<p class="main-header">💰 Suite ARP IA</p>', unsafe_allow_html=True)
