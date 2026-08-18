@@ -398,6 +398,11 @@ def proposal_section():
 
     st.divider()
 
+    # Inicializar variables de Cambios Org. FUERA de columnas
+    new_company = employee.company_name
+    new_position = employee.job_title
+    new_supervisor = employee.supervisor
+
     # Layout: Motivo (izq) | Cambios Org. (der) SIEMPRE al lado
     col_motivo, col_cambios = st.columns([1, 1])
 
@@ -424,10 +429,6 @@ def proposal_section():
         change_company = st.checkbox("¿Cambiará de empresa?", key="change_company")
         change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
         change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
-
-        new_company = employee.company_name
-        new_position = employee.job_title
-        new_supervisor = employee.supervisor
 
         if change_company:
             try:
