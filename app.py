@@ -481,12 +481,15 @@ def proposal_section():
     with col_actual:
         st.caption("💰 Haberes Actuales")
 
+        st.text("Colación")
         current_collation = st.number_input("Colación", value=0, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
         st.session_state.current_collation = current_collation
 
+        st.text("Movilización")
         current_mobility = st.number_input("Movilización", value=0, min_value=0, label_visibility="collapsed", key="mob_actual", step=1000)
         st.session_state.current_mobility = current_mobility
 
+        st.text("Otros imponibles")
         current_other_taxable = st.number_input("Otros imponibles", value=0, min_value=0, label_visibility="collapsed", key="other_actual", step=1000)
         st.session_state.current_other_taxable = current_other_taxable
 
@@ -502,10 +505,13 @@ def proposal_section():
         base_mobility = st.session_state.get("current_mobility", current_mobility)
         base_other_taxable = st.session_state.get("current_other_taxable", current_other_taxable)
 
+        st.text("Colación")
         proposal_collation = st.number_input("Colación", value=int(base_collation), min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
 
+        st.text("Movilización")
         proposal_mobility = st.number_input("Movilización", value=int(base_mobility), min_value=0, label_visibility="collapsed", key="mob_prop", step=1000)
 
+        st.text("Otros imponibles")
         proposal_other_taxable = st.number_input("Otros imponibles", value=int(base_other_taxable), min_value=0, label_visibility="collapsed", key="other_prop", step=1000)
 
         # Checkbox para estacionamiento en propuesta
