@@ -645,16 +645,16 @@ def proposal_section():
             st.text("Nivel HAY")
             hay_actual_comp = st.session_state.get("nivel_hay_actual_input", "")
             # Permitir edición si no tiene valor, solo lectura si lo tiene
-            st.text_input("Nivel HAY Actual", value=hay_actual_comp, disabled=bool(hay_actual_comp), label_visibility="collapsed", key="comp_hay_actual")
+            st.text_input("Nivel HAY Actual", value=hay_actual_comp, disabled=bool(hay_actual_comp), label_visibility="collapsed", key="nivel_hay_actual_input")
 
             st.text("Target (rentas)")
             target_actual_comp = st.session_state.get("target_actual_input", 0.0)
             # Permitir edición si es 0, solo lectura si tiene valor
-            st.number_input("Target Actual", value=float(target_actual_comp) if target_actual_comp else 0.0, disabled=bool(target_actual_comp), label_visibility="collapsed", key="comp_target_actual", step=0.1)
+            st.number_input("Target Actual", value=float(target_actual_comp) if target_actual_comp else 0.0, disabled=bool(target_actual_comp), label_visibility="collapsed", key="target_actual_input", step=0.1)
 
             st.text("Tipo de Mercado")
             mercado_actual_comp = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
-            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="comp_mercado_actual")
+            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="mercado_comparacion_main")
 
         # DATOS PROPUESTOS (editable)
         with col_comp_propuesta:
