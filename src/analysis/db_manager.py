@@ -329,6 +329,38 @@ class AnalysisDBManager:
             logger.error(f"Error obteniendo análisis: {e}")
             return []
 
+    def get_employee_by_rut(self, rut: str) -> Optional[Dict[str, Any]]:
+        """Obtiene datos de análisis de un empleado por RUT.
+
+        Args:
+            rut: RUT del empleado (con o sin formato)
+
+        Returns:
+            Dict con datos del empleado (incluyendo nivel_hay y target) o None si no existe
+        """
+        try:
+            # Normalizar RUT (remover puntos y guión si los tiene)
+            rut_clean = rut.replace(".", "").replace("-", "").strip()
+
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                # Buscar por RUT exacto o con formato similar
+                cursor.execute(
+                    "SELECT * FROM employee_analysis WHERE rut LIKE ? LIMIT 1",
+                    (f"%{rut_clean}%",)
+                )
+                row = cursor.fetchone()
+
+                if row:
+                    return dict(row)
+                return None
+
+        except Exception as e:
+            logger.error(f"Error obteniendo empleado por RUT {rut}: {e}")
+            return None
+
     def get_summary_metrics(
         self, empresa: Optional[str] = None, area: Optional[str] = None
     ) -> Dict[str, Any]:
