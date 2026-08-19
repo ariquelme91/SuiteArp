@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite ARP IA - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1F4E78 0%, #2E5F9E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #1F4E78;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #1F4E78;
+            box-shadow: 0 0 0 3px rgba(31, 78, 120, 0.1);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: #1F4E78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            background: #163a56;
+        }
+
+        .demo-users {
+            background: #F5F5F5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 25px;
+            font-size: 13px;
+        }
+
+        .demo-users h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .user-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #1F4E78;
+        }
+
+        .user-item strong {
+            color: #1F4E78;
+        }
+
+        .user-role {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .role-admin {
+            background: #D1E7F5;
+            color: #1F4E78;
+        }
+
+        .role-user {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .error-message {
+            background: #FFEBEE;
+            color: #C62828;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>💰 Suite ARP IA</h1>
+            <p>Sistema de Compensaciones</p>
+        </div>
+
+        <div class="error-message" id="errorMsg"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="usuario">👤 Usuario</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Ingresa tu usuario" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔐 Contraseña</label>
+                <input type="password" id="password" name="password" placeholder="Ingresa tu contraseña" required>
+            </div>
+
+            <button type="submit" class="login-button">🔓 Iniciar Sesión</button>
+        </form>
+
+        <div class="demo-users">
+            <h3>📋 Usuarios Disponibles:</h3>
+
+            <div class="user-item">
+                <strong>Ariquelme</strong>
+                <span class="user-role role-admin">ADMIN</span>
+                <br>
+                <small>Contraseña: admin</small>
+            </div>
+
+            <div class="user-item">
+                <strong>Pcuadra</strong>
+                <span class="user-role role-user">USER</span>
+                <br>
+                <small>Contraseña: user</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const usuario = document.getElementById('usuario').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            const usuarios = {
+                'Ariquelme': { password: 'admin', rol: 'admin' },
+                'Pcuadra': { password: 'user', rol: 'user' }
+            };
+
+            if (usuarios[usuario] && usuarios[usuario].password === password) {
+                errorMsg.style.display = 'none';
+                alert(`✅ Bienvenido ${usuario} (${usuarios[usuario].rol.toUpperCase()})\n\nSerías redirigido a la aplicación...`);
+            } else {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = '❌ Usuario o contraseña inválidos';
+                document.getElementById('password').value = '';
+                document.getElementById('usuario').focus();
+            }
+        });
+    </script>
+</body>
+</html>

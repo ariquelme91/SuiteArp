@@ -16,6 +16,10 @@ from src.simulator import Simulator
 from src.exporter import ExcelExporter
 from src.pdf_exporter import PDFExporter
 from src.pdf_exporter_calc import PDFExporterCalc
+from src.auth_manager import AuthManager
+from src.ui.login_page import render_login_page
+from src.ui.user_management import render_user_management
+from src.analysis.db_manager import AnalysisDBManager
 
 # Cargar variables de entorno
 load_dotenv()
@@ -67,6 +71,14 @@ st.markdown("""
 
 def initialize_session_state():
     """Inicializa variables de sesión."""
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    if "usuario" not in st.session_state:
+        st.session_state.usuario = None
+    if "rol" not in st.session_state:
+        st.session_state.rol = None
+    if "user_id" not in st.session_state:
+        st.session_state.user_id = None
     if "current_employee" not in st.session_state:
         st.session_state.current_employee = None
     if "comparison" not in st.session_state:
@@ -2498,9 +2510,34 @@ def main():
     """Función principal."""
     initialize_session_state()
 
-    # Sidebar: Checkbox global para Analizador de Renta
+    # === VERIFICAR AUTENTICACIÓN ===
+    if not st.session_state.authenticated:
+        db_manager = AnalysisDBManager()
+        auth_manager = AuthManager(db_manager)
+        render_login_page(auth_manager)
+        st.stop()
+
+    # === USUARIO AUTENTICADO - MOSTRAR APLICACIÓN ===
+
+    # Sidebar: Información del usuario y logout
     with st.sidebar:
         st.header("⚙️ Opciones Globales")
+
+        # Información del usuario
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**👤 {st.session_state.usuario}**")
+            st.caption(f"Rol: {st.session_state.rol.upper()}")
+        with col2:
+            if st.button("🚪 Logout", use_container_width=True):
+                st.session_state.authenticated = False
+                st.session_state.usuario = None
+                st.session_state.rol = None
+                st.session_state.user_id = None
+                st.rerun()
+
+        st.divider()
+
         st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
                    help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
@@ -2508,8 +2545,23 @@ def main():
     st.markdown('<p class="main-header">💰 Suite ARP IA</p>', unsafe_allow_html=True)
     st.markdown("Suite de compensaciones ARP")
 
-    # Pestañas principales
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS", "💰 COMPENSACIONES", "🎯 SIMULADOR (test)", "⚙️ CONFIGURACIÓN"])
+    # Pestañas principales - Variar según rol
+    if st.session_state.rol == "admin":
+        # Admin ve todas las tabs
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
+            "💰 COMPENSACIONES", "🎯 SIMULADOR (test)", "⚙️ CONFIGURACIÓN",
+            "👥 GESTIÓN DE USUARIOS"
+        ])
+    else:
+        # User solo ve: Calculadora, Propuestas, Compensaciones
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "🧮 CALCULADORA", "📝 PROPUESTAS",
+            "💰 COMPENSACIONES", "🎯 SIMULADOR (test)"
+        ])
+        tab5 = None  # No hay tab 5 para users
+        tab6 = None  # No hay tab 6 para users
+        tab7 = None  # No hay tab 7 para users
 
     with tab1:
         # === TAB CALCULADORA ===
@@ -2612,6 +2664,14 @@ def main():
                 st.rerun()
 
         configuration_section()
+
+    # TAB 7: Gestión de Usuarios (Solo para admins)
+    if st.session_state.rol == "admin" and tab7:
+        with tab7:
+            # === TAB GESTIÓN DE USUARIOS ===
+            db_manager = AnalysisDBManager()
+            auth_manager = AuthManager(db_manager)
+            render_user_management(auth_manager)
 
 
 if __name__ == "__main__":

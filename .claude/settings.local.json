@@ -62,7 +62,16 @@
       "Bash(git commit -m 'Fix: Correct error when saving proposal to history *)",
       "Bash(git commit -m 'Improve: Change Análisis de Compensación layout to report style *)",
       "Bash(git commit -m 'Feature: Add Compensación Anual summary table to PDF proposal *)",
-      "Bash(git commit -m 'Fix: Link PDF compensation table to real calculator data *)"
+      "Bash(git commit -m 'Fix: Link PDF compensation table to real calculator data *)",
+      "Bash(git commit -m 'Fix: Get proposal salary from comparison object, not locals *)",
+      "Bash(git commit -m 'Fix: Read compensation data from stored compensation_data dict *)",
+      "Bash(git commit -m 'Fix: Ensure proper type conversion for compensation data *)",
+      "Bash(pip install *)",
+      "Bash(rm /tmp/tmp*.png 2>/dev/null; echo \"Archivos temporales limpios\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8501)",
+      "Bash(pkill -f \"streamlit run\")",
+      "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }
