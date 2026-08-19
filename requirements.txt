@@ -8,3 +8,5 @@ streamlit>=1.28.0
 streamlit-option-menu>=0.3.2
 Pillow>=9.0.0
 inquirer>=3.0.0
+matplotlib>=3.7.0
+numpy>=1.24.0
