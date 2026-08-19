@@ -2,11 +2,9 @@
 """Script para inicializar usuarios en la BD."""
 
 from src.auth_manager import AuthManager
-from src.analysis.db_manager import AnalysisDBManager
 
 # Inicializar
-db_manager = AnalysisDBManager()
-auth_manager = AuthManager(db_manager)
+auth_manager = AuthManager()
 
 # Listar usuarios
 usuarios = auth_manager.listar_usuarios()

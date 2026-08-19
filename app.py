@@ -2536,17 +2536,19 @@ def main():
     # Pestañas principales - Variar según rol
     if st.session_state.rol == "admin":
         # Admin ve todas las tabs
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
             "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES", "🎯 SIMULADOR (test)", "⚙️ CONFIGURACIÓN",
+            "💰 COMPENSACIONES", "⚙️ CONFIGURACIÓN",
             "👥 GESTIÓN DE USUARIOS"
         ])
+        tab7 = None
     else:
         # User solo ve: Calculadora, Propuestas, Compensaciones
-        tab1, tab2, tab3, tab4 = st.tabs([
+        tab1, tab2, tab3 = st.tabs([
             "🧮 CALCULADORA", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES", "🎯 SIMULADOR (test)"
+            "💰 COMPENSACIONES"
         ])
+        tab4 = None  # No hay tab 4 para users
         tab5 = None  # No hay tab 5 para users
         tab6 = None  # No hay tab 6 para users
         tab7 = None  # No hay tab 7 para users
@@ -2623,26 +2625,6 @@ def main():
         show_compensations_section(buk_client)
 
     with tab5:
-        # === TAB SIMULADOR (test) ===
-        from src.analysis.proposal_simulator_ui import show_proposal_simulator, show_compensation_comparison
-
-        # Subtab para seleccionar entre simulador clásico y comparativa de compensación
-        simulador_subtab = st.radio(
-            "Selecciona tipo de análisis:",
-            ["Propuesta Tradicional", "Comparativa de Compensación Anual"],
-            horizontal=True,
-            key="simulador_tipo"
-        )
-
-        if simulador_subtab == "Propuesta Tradicional":
-            show_proposal_simulator()
-        else:
-            # Comparativa de compensación anual
-            db_manager = AnalysisDBManager()
-            engine = get_payroll_engine()
-            show_compensation_comparison(db_manager, engine)
-
-    with tab6:
         # === TAB CONFIGURACIÓN ===
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -2652,9 +2634,9 @@ def main():
 
         configuration_section()
 
-    # TAB 7: Gestión de Usuarios (Solo para admins)
-    if st.session_state.rol == "admin" and tab7:
-        with tab7:
+    # TAB 6: Gestión de Usuarios (Solo para admins)
+    if st.session_state.rol == "admin" and tab6:
+        with tab6:
             # === TAB GESTIÓN DE USUARIOS ===
             db_manager = AnalysisDBManager()
             auth_manager = AuthManager()

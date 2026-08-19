@@ -92,31 +92,3 @@ def render_login_page(auth_manager: AuthManager):
                     else:
                         st.error("❌ Usuario o contraseña inválidos")
 
-        # Información de usuarios demo
-        st.markdown('<div class="demo-info">', unsafe_allow_html=True)
-        st.markdown("### 📋 Usuarios Disponibles:")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("""
-            **👨‍💼 Ariquelme**
-            Rol: ADMIN
-            Contraseña: `admin`
-            """)
-
-        with col2:
-            st.markdown("""
-            **👤 Pcuadra**
-            Rol: USER
-            Contraseña: `user`
-            """)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # Información adicional
-        st.info(
-            "💡 **Acceso Administrativo:**\n\n"
-            "- ADMIN: Acceso completo a todas las funciones\n"
-            "- USER: Acceso limitado (sin Configuración ni Análisis)"
-        )
