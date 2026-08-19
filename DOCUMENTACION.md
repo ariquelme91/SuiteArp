@@ -108,6 +108,12 @@ La pestaña **DOTACIÓN** (solo admin) cruza tres cosas:
 La vacante se calcula **por cargo, no por área**: un área puede estar completa en
 número y aun así faltarle un cargo concreto mientras le sobra otro.
 
+El panel muestra las tres cifras juntas: **nómina actual** (lo que ya se paga
+hoy, costeando el `sueldo_actual` de cada persona), **lo que suma el plan** y el
+**total proyectado**. Ambos lados se calculan con el mismo criterio, así que son
+sumables. Los datos de Buk no traen colación ni movilización, de modo que quedan
+fuera de los dos por igual.
+
 El costo no es el sueldo bruto. `PayrollEngine` entrega el **costo empresa**:
 sueldo base, gratificación legal y aportes patronales (SIS, AFC y mutual). El
 sueldo base sale de dos fuentes, en este orden:

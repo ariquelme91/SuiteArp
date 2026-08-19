@@ -69,7 +69,7 @@ def show_dotacion_section(payroll_engine=None):
     )
 
     with tab_control:
-        _control_por_area(gestor, empresa, periodo)
+        _control_por_area(gestor, empresa, periodo, resumen)
 
     with tab_costo:
         _vacantes_y_costo(gestor, empresa, periodo, resumen)
@@ -83,27 +83,51 @@ def show_dotacion_section(payroll_engine=None):
 # ----------------------------------------------------------------------
 
 def _metricas(r):
-    c1, c2, c3, c4 = st.columns(4)
+    # Fila 1: dotación
+    c1, c2, c3 = st.columns(3)
     c1.metric("Dotación real", r["real"], help="Personas según la última carga desde Buk")
-    c2.metric("Plan", r["planificado"], help="Posiciones definidas en el plan del período")
-
-    # Sin plan cargado, toda la dotación contaría como exceso: mostrar ese
-    # delta antes de que exista un plan solo confunde.
-    hay_plan = r["planificado"] > 0
-    delta_vac = f"-{r['exceso']} sobre plan" if (hay_plan and r["exceso"]) else None
-    c3.metric("Vacantes", r["vacantes"], delta=delta_vac, delta_color="inverse",
+    c2.metric("Posiciones en el plan", r["planificado"],
+              help="Posiciones definidas en el plan del período")
+    c3.metric("Vacantes por cubrir", r["vacantes"],
               help="Posiciones planificadas que hoy no tienen a nadie en ese cargo")
 
-    c4.metric("Costo mensual", format_peso_chileno(r["costo_mensual"]),
-              help="Costo empresa de cubrir todas las vacantes: bruto, "
-                   "gratificación legal y aportes patronales (SIS, AFC y mutual)")
+    # Fila 2: el costo actual, lo que sumaría el plan, y el total
+    st.markdown("")
+    d1, d2, d3 = st.columns(3)
+    d1.metric("Nómina actual", format_peso_chileno(r["costo_actual"]),
+              help=f"Costo empresa mensual de las {r['personas_costeadas']} personas "
+                   "que ya están trabajando")
+
+    delta = f"+{r['variacion_pct']:.1f}%" if r["costo_vacantes"] else None
+    d2.metric("Suma el plan", format_peso_chileno(r["costo_vacantes"]), delta=delta,
+              delta_color="off",
+              help="Costo empresa de cubrir las vacantes del plan")
+
+    d3.metric("Total proyectado", format_peso_chileno(r["costo_total"]),
+              help=f"Nómina actual + vacantes. Anualizado: "
+                   f"{format_peso_chileno(r['costo_total_anual'])}")
+
+    avisos = []
+    if r["sin_sueldo"]:
+        avisos.append(f"{r['sin_sueldo']} persona(s) sin sueldo cargado quedan fuera del costo")
+    if r["vacantes_sin_estimar"]:
+        avisos.append(f"{r['vacantes_sin_estimar']} vacante(s) sin costo estimado")
+    if avisos:
+        st.caption("⚠️ " + " · ".join(avisos))
 
 
-def _control_por_area(gestor, empresa, periodo):
+def _control_por_area(gestor, empresa, periodo, resumen):
     filas = gestor.control_por_area(empresa, periodo)
     if not filas:
         st.info("Sin áreas para mostrar.")
         return
+
+    # Costo de las vacantes agrupado por área, para sumarlo al costo actual.
+    vac_area = {}
+    for v in gestor.vacantes_detalladas(empresa, periodo):
+        vac_area[v["area"]] = vac_area.get(v["area"], 0.0) + v["costo_total"]
+
+    costo_actual = resumen["costo_por_area"]
 
     df = pd.DataFrame([{
         "Área": f["area"],
@@ -112,8 +136,12 @@ def _control_por_area(gestor, empresa, periodo):
         "Vacantes": f["vacantes"],
         "Exceso": f["exceso"],
         "Estado": f["estado"],
+        "Nómina actual": costo_actual.get(f["area"], 0.0),
+        "Suma el plan": vac_area.get(f["area"], 0.0),
+        "Total área": costo_actual.get(f["area"], 0.0) + vac_area.get(f["area"], 0.0),
     } for f in filas])
 
+    pesos = st.column_config.NumberColumn(format="$%,d", width="medium")
     st.dataframe(
         df, width="stretch", hide_index=True,
         column_config={
@@ -121,6 +149,9 @@ def _control_por_area(gestor, empresa, periodo):
             "Real": st.column_config.NumberColumn(width="small"),
             "Vacantes": st.column_config.NumberColumn(width="small"),
             "Exceso": st.column_config.NumberColumn(width="small"),
+            "Nómina actual": pesos,
+            "Suma el plan": pesos,
+            "Total área": pesos,
         },
     )
 
@@ -187,14 +218,19 @@ def _vacantes_y_costo(gestor, empresa, periodo, resumen):
 
     st.dataframe(df, width="stretch", hide_index=True)
 
-    c1, c2 = st.columns(2)
-    c1.metric("Costo mensual de cubrir el plan", format_peso_chileno(resumen["costo_mensual"]))
-    c2.metric("Proyección anual", format_peso_chileno(resumen["costo_anual"]))
+    st.markdown("##### Impacto en la nómina")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Nómina actual", format_peso_chileno(resumen["costo_actual"]))
+    c2.metric("Cubrir las vacantes", format_peso_chileno(resumen["costo_vacantes"]),
+              delta=f"+{resumen['variacion_pct']:.1f}%", delta_color="off")
+    c3.metric("Total proyectado", format_peso_chileno(resumen["costo_total"]))
 
     st.caption(
+        f"Anualizado, el total proyectado son "
+        f"**{format_peso_chileno(resumen['costo_total_anual'])}**. "
         "El costo empresa incluye sueldo base, gratificación legal y los aportes "
-        "del empleador (SIS, AFC y mutual). No incluye colación ni movilización, "
-        "que se definen por posición."
+        "del empleador (SIS, AFC y mutual). No incluye colación ni movilización: "
+        "los datos de Buk no las traen, así que quedan fuera de ambos lados por igual."
     )
 
 

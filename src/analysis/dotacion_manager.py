@@ -285,6 +285,59 @@ class DotacionManager:
             logger.error(f"Costeando posición: {e}")
             return CostoPosicion(base, 0, "sin estimar", f"Error de cálculo: {e}")
 
+    def costo_nomina_actual(self, empresa: str) -> Dict:
+        """Costo empresa de la dotación que ya está trabajando.
+
+        Se calcula sobre `sueldo_actual` de cada persona con el mismo criterio
+        que las vacantes (base + gratificación legal + aportes patronales),
+        para que ambas cifras sean sumables.
+
+        Los datos de Buk no traen colación ni movilización, así que quedan
+        fuera de los dos lados por igual.
+        """
+        vacio = {"total": 0.0, "por_area": {}, "personas": 0, "sin_sueldo": 0}
+        if self.payroll is None:
+            return vacio
+
+        try:
+            with self._conn() as conn:
+                filas = conn.execute("""
+                    SELECT area, sueldo_actual FROM employee_analysis
+                    WHERE empresa = ?
+                """, (empresa,)).fetchall()
+        except sqlite3.Error as e:
+            logger.error(f"Leyendo sueldos: {e}")
+            return vacio
+
+        por_area, total, personas, sin_sueldo = {}, 0.0, 0, 0
+        # Sueldos repetidos son frecuentes (bandas), así que se cachea el
+        # cálculo por monto en vez de rehacerlo por persona.
+        cache: Dict[float, float] = {}
+
+        for fila in filas:
+            base = fila["sueldo_actual"]
+            if not base or base <= 0:
+                sin_sueldo += 1
+                continue
+
+            base = float(base)
+            if base not in cache:
+                try:
+                    cache[base] = self.payroll.calculate(
+                        base_salary=base, contract_type="indefinido"
+                    ).total_employer_cost
+                except Exception as e:
+                    logger.error(f"Costeando sueldo {base}: {e}")
+                    cache[base] = 0.0
+
+            costo = cache[base]
+            por_area[fila["area"]] = por_area.get(fila["area"], 0.0) + costo
+            total += costo
+            personas += 1
+
+        return {"total": total, "por_area": por_area,
+                "personas": personas, "sin_sueldo": sin_sueldo}
+
     # ------------------------------------------------------------------
     # Control: plan contra realidad
     # ------------------------------------------------------------------
@@ -364,11 +417,18 @@ class DotacionManager:
         return detalle
 
     def resumen(self, empresa: str, periodo: str) -> Dict:
-        """Cifras de cabecera para el panel."""
+        """Cifras de cabecera para el panel.
+
+        Incluye las tres cifras de costo que interesan juntas: lo que ya se
+        paga hoy, lo que sumaría cubrir el plan, y el total proyectado.
+        """
         control = self.control_por_area(empresa, periodo)
         vacantes = self.vacantes_detalladas(empresa, periodo)
+        nomina = self.costo_nomina_actual(empresa)
 
-        costo_mensual = sum(v["costo_total"] for v in vacantes)
+        costo_vacantes = sum(v["costo_total"] for v in vacantes)
+        costo_actual = nomina["total"]
+        costo_total = costo_actual + costo_vacantes
         sin_estimar = sum(v["vacantes"] for v in vacantes if v["origen"] == "sin estimar")
 
         return {
@@ -377,7 +437,13 @@ class DotacionManager:
             "vacantes": sum(v["vacantes"] for v in vacantes),
             "exceso": sum(f["exceso"] for f in control),
             "areas": len(control),
-            "costo_mensual": costo_mensual,
-            "costo_anual": costo_mensual * 12,
+            "costo_actual": costo_actual,
+            "costo_vacantes": costo_vacantes,
+            "costo_total": costo_total,
+            "costo_total_anual": costo_total * 12,
+            "variacion_pct": (costo_vacantes / costo_actual * 100) if costo_actual else 0.0,
+            "costo_por_area": nomina["por_area"],
+            "personas_costeadas": nomina["personas"],
+            "sin_sueldo": nomina["sin_sueldo"],
             "vacantes_sin_estimar": sin_estimar,
         }
