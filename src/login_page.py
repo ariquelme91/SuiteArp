@@ -46,6 +46,19 @@ def render_login_page(auth_manager: AuthManager):
         st.markdown('<div class="login-title">💰 Suite ARP IA</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-subtitle">Sistema de Compensaciones</div>', unsafe_allow_html=True)
 
+        # Problema de configuración, no de credenciales: sin esto el usuario
+        # solo vería "contraseña inválida" y no sabría que el fallo está
+        # en los Secrets.
+        if auth_manager.usuarios_invalidos:
+            afectados = ", ".join(auth_manager.usuarios_invalidos)
+            st.error(
+                f"⚠️ **Error de configuración** — el `password_hash` de "
+                f"**{afectados}** está incompleto en los Secrets de Streamlit.\n\n"
+                "Debe ser el valor completo (111 caracteres, termina en el hash), "
+                "sin recortes ni `...`. Estos usuarios no podrán ingresar hasta "
+                "corregirlo."
+            )
+
         # Formulario de login
         with st.form("login_form"):
             usuario = st.text_input(

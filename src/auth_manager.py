@@ -33,6 +33,7 @@ class AuthManager:
     def __init__(self):
         """Inicializa el gestor: Secrets si están disponibles, si no SQLite."""
         self.db_path = os.path.join(os.path.dirname(__file__), "analysis", "data", "auth.db")
+        self.usuarios_invalidos: list = []
         self._usuarios_secrets = self._leer_usuarios_secrets()
 
         if not self.modo_secrets:
@@ -50,7 +51,37 @@ class AuthManager:
         return self._usuarios_secrets is not None
 
     @staticmethod
-    def _leer_usuarios_secrets() -> Optional[Dict[str, Dict]]:
+    def _hash_bien_formado(valor) -> bool:
+        """True si el hash tiene una forma utilizable.
+
+        Detecta el error típico de pegar un hash recortado (con "...")
+        desde un mensaje en vez del valor completo.
+        """
+        if not isinstance(valor, str):
+            return False
+
+        if valor.startswith("pbkdf2$"):
+            partes = valor.split("$")
+            if len(partes) != 4:
+                return False
+            _, iteraciones, salt_hex, derivada_hex = partes
+            if not iteraciones.isdigit():
+                return False
+            try:
+                bytes.fromhex(salt_hex)
+                bytes.fromhex(derivada_hex)
+            except ValueError:
+                return False
+            return len(derivada_hex) == 64
+
+        # Formato heredado: SHA256 sin sal.
+        try:
+            bytes.fromhex(valor)
+        except ValueError:
+            return False
+        return len(valor) == 64
+
+    def _leer_usuarios_secrets(self) -> Optional[Dict[str, Dict]]:
         """Lee la sección [usuarios] de los Secrets. None si no existe."""
         try:
             if "usuarios" not in st.secrets:
@@ -63,14 +94,28 @@ class AuthManager:
         usuarios = {}
         for nombre, datos in dict(crudos).items():
             try:
-                usuarios[nombre] = {
-                    "password_hash": datos["password_hash"],
-                    "rol": datos.get("rol", "user"),
-                }
+                password_hash = datos["password_hash"]
+                rol = datos.get("rol", "user")
             except (TypeError, KeyError):
-                logger.error("Entrada de usuario inválida en secrets: %s", nombre)
+                logger.error("Entrada de usuario mal escrita en secrets: %s", nombre)
+                self.usuarios_invalidos.append(nombre)
+                continue
 
-        return usuarios or None
+            if not self._hash_bien_formado(password_hash):
+                logger.error(
+                    "El password_hash de '%s' está incompleto o mal copiado en los "
+                    "Secrets. Debe ser el valor completo (111 caracteres), sin '...'.",
+                    nombre,
+                )
+                self.usuarios_invalidos.append(nombre)
+                continue
+
+            usuarios[nombre] = {"password_hash": password_hash, "rol": rol}
+
+        # Con la sección presente seguimos en modo Secrets aunque todas las
+        # entradas estén mal: así el aviso de configuración llega al usuario
+        # en vez de caer silenciosamente a la BD local.
+        return usuarios if (usuarios or self.usuarios_invalidos) else None
 
     def _get_connection(self):
         """Obtiene conexión a la BD local."""
