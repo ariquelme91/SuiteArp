@@ -2618,7 +2618,8 @@ def main():
     with tab2:
         # === TAB ANÁLISIS ===
         from src.analysis.streamlit_ui import show_analysis_section
-        show_analysis_section()
+        buk_client = get_buk_client()
+        show_analysis_section(buk_client)
 
     with tab3:
         # === TAB PROPUESTAS ===
