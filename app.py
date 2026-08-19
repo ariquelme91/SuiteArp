@@ -2614,12 +2614,6 @@ def main():
                         st.rerun()
 
             search_employee_section()
-        # Detectar si hay empleado seleccionado desde ANÁLISIS
-        if st.session_state.selected_employee:
-            employee = st.session_state.selected_employee
-            st.write(f"**Empleado seleccionado**: {employee.name} ({employee.rut})")
-
-        proposals_section()
 
     with tab4:
         # === TAB COMPENSACIONES ===
