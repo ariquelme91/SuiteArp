@@ -112,7 +112,6 @@ def get_buk_client():
         st.error("❌ Variables de entorno BUK_API_TOKEN y BUK_SUBDOMAIN no configuradas")
         st.stop()
 
-    from src.analysis.db_manager import AnalysisDBManager
     db_manager = AnalysisDBManager()
     return BukClient(api_token, subdomain, db_manager=db_manager)
 
@@ -471,7 +470,6 @@ def proposal_section():
     st.subheader("📊 Haberes Actuales vs Propuestos")
 
     # Obtener UF para valores sugeridos
-    from src.analysis.db_manager import AnalysisDBManager
     db_mgr = AnalysisDBManager()
     mes_actual = datetime.now().strftime("%Y-%m")
     uf_valor = db_mgr.get_uf(mes_actual) or 40873.77
@@ -656,7 +654,6 @@ def proposal_section():
 
                 # Prioridad 2: Desde la BD de análisis (si no viene de BUK)
                 if not (hasattr(employee, 'nivel_hay') and employee.nivel_hay):
-                    from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
                     employee_analysis = db_manager.get_employee_by_rut(employee.rut)
 
@@ -797,7 +794,6 @@ def proposal_section():
             # Mostrar valores de Mercado y Promedio Interno con Gap Análisis
             if nivel_hay_actual_str and nivel_hay_actual_str.isdigit():
                 try:
-                    from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
 
                     # Obtener datos de mercado y promedio
@@ -871,7 +867,6 @@ def proposal_section():
             # Mostrar valores de Mercado y Promedio Interno con Gap Análisis
             if nivel_hay_prop_str and nivel_hay_prop_str.isdigit():
                 try:
-                    from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
 
                     # Obtener datos de mercado y promedio
@@ -1000,7 +995,6 @@ def proposal_section():
 
             # Guardar propuesta en historial
             try:
-                from src.analysis.db_manager import AnalysisDBManager
                 db_manager = AnalysisDBManager()
                 proposal_record = {
                     "rut": employee.rut,
@@ -1032,7 +1026,6 @@ def proposal_section():
 def calculate_compensation_metrics(base_salary_actual, base_salary_proposal, target_actual, target_propuesta, nivel_hay_actual, nivel_hay_propuesta, mercado):
     """Calcula métricas de compensación con caching."""
     try:
-        from src.analysis.db_manager import AnalysisDBManager
         from src.compensation_comparator import CompensationComparator, CompensationScenario
 
         db_manager = AnalysisDBManager()
@@ -1408,7 +1401,6 @@ def comparison_section(payroll_engine=None):
 
                 # Log exportación
                 try:
-                    from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
                     db_manager.log_export({
                         "empresa": employee.company_name,
@@ -1499,7 +1491,6 @@ def comparison_section(payroll_engine=None):
 
                 # Log exportación
                 try:
-                    from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
                     db_manager.log_export({
                         "empresa": employee.company_name,
@@ -1668,7 +1659,6 @@ def configuration_section():
     # Sección de IPC
     st.subheader("📊 Histórico de IPC")
 
-    from src.analysis.db_manager import AnalysisDBManager
     db = AnalysisDBManager()
 
     col1, col2 = st.columns([3, 1])
@@ -2174,7 +2164,6 @@ def calculator_section():
         st.caption("Haberes adicionales")
 
         # Obtener valor de UF para Movilización
-        from src.analysis.db_manager import AnalysisDBManager
         db_mgr = AnalysisDBManager()
         mes_actual = datetime.now().strftime("%Y-%m")
         uf_valor = db_mgr.get_uf(mes_actual) or 40873.77  # Valor por defecto
@@ -2335,7 +2324,6 @@ def calculator_section():
         st.markdown("**APORTES EMPLEADOR (Tope Imponible Mensual)**")
 
         # Obtener valor de UF del período actual
-        from src.analysis.db_manager import AnalysisDBManager
         db_mgr = AnalysisDBManager()
         mes_actual = datetime.now().strftime("%Y-%m")
         uf_valor = db_mgr.get_uf(mes_actual) or 40873.77  # Valor por defecto
@@ -2650,7 +2638,6 @@ def main():
             show_proposal_simulator()
         else:
             # Comparativa de compensación anual
-            from src.analysis.db_manager import AnalysisDBManager
             db_manager = AnalysisDBManager()
             engine = get_payroll_engine()
             show_compensation_comparison(db_manager, engine)
