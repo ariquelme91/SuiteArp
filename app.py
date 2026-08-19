@@ -1421,11 +1421,11 @@ def comparison_section(payroll_engine=None):
             # Preparar datos de compensación para PDF - Traer datos reales del calculador
             comp_data = st.session_state.get("compensation_data", {})
 
-            # Extraer datos reales del calculador
-            nivel_hay_actual = st.session_state.get("nivel_hay_actual_input", "—")
-            nivel_hay_propuesto = st.session_state.get("nivel_hay_prop_input", "—")
-            target_actual = st.session_state.get("target_actual_input", 0.0)
-            target_propuesto = st.session_state.get("target_prop_input", 0.0)
+            # Extraer datos reales del calculador - usar compensation_data que se guardó al crear propuesta
+            nivel_hay_actual = comp_data.get("nivel_hay_actual_input", st.session_state.get("nivel_hay_actual_input", "—"))
+            nivel_hay_propuesto = comp_data.get("nivel_hay_prop_input", st.session_state.get("nivel_hay_prop_input", "—"))
+            target_actual = comp_data.get("target_actual", st.session_state.get("target_actual_input", 0.0))
+            target_propuesto = comp_data.get("target_propuesta_input", st.session_state.get("target_prop_input", 0.0))
 
             # Calcular bonos y compensaciones desde el comparison
             sal_base_actual = float(comparison.current.base_salary) if comparison and comparison.current else employee.base_salary
