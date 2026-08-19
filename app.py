@@ -745,7 +745,7 @@ def proposal_section():
             st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
             st.divider()
 
-            # Mostrar valores de Mercado y Promedio Interno
+            # Mostrar valores de Mercado y Promedio Interno con Gap Análisis
             if nivel_hay_actual_str and nivel_hay_actual_str.isdigit():
                 try:
                     from src.analysis.db_manager import AnalysisDBManager
@@ -759,7 +759,24 @@ def proposal_section():
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
                     st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
+
+                    # Gap vs Mercado
+                    if mercado_val > 0:
+                        gap_mercado = total_actual_comp - mercado_val
+                        pct_mercado = (gap_mercado / mercado_val * 100) if mercado_val != 0 else 0
+                        icon_mercado = "✅" if gap_mercado >= 0 else "⚠️"
+                        direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
+                        st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
+
                     st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
+
+                    # Gap vs Promedio Interno
+                    if promedio_val > 0:
+                        gap_promedio = total_actual_comp - promedio_val
+                        pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
+                        icon_promedio = "✅" if gap_promedio >= 0 else "⚠️"
+                        direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
+                        st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
                     st.caption(f"📊 Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
             elif nivel_hay_actual_str:
@@ -800,7 +817,7 @@ def proposal_section():
             st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
             st.divider()
 
-            # Mostrar valores de Mercado y Promedio Interno
+            # Mostrar valores de Mercado y Promedio Interno con Gap Análisis
             if nivel_hay_prop_str and nivel_hay_prop_str.isdigit():
                 try:
                     from src.analysis.db_manager import AnalysisDBManager
@@ -814,7 +831,24 @@ def proposal_section():
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
                     st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, Mercado Financiero): **${mercado_val:,.0f}**")
+
+                    # Gap vs Mercado
+                    if mercado_val > 0:
+                        gap_mercado = total_prop_comp - mercado_val
+                        pct_mercado = (gap_mercado / mercado_val * 100) if mercado_val != 0 else 0
+                        icon_mercado = "✅" if gap_mercado >= 0 else "⚠️"
+                        direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
+                        st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
+
                     st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
+
+                    # Gap vs Promedio Interno
+                    if promedio_val > 0:
+                        gap_promedio = total_prop_comp - promedio_val
+                        pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
+                        icon_promedio = "✅" if gap_promedio >= 0 else "⚠️"
+                        direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
+                        st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
                     st.caption(f"📊 Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
             elif nivel_hay_prop_str:
