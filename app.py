@@ -1418,23 +1418,44 @@ def comparison_section(payroll_engine=None):
             # Obtener logo de la empresa
             logo_path = get_company_logo(employee.company_name)
 
-            # Preparar datos de compensación para PDF
+            # Preparar datos de compensación para PDF - Traer datos reales del calculador
             comp_data = st.session_state.get("compensation_data", {})
+
+            # Extraer datos reales del calculador
+            nivel_hay_actual = st.session_state.get("nivel_hay_actual_input", "—")
+            nivel_hay_propuesto = st.session_state.get("nivel_hay_prop_input", "—")
+            target_actual = st.session_state.get("target_actual_input", 0.0)
+            target_propuesto = st.session_state.get("target_prop_input", 0.0)
+
+            # Calcular bonos y compensaciones
+            sal_base_actual = employee.base_salary
+            sal_base_propuesto = proposal_base_salary if 'proposal_base_salary' in locals() else sal_base_actual
+
+            bono_actual = target_actual * sal_base_actual if target_actual > 0 else 0
+            bono_propuesto = target_propuesto * sal_base_propuesto if target_propuesto > 0 else 0
+
+            # Total anualizado (sueldos + bonos)
+            sal_anual_actual = sal_base_actual * 12
+            sal_anual_propuesto = sal_base_propuesto * 12
+
+            mercado_actual = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
+            mercado_propuesto = st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")
+
             compensation_pdf_data = {
-                "bono_actual": st.session_state.get("bono_target_actual", 0),
-                "bono_propuesto": st.session_state.get("bono_target_prop", 0),
-                "mercado_actual": comp_data.get("mercado", "—"),
-                "mercado_propuesto": comp_data.get("mercado", "—"),
-                "nivel_hay_actual": comp_data.get("nivel_hay_actual_input", "—"),
-                "nivel_hay_propuesto": comp_data.get("nivel_hay_prop_input", "—"),
-                "posicion_media_actual": 58,  # Placeholder - puede venir del análisis
-                "posicion_media_propuesto": 96,  # Placeholder
-                "mediana_actual": 108045466,  # Placeholder
-                "mediana_propuesto": 58879636,  # Placeholder
-                "pct_variable_actual": 21,  # Placeholder
-                "pct_variable_propuesto": 11,  # Placeholder
-                "comp_anual_actual": 62985980,  # Placeholder
-                "comp_anual_propuesto": 56530635,  # Placeholder
+                "bono_actual": bono_actual,
+                "bono_propuesto": bono_propuesto,
+                "mercado_actual": mercado_actual,
+                "mercado_propuesto": mercado_propuesto,
+                "nivel_hay_actual": nivel_hay_actual,
+                "nivel_hay_propuesto": nivel_hay_propuesto,
+                "posicion_media_actual": 58,
+                "posicion_media_propuesto": 96,
+                "mediana_actual": 108045466,
+                "mediana_propuesto": 58879636,
+                "pct_variable_actual": (target_actual * 100) if target_actual > 0 else 0,
+                "pct_variable_propuesto": (target_propuesto * 100) if target_propuesto > 0 else 0,
+                "comp_anual_actual": sal_anual_actual + bono_actual,
+                "comp_anual_propuesto": sal_anual_propuesto + bono_propuesto,
             }
 
             success = pdf_exporter.export_comparison(

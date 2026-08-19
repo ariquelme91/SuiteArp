@@ -61,7 +61,8 @@
       "Bash(git commit -m 'Fix: Use correct market type \\(Mercado Financiero vs Seguros\\) in Gap Analysis *)",
       "Bash(git commit -m 'Fix: Correct error when saving proposal to history *)",
       "Bash(git commit -m 'Improve: Change Análisis de Compensación layout to report style *)",
-      "Bash(git commit -m 'Feature: Add Compensación Anual summary table to PDF proposal *)"
+      "Bash(git commit -m 'Feature: Add Compensación Anual summary table to PDF proposal *)",
+      "Bash(git commit -m 'Fix: Link PDF compensation table to real calculator data *)"
     ]
   }
 }

@@ -278,7 +278,7 @@ class PDFExporter:
             if compensation_data:
                 story.append(Spacer(1, 0.3 * inch))
 
-                # Título de Compensación Anual
+                # Título de Compensación Anual - Centrado
                 comp_title = ParagraphStyle(
                     'CompTitle',
                     parent=self.styles['Normal'],
@@ -286,6 +286,7 @@ class PDFExporter:
                     textColor=colors.HexColor("#1F4E78"),
                     fontName='Helvetica-Bold',
                     spaceAfter=10,
+                    alignment=TA_CENTER,
                 )
                 story.append(Paragraph("ANÁLISIS DE COMPENSACIÓN ANUAL", comp_title))
 
