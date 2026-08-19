@@ -981,6 +981,29 @@ def proposal_section():
             st.session_state.standard_proposals = standard_proposals
             st.session_state.propuestas_subtab = "comparativa"
 
+            # Guardar propuesta en historial
+            try:
+                from src.analysis.db_manager import AnalysisDBManager
+                db_manager = AnalysisDBManager()
+                proposal_record = {
+                    "rut": employee.rut,
+                    "nombre": employee.full_name,
+                    "empresa": employee.company_name,
+                    "cargo": employee.job_title,
+                    "sueldo_actual": employee.base_salary,
+                    "sueldo_propuesto": proposal_base_salary,
+                    "diferencia_pesos": proposal_base_salary - employee.base_salary,
+                    "diferencia_pct": ((proposal_base_salary - employee.base_salary) / employee.base_salary * 100) if employee.base_salary > 0 else 0,
+                    "nivel_hay": st.session_state.get("nivel_hay_prop_input", ""),
+                    "target": st.session_state.get("target_prop_input", 0.0),
+                    "cambio_comp": comparison.get("current_net", 0) - comparison.get("current_net", 0) if "current_net" in comparison else 0,
+                    "cambio_comp_pct": 0,
+                    "comentarios": "Propuesta creada desde interfaz"
+                }
+                db_manager.save_proposal(proposal_record)
+            except Exception as e:
+                logger.warning(f"No se pudo guardar propuesta en historial: {e}")
+
             st.success("✅ Propuesta calculada exitosamente")
             st.rerun()
             st.rerun()
@@ -1357,6 +1380,20 @@ def comparison_section(payroll_engine=None):
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
                 st.success("✅ Excel generado correctamente")
+
+                # Log exportación
+                try:
+                    from src.analysis.db_manager import AnalysisDBManager
+                    db_manager = AnalysisDBManager()
+                    db_manager.log_export({
+                        "empresa": employee.company_name,
+                        "area": "N/A",
+                        "cantidad_empleados": 1,
+                        "archivo": filename,
+                        "tipo": "excel"
+                    })
+                except Exception as e:
+                    logger.warning(f"No se pudo loguear exportación: {e}")
             else:
                 st.error("❌ Error al generar Excel")
 
@@ -1393,6 +1430,20 @@ def comparison_section(payroll_engine=None):
                         mime="application/pdf"
                     )
                 st.success("✅ PDF generado correctamente")
+
+                # Log exportación
+                try:
+                    from src.analysis.db_manager import AnalysisDBManager
+                    db_manager = AnalysisDBManager()
+                    db_manager.log_export({
+                        "empresa": employee.company_name,
+                        "area": "N/A",
+                        "cantidad_empleados": 1,
+                        "archivo": filename,
+                        "tipo": "pdf"
+                    })
+                except Exception as e:
+                    logger.warning(f"No se pudo loguear exportación PDF: {e}")
             else:
                 st.error("❌ Error al generar PDF")
 

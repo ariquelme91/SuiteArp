@@ -515,6 +515,147 @@ class AnalysisDBManager:
             logger.debug(f"Error guardando área en caché: {e}")
             return False
 
+    # ===== PROPOSAL HISTORY METHODS =====
+
+    def save_proposal(self, proposal_data: Dict[str, Any]) -> bool:
+        """Guarda una propuesta creada en el historial.
+
+        Args:
+            proposal_data: Diccionario con datos de la propuesta
+
+        Returns:
+            True si fue exitoso
+        """
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    """INSERT INTO compensation_proposals (
+                        rut, nombre, empresa, cargo,
+                        sueldo_actual, sueldo_propuesto,
+                        diferencia_pesos, diferencia_pct,
+                        nivel_hay, target, cambio_comp, cambio_comp_pct,
+                        comentarios, pdf_path,
+                        fecha_creacion, fecha_actualizacion
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        proposal_data.get("rut"),
+                        proposal_data.get("nombre"),
+                        proposal_data.get("empresa"),
+                        proposal_data.get("cargo"),
+                        proposal_data.get("sueldo_actual"),
+                        proposal_data.get("sueldo_propuesto"),
+                        proposal_data.get("diferencia_pesos"),
+                        proposal_data.get("diferencia_pct"),
+                        proposal_data.get("nivel_hay"),
+                        proposal_data.get("target"),
+                        proposal_data.get("cambio_comp"),
+                        proposal_data.get("cambio_comp_pct"),
+                        proposal_data.get("comentarios"),
+                        proposal_data.get("pdf_path"),
+                        datetime.now().isoformat(),
+                        datetime.now().isoformat(),
+                    ),
+                )
+                conn.commit()
+                return True
+
+        except Exception as e:
+            logger.error(f"Error guardando propuesta: {e}")
+            return False
+
+    def log_export(self, export_data: Dict[str, Any]) -> bool:
+        """Guarda un log de exportación (Excel/PDF).
+
+        Args:
+            export_data: Diccionario con datos de exportación
+
+        Returns:
+            True si fue exitoso
+        """
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    """INSERT INTO export_logs (
+                        fecha_exportacion, empresa, area,
+                        cantidad_empleados, archivo, tipo
+                    ) VALUES (?, ?, ?, ?, ?, ?)""",
+                    (
+                        datetime.now().isoformat(),
+                        export_data.get("empresa"),
+                        export_data.get("area"),
+                        export_data.get("cantidad_empleados"),
+                        export_data.get("archivo"),
+                        export_data.get("tipo"),  # "excel" o "pdf"
+                    ),
+                )
+                conn.commit()
+                return True
+
+        except Exception as e:
+            logger.error(f"Error guardando log de exportación: {e}")
+            return False
+
+    def get_export_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Obtiene historial de exportaciones recientes.
+
+        Args:
+            limit: Número máximo de registros
+
+        Returns:
+            Lista de logs de exportación
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    "SELECT * FROM export_logs ORDER BY fecha_exportacion DESC LIMIT ?",
+                    (limit,)
+                )
+                return [dict(row) for row in cursor.fetchall()]
+
+        except Exception as e:
+            logger.error(f"Error obteniendo logs de exportación: {e}")
+            return []
+
+    def get_proposal_history(self, rut: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+        """Obtiene historial de propuestas creadas.
+
+        Args:
+            rut: RUT para filtrar (None = todas)
+            limit: Número máximo de registros
+
+        Returns:
+            Lista de propuestas
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+
+                if rut:
+                    cursor.execute(
+                        "SELECT * FROM compensation_proposals WHERE rut = ? ORDER BY fecha_creacion DESC LIMIT ?",
+                        (rut, limit)
+                    )
+                else:
+                    cursor.execute(
+                        "SELECT * FROM compensation_proposals ORDER BY fecha_creacion DESC LIMIT ?",
+                        (limit,)
+                    )
+                return [dict(row) for row in cursor.fetchall()]
+
+        except Exception as e:
+            logger.error(f"Error obteniendo historial de propuestas: {e}")
+            return []
+
     def get_summary_metrics(
         self, empresa: Optional[str] = None, area: Optional[str] = None
     ) -> Dict[str, Any]:
