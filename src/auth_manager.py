@@ -48,8 +48,8 @@ class AuthManager:
     def _init_default_users(self):
         """Crea usuarios por defecto si no existen."""
         default_users = [
-            ("Ariquelme", "admin", "admin"),
-            ("Pcuadra", "user", "user"),
+            ("Ariquelme", "Marti.2026", "admin"),
+            ("Pcuadra", "jsqv00", "user"),
         ]
 
         for usuario, password, rol in default_users:

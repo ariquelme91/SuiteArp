@@ -2501,7 +2501,7 @@ def main():
     # === VERIFICAR AUTENTICACIÓN ===
     if not st.session_state.authenticated:
         db_manager = AnalysisDBManager()
-        auth_manager = AuthManager(db_manager)
+        auth_manager = AuthManager()
         render_login_page(auth_manager)
         st.stop()
 
@@ -2657,7 +2657,7 @@ def main():
         with tab7:
             # === TAB GESTIÓN DE USUARIOS ===
             db_manager = AnalysisDBManager()
-            auth_manager = AuthManager(db_manager)
+            auth_manager = AuthManager()
             render_user_management(auth_manager)
 
 

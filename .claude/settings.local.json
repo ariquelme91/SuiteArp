@@ -72,7 +72,9 @@
       "Bash(findstr :8501)",
       "Bash(pkill -f \"streamlit run\")",
       "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\\\\\" -Force | Where-Object {$_.Name -eq \"__init__.py\"})"
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\\\\\" -Force | Where-Object {$_.Name -eq \"__init__.py\"})",
+      "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\" -Recurse -Name \"__pycache__\" -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -Path $_ -Recurse -Force -ErrorAction SilentlyContinue }; Write-Output \"Listo\")",
+      "Bash(python init_users.py)"
     ]
   }
 }
