@@ -2624,18 +2624,18 @@ def main():
         buk_client = get_buk_client()
         show_compensations_section(buk_client)
 
-    with tab5:
-        # === TAB CONFIGURACIÓN ===
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            if st.button("← Volver", use_container_width=True, key="back_from_config"):
-                st.session_state.main_tab = "propuestas"
-                st.rerun()
+    # TABS solo disponibles para admin
+    if st.session_state.rol == "admin":
+        with tab5:
+            # === TAB CONFIGURACIÓN ===
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                if st.button("← Volver", use_container_width=True, key="back_from_config"):
+                    st.session_state.main_tab = "propuestas"
+                    st.rerun()
 
-        configuration_section()
+            configuration_section()
 
-    # TAB 6: Gestión de Usuarios (Solo para admins)
-    if st.session_state.rol == "admin" and tab6:
         with tab6:
             # === TAB GESTIÓN DE USUARIOS ===
             db_manager = AnalysisDBManager()
