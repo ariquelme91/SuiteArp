@@ -2618,14 +2618,15 @@ def main():
 
             search_employee_section()
 
-    with tab4:
-        # === TAB COMPENSACIONES ===
-        from src.analysis.compensaciones_ui import show_compensations_section
-        buk_client = get_buk_client()
-        show_compensations_section(buk_client)
-
-    # TABS solo disponibles para admin
+    # Renderizar tabs según rol
     if st.session_state.rol == "admin":
+        # ADMIN: tab4 = COMPENSACIONES
+        with tab4:
+            # === TAB COMPENSACIONES ===
+            from src.analysis.compensaciones_ui import show_compensations_section
+            buk_client = get_buk_client()
+            show_compensations_section(buk_client)
+
         with tab5:
             # === TAB CONFIGURACIÓN ===
             col1, col2 = st.columns([1, 2])
@@ -2641,6 +2642,13 @@ def main():
             db_manager = AnalysisDBManager()
             auth_manager = AuthManager()
             render_user_management(auth_manager)
+    else:
+        # USER: tab3 = COMPENSACIONES
+        with tab3:
+            # === TAB COMPENSACIONES ===
+            from src.analysis.compensaciones_ui import show_compensations_section
+            buk_client = get_buk_client()
+            show_compensations_section(buk_client)
 
 
 if __name__ == "__main__":
