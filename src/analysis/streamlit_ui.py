@@ -337,6 +337,34 @@ def show_analysis_section(buk_client: BukClient):
         </script>
         """, unsafe_allow_html=True)
 
+        # Paginación: cada fila genera ~24 elementos, así que renderizar
+        # cientos de empleados de una vez satura el render y deja en blanco
+        # las pestañas que vienen después de ANÁLISIS.
+        FILAS_POR_PAGINA = 25
+        total_filas = len(df)
+        total_paginas = max(1, (total_filas + FILAS_POR_PAGINA - 1) // FILAS_POR_PAGINA)
+
+        if total_paginas > 1:
+            col_pag, col_info = st.columns([1, 3])
+            with col_pag:
+                pagina = st.number_input(
+                    f"Página (de {total_paginas})",
+                    min_value=1,
+                    max_value=total_paginas,
+                    value=1,
+                    step=1,
+                    key="tabla_detallada_pagina"
+                )
+            inicio = (pagina - 1) * FILAS_POR_PAGINA
+            fin = min(inicio + FILAS_POR_PAGINA, total_filas)
+            with col_info:
+                st.caption(f"Mostrando {inicio + 1}-{fin} de {total_filas} empleados")
+        else:
+            inicio = 0
+            fin = total_filas
+
+        df_pagina = df.iloc[inicio:fin]
+
         # Headers fijos con scroll de contenido
         col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12 = st.columns([2, 1.2, 1.2, 1.6, 1.4, 1.4, 1.3, 1.2, 1.2, 1.2, 0.8, 0.8])
 
@@ -363,7 +391,7 @@ def show_analysis_section(buk_client: BukClient):
 
         st.divider()
 
-        for idx, row in df.iterrows():
+        for idx, row in df_pagina.iterrows():
             col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12 = st.columns([2, 1.2, 1.2, 1.6, 1.4, 1.4, 1.3, 1.2, 1.2, 1.2, 0.8, 0.8])
 
             nombre = row.get("nombre", "")
