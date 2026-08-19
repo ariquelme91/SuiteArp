@@ -1,8 +1,9 @@
 """Gestor de autenticación y control de acceso."""
 
 import hashlib
+import sqlite3
+import os
 from typing import Optional, Dict, Tuple
-from src.analysis.db_manager import AnalysisDBManager
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,21 +12,25 @@ logger = logging.getLogger(__name__)
 class AuthManager:
     """Gestor de autenticación de usuarios."""
 
-    def __init__(self, db_manager: AnalysisDBManager = None):
-        """
-        Inicializa el gestor de autenticación.
-
-        Args:
-            db_manager: Gestor de BD para persistencia
-        """
-        self.db_manager = db_manager or AnalysisDBManager()
+    def __init__(self):
+        """Inicializa el gestor de autenticación con BD local."""
+        self.db_path = os.path.join(os.path.dirname(__file__), "analysis", "data", "auth.db")
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._ensure_tables()
         self._init_default_users()
+
+    def _get_connection(self):
+        """Obtiene conexión a la BD."""
+        conn = sqlite3.connect(self.db_path, timeout=5)
+        conn.row_factory = sqlite3.Row
+        return conn
 
     def _ensure_tables(self):
         """Crea tabla de usuarios si no existe."""
         try:
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     usuario TEXT UNIQUE NOT NULL,
@@ -35,9 +40,10 @@ class AuthManager:
                     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            self.db_manager.conn.commit()
+            conn.commit()
+            conn.close()
         except Exception as e:
-            logger.warning(f"Tabla de usuarios ya existe: {e}")
+            logger.warning(f"Tabla de usuarios: {e}")
 
     def _init_default_users(self):
         """Crea usuarios por defecto si no existen."""
@@ -48,55 +54,43 @@ class AuthManager:
 
         for usuario, password, rol in default_users:
             try:
-                # Verificar si ya existe
-                self.db_manager.cursor.execute(
+                conn = self._get_connection()
+                cursor = conn.cursor()
+                cursor.execute(
                     "SELECT id FROM usuarios WHERE usuario = ?",
                     (usuario,)
                 )
-                if self.db_manager.cursor.fetchone() is None:
-                    # No existe, crear
+                if cursor.fetchone() is None:
                     password_hash = self._hash_password(password)
-                    self.db_manager.cursor.execute("""
+                    cursor.execute("""
                         INSERT INTO usuarios (usuario, password_hash, rol)
                         VALUES (?, ?, ?)
                     """, (usuario, password_hash, rol))
-                    self.db_manager.conn.commit()
+                    conn.commit()
                     logger.info(f"Usuario creado: {usuario} ({rol})")
+                conn.close()
             except Exception as e:
                 logger.error(f"Error creando usuario {usuario}: {e}")
 
     def _hash_password(self, password: str) -> str:
-        """
-        Hashea una contraseña.
-
-        Args:
-            password: Contraseña en texto plano
-
-        Returns:
-            Hash SHA256 de la contraseña
-        """
+        """Hashea una contraseña."""
         return hashlib.sha256(password.encode()).hexdigest()
 
     def authenticate(self, usuario: str, password: str) -> Tuple[bool, Optional[Dict]]:
-        """
-        Autentica un usuario.
-
-        Args:
-            usuario: Nombre de usuario
-            password: Contraseña en texto plano
-
-        Returns:
-            Tupla (éxito, datos_usuario)
-        """
+        """Autentica un usuario."""
         try:
             password_hash = self._hash_password(password)
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 SELECT id, usuario, rol, activo
                 FROM usuarios
                 WHERE usuario = ? AND password_hash = ?
             """, (usuario, password_hash))
 
-            resultado = self.db_manager.cursor.fetchone()
+            resultado = cursor.fetchone()
+            conn.close()
+
             if resultado:
                 user_id, user, rol, activo = resultado
                 if activo:
@@ -117,19 +111,8 @@ class AuthManager:
             return False, None
 
     def crear_usuario(self, usuario: str, password: str, rol: str = "user") -> Tuple[bool, str]:
-        """
-        Crea un nuevo usuario.
-
-        Args:
-            usuario: Nombre de usuario
-            password: Contraseña en texto plano
-            rol: Rol (admin o user)
-
-        Returns:
-            Tupla (éxito, mensaje)
-        """
+        """Crea un nuevo usuario."""
         try:
-            # Validaciones
             if not usuario or len(usuario) < 3:
                 return False, "El usuario debe tener al menos 3 caracteres"
 
@@ -139,21 +122,23 @@ class AuthManager:
             if rol not in ["admin", "user"]:
                 return False, "Rol inválido (admin o user)"
 
-            # Verificar si ya existe
-            self.db_manager.cursor.execute(
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
                 "SELECT id FROM usuarios WHERE usuario = ?",
                 (usuario,)
             )
-            if self.db_manager.cursor.fetchone() is not None:
+            if cursor.fetchone() is not None:
+                conn.close()
                 return False, f"El usuario '{usuario}' ya existe"
 
-            # Crear usuario
             password_hash = self._hash_password(password)
-            self.db_manager.cursor.execute("""
+            cursor.execute("""
                 INSERT INTO usuarios (usuario, password_hash, rol)
                 VALUES (?, ?, ?)
             """, (usuario, password_hash, rol))
-            self.db_manager.conn.commit()
+            conn.commit()
+            conn.close()
 
             logger.info(f"Usuario creado: {usuario} ({rol})")
             return True, f"Usuario '{usuario}' creado exitosamente"
@@ -163,31 +148,22 @@ class AuthManager:
             return False, f"Error: {str(e)}"
 
     def cambiar_password(self, usuario: str, password_actual: str, password_nueva: str) -> Tuple[bool, str]:
-        """
-        Cambia la contraseña de un usuario.
-
-        Args:
-            usuario: Nombre de usuario
-            password_actual: Contraseña actual
-            password_nueva: Nueva contraseña
-
-        Returns:
-            Tupla (éxito, mensaje)
-        """
+        """Cambia la contraseña de un usuario."""
         try:
-            # Verificar contraseña actual
             autenticado, _ = self.authenticate(usuario, password_actual)
             if not autenticado:
                 return False, "Contraseña actual inválida"
 
-            # Actualizar contraseña
             password_hash = self._hash_password(password_nueva)
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 UPDATE usuarios
                 SET password_hash = ?
                 WHERE usuario = ?
             """, (password_hash, usuario))
-            self.db_manager.conn.commit()
+            conn.commit()
+            conn.close()
 
             logger.info(f"Contraseña actualizada: {usuario}")
             return True, "Contraseña actualizada exitosamente"
@@ -197,19 +173,18 @@ class AuthManager:
             return False, f"Error: {str(e)}"
 
     def listar_usuarios(self) -> list:
-        """
-        Lista todos los usuarios.
-
-        Returns:
-            Lista de usuarios con sus datos
-        """
+        """Lista todos los usuarios."""
         try:
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 SELECT id, usuario, rol, activo, fecha_creacion
                 FROM usuarios
                 ORDER BY fecha_creacion DESC
             """)
-            usuarios = self.db_manager.cursor.fetchall()
+            usuarios = cursor.fetchall()
+            conn.close()
+
             return [
                 {
                     "id": u[0],
@@ -225,26 +200,20 @@ class AuthManager:
             return []
 
     def eliminar_usuario(self, usuario: str) -> Tuple[bool, str]:
-        """
-        Desactiva un usuario.
-
-        Args:
-            usuario: Nombre de usuario
-
-        Returns:
-            Tupla (éxito, mensaje)
-        """
+        """Desactiva un usuario."""
         try:
-            # No permitir eliminar el admin por defecto
             if usuario == "Ariquelme":
                 return False, "No se puede desactivar el usuario administrador"
 
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 UPDATE usuarios
                 SET activo = 0
                 WHERE usuario = ?
             """, (usuario,))
-            self.db_manager.conn.commit()
+            conn.commit()
+            conn.close()
 
             logger.info(f"Usuario desactivado: {usuario}")
             return True, f"Usuario '{usuario}' desactivado exitosamente"
@@ -254,26 +223,20 @@ class AuthManager:
             return False, f"Error: {str(e)}"
 
     def cambiar_rol(self, usuario: str, nuevo_rol: str) -> Tuple[bool, str]:
-        """
-        Cambia el rol de un usuario.
-
-        Args:
-            usuario: Nombre de usuario
-            nuevo_rol: Nuevo rol (admin o user)
-
-        Returns:
-            Tupla (éxito, mensaje)
-        """
+        """Cambia el rol de un usuario."""
         try:
             if nuevo_rol not in ["admin", "user"]:
                 return False, "Rol inválido (admin o user)"
 
-            self.db_manager.cursor.execute("""
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
                 UPDATE usuarios
                 SET rol = ?
                 WHERE usuario = ?
             """, (nuevo_rol, usuario))
-            self.db_manager.conn.commit()
+            conn.commit()
+            conn.close()
 
             logger.info(f"Rol actualizado para {usuario}: {nuevo_rol}")
             return True, f"Rol de '{usuario}' actualizado a '{nuevo_rol}'"
