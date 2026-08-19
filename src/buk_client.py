@@ -33,17 +33,19 @@ class Employee:
 class BukClient:
     """Cliente para consumir API de Buk Chile."""
 
-    def __init__(self, auth_token: str, subdomain: str):
+    def __init__(self, auth_token: str, subdomain: str, db_manager=None):
         """
         Inicializa cliente Buk.
 
         Args:
             auth_token: Token de autenticación API Buk
             subdomain: Subdominio de la empresa en Buk
+            db_manager: Gestor de BD opcional para usar caché
         """
         self.auth_token = auth_token
         self.subdomain = subdomain
         self.base_url = f"https://{subdomain}.buk.cl/api/v1/chile"
+        self.db_manager = db_manager  # Para caché de supervisores, empresas, áreas
         self.session = requests.Session()
         self.session.headers.update({
             "auth_token": auth_token,
@@ -427,7 +429,7 @@ class BukClient:
 
     def get_company_name(self, company_id: int) -> Optional[str]:
         """
-        Obtiene nombre de empresa por ID.
+        Obtiene nombre de empresa por ID (con caché).
 
         Args:
             company_id: ID de la empresa
@@ -436,11 +438,22 @@ class BukClient:
             Nombre de la empresa o None
         """
         try:
+            # 1. Intentar obtener del caché
+            if self.db_manager:
+                cached_name = self.db_manager.get_cached_company_name(company_id)
+                if cached_name:
+                    return cached_name
+
+            # 2. Si no está en caché, obtener de API
             companies = self.get_companies()
             if companies:
                 for comp in companies:
                     if comp.get("id") == company_id:
-                        return comp.get("name")
+                        comp_name = comp.get("name")
+                        # 3. Guardar en caché
+                        if comp_name and self.db_manager:
+                            self.db_manager.cache_company_name(company_id, comp_name)
+                        return comp_name
         except Exception as e:
             logger.error(f"Error obteniendo nombre de empresa: {e}")
 
@@ -448,7 +461,7 @@ class BukClient:
 
     def get_supervisor_name(self, supervisor_rut: str) -> Optional[str]:
         """
-        Obtiene nombre del supervisor por RUT.
+        Obtiene nombre del supervisor por RUT (con caché).
 
         Args:
             supervisor_rut: RUT del supervisor (sin formato)
@@ -460,6 +473,13 @@ class BukClient:
             if not supervisor_rut:
                 return None
 
+            # 1. Intentar obtener del caché
+            if self.db_manager:
+                cached_name = self.db_manager.get_cached_supervisor_name(supervisor_rut)
+                if cached_name:
+                    return cached_name
+
+            # 2. Si no está en caché, obtener de API
             response = self.session.get(
                 f"{self.base_url}/employees",
                 params={"rut": supervisor_rut, "page_size": 1},
@@ -471,7 +491,11 @@ class BukClient:
             employees_data = data.get("data", [])
 
             if employees_data:
-                return employees_data[0].get("full_name")
+                supervisor_name = employees_data[0].get("full_name")
+                # 3. Guardar en caché
+                if supervisor_name and self.db_manager:
+                    self.db_manager.cache_supervisor_name(supervisor_rut, supervisor_name)
+                return supervisor_name
 
         except Exception as e:
             logger.error(f"Error obteniendo nombre del supervisor: {e}")

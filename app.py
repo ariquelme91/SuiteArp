@@ -100,7 +100,9 @@ def get_buk_client():
         st.error("❌ Variables de entorno BUK_API_TOKEN y BUK_SUBDOMAIN no configuradas")
         st.stop()
 
-    return BukClient(api_token, subdomain)
+    from src.analysis.db_manager import AnalysisDBManager
+    db_manager = AnalysisDBManager()
+    return BukClient(api_token, subdomain, db_manager=db_manager)
 
 
 def get_payroll_engine():

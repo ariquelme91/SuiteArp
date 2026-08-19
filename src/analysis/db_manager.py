@@ -207,6 +207,39 @@ class AnalysisDBManager:
                     """
                 )
 
+                # Tabla de caché: Nombres de supervisores
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS supervisor_cache (
+                        rut TEXT PRIMARY KEY,
+                        nombre TEXT NOT NULL,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
+                # Tabla de caché: Nombres de empresas
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS company_cache (
+                        company_id INTEGER PRIMARY KEY,
+                        nombre TEXT NOT NULL,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
+                # Tabla de caché: Nombres de áreas
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS area_cache (
+                        area_id INTEGER PRIMARY KEY,
+                        nombre TEXT NOT NULL,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
                 conn.commit()
                 logger.info(f"Base de datos inicializada: {self.db_path}")
 
@@ -368,6 +401,119 @@ class AnalysisDBManager:
         except Exception as e:
             logger.error(f"Error obteniendo empleado por RUT {rut}: {e}")
             return None
+
+    # ===== CACHE METHODS =====
+
+    def get_cached_supervisor_name(self, rut: str) -> Optional[str]:
+        """Obtiene nombre de supervisor desde caché.
+
+        Args:
+            rut: RUT del supervisor
+
+        Returns:
+            Nombre del supervisor o None si no está en caché
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT nombre FROM supervisor_cache WHERE rut = ? LIMIT 1",
+                    (rut,)
+                )
+                row = cursor.fetchone()
+                return row[0] if row else None
+        except Exception as e:
+            logger.debug(f"Error obteniendo supervisor del caché: {e}")
+            return None
+
+    def cache_supervisor_name(self, rut: str, nombre: str) -> bool:
+        """Guarda nombre de supervisor en caché.
+
+        Args:
+            rut: RUT del supervisor
+            nombre: Nombre del supervisor
+
+        Returns:
+            True si fue exitoso
+        """
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """INSERT OR REPLACE INTO supervisor_cache (rut, nombre, fecha_actualizacion)
+                       VALUES (?, ?, ?)""",
+                    (rut, nombre, datetime.now().isoformat())
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.debug(f"Error guardando supervisor en caché: {e}")
+            return False
+
+    def get_cached_company_name(self, company_id: int) -> Optional[str]:
+        """Obtiene nombre de empresa desde caché."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT nombre FROM company_cache WHERE company_id = ? LIMIT 1",
+                    (company_id,)
+                )
+                row = cursor.fetchone()
+                return row[0] if row else None
+        except Exception as e:
+            logger.debug(f"Error obteniendo empresa del caché: {e}")
+            return None
+
+    def cache_company_name(self, company_id: int, nombre: str) -> bool:
+        """Guarda nombre de empresa en caché."""
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """INSERT OR REPLACE INTO company_cache (company_id, nombre, fecha_actualizacion)
+                       VALUES (?, ?, ?)""",
+                    (company_id, nombre, datetime.now().isoformat())
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.debug(f"Error guardando empresa en caché: {e}")
+            return False
+
+    def get_cached_area_name(self, area_id: int) -> Optional[str]:
+        """Obtiene nombre de área desde caché."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT nombre FROM area_cache WHERE area_id = ? LIMIT 1",
+                    (area_id,)
+                )
+                row = cursor.fetchone()
+                return row[0] if row else None
+        except Exception as e:
+            logger.debug(f"Error obteniendo área del caché: {e}")
+            return None
+
+    def cache_area_name(self, area_id: int, nombre: str) -> bool:
+        """Guarda nombre de área en caché."""
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """INSERT OR REPLACE INTO area_cache (area_id, nombre, fecha_actualizacion)
+                       VALUES (?, ?, ?)""",
+                    (area_id, nombre, datetime.now().isoformat())
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.debug(f"Error guardando área en caché: {e}")
+            return False
 
     def get_summary_metrics(
         self, empresa: Optional[str] = None, area: Optional[str] = None
