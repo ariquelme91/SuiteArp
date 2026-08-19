@@ -339,19 +339,27 @@ class AnalysisDBManager:
             Dict con datos del empleado (incluyendo nivel_hay y target) o None si no existe
         """
         try:
-            # Normalizar RUT (remover puntos y guión si los tiene)
-            rut_clean = rut.replace(".", "").replace("-", "").strip()
+            rut_input = rut.strip()
+            rut_clean = rut_input.replace(".", "").replace("-", "").strip()
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.cursor()
 
-                # Buscar por RUT exacto o con formato similar
+                # Intentar primero búsqueda exacta con el formato original
                 cursor.execute(
-                    "SELECT * FROM employee_analysis WHERE rut LIKE ? LIMIT 1",
-                    (f"%{rut_clean}%",)
+                    "SELECT * FROM employee_analysis WHERE rut = ? LIMIT 1",
+                    (rut_input,)
                 )
                 row = cursor.fetchone()
+
+                # Si no encuentra, intentar con búsqueda flexible
+                if not row:
+                    cursor.execute(
+                        "SELECT * FROM employee_analysis WHERE rut LIKE ? LIMIT 1",
+                        (f"%{rut_clean}%",)
+                    )
+                    row = cursor.fetchone()
 
                 if row:
                     return dict(row)
