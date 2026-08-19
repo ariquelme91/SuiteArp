@@ -624,24 +624,38 @@ def proposal_section():
 
     # INFORMACIÓN DE COMPENSACIÓN ACTUAL vs PROPUESTA (solo si está habilitado el Analizador)
     if st.session_state.get("enable_compensation_analysis", False):
-        # Buscar si el empleado tiene datos de Nivel HAY y Target en la tabla de análisis
+        # Cargar Nivel HAY y Target desde múltiples fuentes (en orden de prioridad)
         if employee and hasattr(employee, 'rut'):
             try:
-                from src.analysis.db_manager import AnalysisDBManager
-                db_manager = AnalysisDBManager()
-                employee_analysis = db_manager.get_employee_by_rut(employee.rut)
+                # Prioridad 1: Desde el employee object de BUK (datos más frescos)
+                if hasattr(employee, 'nivel_hay') and employee.nivel_hay:
+                    if "nivel_hay_actual_input" not in st.session_state:
+                        st.session_state.nivel_hay_actual_input = str(employee.nivel_hay)
 
-                if employee_analysis:
-                    # Si tiene datos y aún no se han inicializado, cargarlos
-                    if "nivel_hay_actual_input" not in st.session_state and employee_analysis.get('nivel_hay'):
-                        st.session_state.nivel_hay_actual_input = str(employee_analysis.get('nivel_hay', ''))
-
-                    if "target_actual_input" not in st.session_state and employee_analysis.get('target'):
+                if hasattr(employee, 'target') and employee.target:
+                    if "target_actual_input" not in st.session_state:
                         try:
-                            target_val = float(str(employee_analysis.get('target', '0')).replace(',', '.'))
+                            target_val = float(str(employee.target).replace(',', '.'))
                             st.session_state.target_actual_input = target_val
                         except:
                             st.session_state.target_actual_input = 0.0
+
+                # Prioridad 2: Desde la BD de análisis (si no viene de BUK)
+                if not (hasattr(employee, 'nivel_hay') and employee.nivel_hay):
+                    from src.analysis.db_manager import AnalysisDBManager
+                    db_manager = AnalysisDBManager()
+                    employee_analysis = db_manager.get_employee_by_rut(employee.rut)
+
+                    if employee_analysis:
+                        if "nivel_hay_actual_input" not in st.session_state and employee_analysis.get('nivel_hay'):
+                            st.session_state.nivel_hay_actual_input = str(employee_analysis.get('nivel_hay', ''))
+
+                        if "target_actual_input" not in st.session_state and employee_analysis.get('target'):
+                            try:
+                                target_val = float(str(employee_analysis.get('target', '0')).replace(',', '.'))
+                                st.session_state.target_actual_input = target_val
+                            except:
+                                st.session_state.target_actual_input = 0.0
             except Exception as e:
                 pass  # Si hay error, continúa sin cargar los datos
 

@@ -25,6 +25,9 @@ class Employee:
     contract_type: str
     fixed_items: List[Dict[str, Any]]
     pension_fund: Optional[str] = None
+    nivel_hay: Optional[str] = None
+    target: Optional[str] = None
+    custom_attributes: Optional[Dict[str, Any]] = None
 
 
 class BukClient:
@@ -337,6 +340,36 @@ class BukClient:
             # Items/asignaciones no vienen en este endpoint
             fixed_items = []
 
+            # Extraer custom_attributes (Nivel HAY, Target, etc.)
+            custom_attributes = {}
+            nivel_hay = None
+            target = None
+
+            # Buscar custom_attributes en current_job
+            if isinstance(current_job, dict):
+                job_custom = current_job.get("custom_attributes", {})
+                if isinstance(job_custom, dict):
+                    custom_attributes.update(job_custom)
+
+            # También buscar en nivel raíz (si existen)
+            root_custom = data.get("custom_attributes", {})
+            if isinstance(root_custom, dict):
+                custom_attributes.update(root_custom)
+
+            # Extraer específicamente Nivel HAY y Target (probando diferentes nombres de campo)
+            nivel_hay_keys = ["nivel_hay", "nivel hay", "Nivel HAY", "Nivel Hay", "nivel_hay_actual"]
+            target_keys = ["target", "Target", "target_rentas", "Target Rentas", "rentas"]
+
+            for key in nivel_hay_keys:
+                if key in custom_attributes and custom_attributes[key]:
+                    nivel_hay = str(custom_attributes[key])
+                    break
+
+            for key in target_keys:
+                if key in custom_attributes and custom_attributes[key]:
+                    target = str(custom_attributes[key])
+                    break
+
             return Employee(
                 rut=rut,
                 full_name=full_name,
@@ -349,7 +382,10 @@ class BukClient:
                 base_salary=float(base_salary),
                 contract_type=contract_type,
                 fixed_items=fixed_items,
-                pension_fund=pension_fund
+                pension_fund=pension_fund,
+                nivel_hay=nivel_hay,
+                target=target,
+                custom_attributes=custom_attributes
             )
 
         except Exception as e:

@@ -39,7 +39,23 @@
       "Bash(streamlit run *)",
       "Bash(rm -rf ~/.streamlit/cache && echo \"✅ Cache limpiado\")",
       "Bash(git pull *)",
-      "Bash(python -m streamlit run app.py --logger.level=error)"
+      "Bash(python -m streamlit run app.py --logger.level=error)",
+      "Bash(git checkout *)",
+      "Bash(git commit -m 'Add: Real compensation calculator with annualized values *)",
+      "Bash(git commit -m 'Fix: Calculator now uses Nivel HAY from database to compute real compensation *)",
+      "Bash(git commit -m 'Fix: Correct session_state keys in Información de Compensación section *)",
+      "Bash(git commit -m 'Fix: Correct compensation calculator to show bono and median level *)",
+      "Bash(git commit -m 'Fix: Allow entering Nivel HAY and Target for manual compensation calculation *)",
+      "Bash(git commit -m 'Fix: Always show Bono Target even when zero, consistent layout *)",
+      "Bash(xargs grep -l \"compensation\\\\|nivel\\\\|mercado\")",
+      "Bash(git commit -m 'Feature: Show Estudio de Mercado and Promedio Interno below Total *)",
+      "Bash(git commit -m 'Fix: Make compensation calculator instantly responsive *)",
+      "Bash(git commit -m 'Feature: Add Gap Analysis for compensation benchmarking *)",
+      "Bash(git commit -m 'Feature: Auto-load Nivel HAY and Target from analysis table *)",
+      "Bash(git commit -m 'Fix: Correct RUT search in get_employee_by_rut\\(\\) *)",
+      "Bash(sqlite3 data/analysis.db \".tables\")",
+      "Bash(python3 -c \"import sqlite3; conn = sqlite3.connect\\('data/analysis.db'\\); cursor = conn.cursor\\(\\); cursor.execute\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table';\\\\\"\\); print\\('\\\\n'.join\\([t[0] for t in cursor.fetchall\\(\\)]\\)\\)\")",
+      "Bash(git commit -m 'MEJORA 1: Extract custom_attributes \\(Nivel HAY, Target\\) from BUK API *)"
     ]
   }
 }
