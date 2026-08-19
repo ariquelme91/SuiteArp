@@ -1418,6 +1418,25 @@ def comparison_section(payroll_engine=None):
             # Obtener logo de la empresa
             logo_path = get_company_logo(employee.company_name)
 
+            # Preparar datos de compensación para PDF
+            comp_data = st.session_state.get("compensation_data", {})
+            compensation_pdf_data = {
+                "bono_actual": st.session_state.get("bono_target_actual", 0),
+                "bono_propuesto": st.session_state.get("bono_target_prop", 0),
+                "mercado_actual": comp_data.get("mercado", "—"),
+                "mercado_propuesto": comp_data.get("mercado", "—"),
+                "nivel_hay_actual": comp_data.get("nivel_hay_actual_input", "—"),
+                "nivel_hay_propuesto": comp_data.get("nivel_hay_prop_input", "—"),
+                "posicion_media_actual": 58,  # Placeholder - puede venir del análisis
+                "posicion_media_propuesto": 96,  # Placeholder
+                "mediana_actual": 108045466,  # Placeholder
+                "mediana_propuesto": 58879636,  # Placeholder
+                "pct_variable_actual": 21,  # Placeholder
+                "pct_variable_propuesto": 11,  # Placeholder
+                "comp_anual_actual": 62985980,  # Placeholder
+                "comp_anual_propuesto": 56530635,  # Placeholder
+            }
+
             success = pdf_exporter.export_comparison(
                 comparison=comparison,
                 output_filename=filename,
@@ -1432,6 +1451,7 @@ def comparison_section(payroll_engine=None):
                 logo_path=logo_path,
                 salary_history=salary_history,
                 proposal_reasons=st.session_state.get("proposal_reasons", []),
+                compensation_data=compensation_pdf_data,
             )
 
             if success:
