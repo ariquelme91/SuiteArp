@@ -995,19 +995,21 @@ def proposal_section():
                     "nombre": employee.full_name,
                     "empresa": employee.company_name,
                     "cargo": employee.job_title,
-                    "sueldo_actual": employee.base_salary,
-                    "sueldo_propuesto": proposal_base_salary,
-                    "diferencia_pesos": proposal_base_salary - employee.base_salary,
-                    "diferencia_pct": ((proposal_base_salary - employee.base_salary) / employee.base_salary * 100) if employee.base_salary > 0 else 0,
+                    "sueldo_actual": float(employee.base_salary) if employee.base_salary else 0,
+                    "sueldo_propuesto": float(proposal_base_salary) if proposal_base_salary else 0,
+                    "diferencia_pesos": float(proposal_base_salary - employee.base_salary) if (proposal_base_salary and employee.base_salary) else 0,
+                    "diferencia_pct": ((proposal_base_salary - employee.base_salary) / employee.base_salary * 100) if (employee.base_salary and proposal_base_salary) else 0,
                     "nivel_hay": st.session_state.get("nivel_hay_prop_input", ""),
-                    "target": st.session_state.get("target_prop_input", 0.0),
-                    "cambio_comp": comparison.get("current_net", 0) - comparison.get("current_net", 0) if "current_net" in comparison else 0,
+                    "target": float(st.session_state.get("target_prop_input", 0.0)),
+                    "cambio_comp": 0,  # Se puede calcular después si es necesario
                     "cambio_comp_pct": 0,
                     "comentarios": "Propuesta creada desde interfaz"
                 }
                 db_manager.save_proposal(proposal_record)
             except Exception as e:
-                logger.warning(f"No se pudo guardar propuesta en historial: {e}")
+                # No bloquear la creación de propuesta si falla el guardado en historial
+                logger.warning(f"Advertencia: No se pudo guardar propuesta en historial: {e}")
+                pass
 
             st.success("✅ Propuesta calculada exitosamente")
             st.rerun()
