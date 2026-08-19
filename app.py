@@ -1149,14 +1149,20 @@ def comparison_section(payroll_engine=None):
 
         comp_data = st.session_state.compensation_data
 
-        # Mostrar resumen de datos ingresados
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Nivel HAY Actual", comp_data.get("nivel_hay_actual_input", "—"))
-        with col2:
-            st.metric("Target Actual", f"{comp_data.get('target_actual', 0.0):.1f} rentas")
-        with col3:
-            st.metric("Mercado", comp_data.get("mercado", "—"))
+        # Mostrar resumen en layout tipo informe (2 columnas)
+        col_actual_resume, col_prop_resume = st.columns(2)
+
+        with col_actual_resume:
+            st.write("**📊 Datos Actuales**")
+            st.write(f"• **Nivel HAY:** {comp_data.get('nivel_hay_actual_input', '—')}")
+            st.write(f"• **Target:** {comp_data.get('target_actual', 0.0):.1f} rentas")
+            st.write(f"• **Mercado:** {comp_data.get('mercado', '—')}")
+
+        with col_prop_resume:
+            st.write("**📈 Datos Propuestos**")
+            st.write(f"• **Nivel HAY:** {comp_data.get('nivel_hay_prop_input', '—')}")
+            st.write(f"• **Target:** {comp_data.get('target_propuesta_input', 0.0):.1f} rentas")
+            st.write(f"• **Mercado:** {comp_data.get('mercado', '—')}")
 
         # Botón para calcular compensación
         if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", use_container_width=True):
