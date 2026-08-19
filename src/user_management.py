@@ -19,47 +19,109 @@ def render_user_management(auth_manager: AuthManager):
         st.error("❌ Solo administradores pueden acceder a esta sección")
         return
 
-    # Pestañas
-    tab1, tab2, tab3 = st.tabs(["📋 Usuarios Actuales", "➕ Crear Usuario", "🔑 Cambiar Contraseña"])
+    if auth_manager.modo_secrets:
+        _render_modo_secrets(auth_manager)
+    else:
+        _render_modo_local(auth_manager)
 
-    # TAB 1: Listar usuarios
+
+# ----------------------------------------------------------------------
+# Modo Secrets (producción en Streamlit Cloud)
+# ----------------------------------------------------------------------
+
+def _render_modo_secrets(auth_manager: AuthManager):
+    """UI cuando los usuarios viven en los Secrets de Streamlit."""
+    tab1, tab2 = st.tabs(["📋 Usuarios Actuales", "➕ Agregar / Cambiar Clave"])
+
     with tab1:
         st.subheader("Usuarios Registrados")
+        _tabla_usuarios(auth_manager, mostrar_fecha=False)
 
-        usuarios = auth_manager.listar_usuarios()
+        st.caption(
+            "Los usuarios se guardan en los Secrets de Streamlit Cloud, "
+            "así sobreviven a cada redeploy."
+        )
 
-        if usuarios:
-            # Convertir a DataFrame para mejor visualización
-            df_usuarios = pd.DataFrame([
-                {
-                    "Usuario": u["usuario"],
-                    "Rol": u["rol"].upper(),
-                    "Activo": "✅ Sí" if u["activo"] else "❌ No",
-                    "Fecha Creación": u["fecha_creacion"][:10]
-                }
-                for u in usuarios
-            ])
+    with tab2:
+        st.subheader("Generar línea para los Secrets")
+        st.markdown(
+            "Completa los datos y copia la línea resultante en "
+            "**Manage app → Settings → Secrets**, dentro de `[usuarios]`.\n\n"
+            "Sirve tanto para **agregar** a alguien nuevo como para "
+            "**cambiarle la clave** a alguien existente: en ese caso reemplaza "
+            "su línea actual."
+        )
 
-            st.dataframe(df_usuarios, use_container_width=True, hide_index=True)
+        with st.form("form_generar_secret"):
+            usuario = st.text_input(
+                "👤 Nombre de usuario",
+                placeholder="ej: Juan",
+                help="Mínimo 3 caracteres",
+            )
+            password = st.text_input(
+                "🔐 Contraseña",
+                type="password",
+                placeholder="ej: miclave123",
+                help="Mínimo 3 caracteres",
+            )
+            rol = st.selectbox(
+                "Rol del usuario",
+                ["user", "admin"],
+                index=0,
+                help="User: acceso limitado | Admin: acceso completo",
+            )
 
-            # Acciones
-            st.subheader("⚙️ Acciones")
+            generar = st.form_submit_button(
+                "🔑 Generar línea", use_container_width=True, type="primary"
+            )
 
-            col1, col2 = st.columns(2)
+        if generar:
+            exito, resultado = auth_manager.generar_linea_secrets(usuario, password, rol)
+            if not exito:
+                st.error(f"❌ {resultado}")
+            else:
+                st.success("✅ Línea generada. Cópiala y pégala en los Secrets:")
+                st.code(resultado, language="toml")
+                st.info(
+                    "La contraseña queda hasheada: la línea no la revela. "
+                    "Tras guardar los Secrets, Streamlit reinicia la app sola."
+                )
 
-            with col1:
-                st.markdown("**Cambiar Rol**")
+
+# ----------------------------------------------------------------------
+# Modo local (SQLite, desarrollo)
+# ----------------------------------------------------------------------
+
+def _render_modo_local(auth_manager: AuthManager):
+    """UI cuando los usuarios viven en la BD local."""
+    st.caption("⚙️ Modo local: los usuarios se guardan en la base de datos del equipo.")
+
+    tab1, tab2, tab3 = st.tabs(
+        ["📋 Usuarios Actuales", "➕ Crear Usuario", "🔑 Cambiar Contraseña"]
+    )
+
+    # TAB 1: Listar usuarios y acciones
+    with tab1:
+        st.subheader("Usuarios Registrados")
+        usuarios = _tabla_usuarios(auth_manager, mostrar_fecha=True)
+
+        if not usuarios:
+            return
+
+        st.subheader("⚙️ Acciones")
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Cambiar Rol**")
+            candidatos_rol = [u["usuario"] for u in usuarios if u["usuario"] != "Ariquelme"]
+
+            if not candidatos_rol:
+                st.caption("No hay usuarios a los que cambiar el rol.")
+            else:
                 usuario_cambio = st.selectbox(
-                    "Selecciona usuario:",
-                    [u["usuario"] for u in usuarios if u["usuario"] != "Ariquelme"],
-                    key="usuario_rol_cambio"
+                    "Selecciona usuario:", candidatos_rol, key="usuario_rol_cambio"
                 )
-
-                nuevo_rol = st.radio(
-                    "Nuevo rol:",
-                    ["admin", "user"],
-                    key="nuevo_rol_select"
-                )
+                nuevo_rol = st.radio("Nuevo rol:", ["admin", "user"], key="nuevo_rol_select")
 
                 if st.button("Actualizar Rol", key="btn_cambiar_rol"):
                     exito, mensaje = auth_manager.cambiar_rol(usuario_cambio, nuevo_rol)
@@ -69,12 +131,19 @@ def render_user_management(auth_manager: AuthManager):
                     else:
                         st.error(f"❌ {mensaje}")
 
-            with col2:
-                st.markdown("**Desactivar Usuario**")
+        with col2:
+            st.markdown("**Desactivar Usuario**")
+            candidatos_baja = [
+                u["usuario"] for u in usuarios if u["activo"] and u["usuario"] != "Ariquelme"
+            ]
+
+            if not candidatos_baja:
+                st.caption("No hay usuarios activos que se puedan desactivar.")
+            else:
                 usuario_desactivar = st.selectbox(
                     "Selecciona usuario a desactivar:",
-                    [u["usuario"] for u in usuarios if u["activo"] and u["usuario"] != "Ariquelme"],
-                    key="usuario_desactivar"
+                    candidatos_baja,
+                    key="usuario_desactivar",
                 )
 
                 if st.button("Desactivar", key="btn_desactivar", type="secondary"):
@@ -84,8 +153,6 @@ def render_user_management(auth_manager: AuthManager):
                         st.rerun()
                     else:
                         st.error(f"❌ {mensaje}")
-        else:
-            st.info("No hay usuarios registrados")
 
     # TAB 2: Crear nuevo usuario
     with tab2:
@@ -93,100 +160,97 @@ def render_user_management(auth_manager: AuthManager):
 
         with st.form("form_crear_usuario"):
             nuevo_usuario = st.text_input(
-                "👤 Nombre de usuario",
-                placeholder="ej: Juan",
-                help="Mínimo 3 caracteres"
+                "👤 Nombre de usuario", placeholder="ej: Juan", help="Mínimo 3 caracteres"
             )
-
             nueva_password = st.text_input(
                 "🔐 Contraseña",
                 type="password",
                 placeholder="ej: miclave123",
-                help="Mínimo 3 caracteres"
+                help="Mínimo 3 caracteres",
             )
-
             rol_nuevo = st.selectbox(
                 "Rol del usuario",
                 ["user", "admin"],
                 index=0,
-                help="User: acceso limitado | Admin: acceso completo"
+                help="User: acceso limitado | Admin: acceso completo",
             )
 
-            col1, col2 = st.columns(2)
-            with col1:
-                submit_crear = st.form_submit_button(
-                    "✅ Crear Usuario",
-                    use_container_width=True,
-                    type="primary"
-                )
+            submit_crear = st.form_submit_button(
+                "✅ Crear Usuario", use_container_width=True, type="primary"
+            )
 
-            if submit_crear:
-                # Validaciones
-                if not nuevo_usuario or len(nuevo_usuario) < 3:
-                    st.error("❌ El usuario debe tener al menos 3 caracteres")
-                elif not nueva_password or len(nueva_password) < 3:
-                    st.error("❌ La contraseña debe tener al menos 3 caracteres")
-                else:
-                    exito, mensaje = auth_manager.crear_usuario(
-                        nuevo_usuario,
-                        nueva_password,
-                        rol_nuevo
-                    )
+        if submit_crear:
+            exito, mensaje = auth_manager.crear_usuario(
+                nuevo_usuario, nueva_password, rol_nuevo
+            )
+            if exito:
+                st.success(f"✅ {mensaje}")
+                st.balloons()
+            else:
+                st.error(f"❌ {mensaje}")
 
-                    if exito:
-                        st.success(f"✅ {mensaje}")
-                        st.balloons()
-                        # Limpiar formulario
-                        st.rerun()
-                    else:
-                        st.error(f"❌ {mensaje}")
-
-    # TAB 3: Cambiar contraseña
+    # TAB 3: Cambiar contraseña propia
     with tab3:
         st.subheader("Cambiar Mi Contraseña")
+        usuario_actual = st.session_state.get("usuario")
 
         with st.form("form_cambiar_password"):
-            usuario_actual = st.session_state.get("usuario")
-
             st.info(f"👤 Cambiar contraseña para: **{usuario_actual}**")
 
             password_actual = st.text_input(
-                "🔐 Contraseña Actual",
-                type="password",
-                placeholder="Ingresa tu contraseña actual"
+                "🔐 Contraseña Actual", type="password", placeholder="Ingresa tu contraseña actual"
             )
-
             password_nueva = st.text_input(
-                "🔑 Nueva Contraseña",
-                type="password",
-                placeholder="Ingresa la nueva contraseña"
+                "🔑 Nueva Contraseña", type="password", placeholder="Ingresa la nueva contraseña"
             )
-
             password_confirmar = st.text_input(
                 "🔑 Confirmar Nueva Contraseña",
                 type="password",
-                placeholder="Confirma la nueva contraseña"
+                placeholder="Confirma la nueva contraseña",
             )
 
             submit_cambiar = st.form_submit_button(
-                "✅ Cambiar Contraseña",
-                use_container_width=True,
-                type="primary"
+                "✅ Cambiar Contraseña", use_container_width=True, type="primary"
             )
 
-            if submit_cambiar:
-                if not password_actual or not password_nueva:
-                    st.error("❌ Completa todos los campos")
-                elif password_nueva != password_confirmar:
-                    st.error("❌ Las contraseñas nuevas no coinciden")
+        if submit_cambiar:
+            if not password_actual or not password_nueva:
+                st.error("❌ Completa todos los campos")
+            elif password_nueva != password_confirmar:
+                st.error("❌ Las contraseñas nuevas no coinciden")
+            else:
+                exito, mensaje = auth_manager.cambiar_password(
+                    usuario_actual, password_actual, password_nueva
+                )
+                if exito:
+                    st.success(f"✅ {mensaje}")
                 else:
-                    exito, mensaje = auth_manager.cambiar_password(
-                        usuario_actual,
-                        password_actual,
-                        password_nueva
-                    )
+                    st.error(f"❌ {mensaje}")
 
-                    if exito:
-                        st.success(f"✅ {mensaje}")
-                    else:
-                        st.error(f"❌ {mensaje}")
+
+# ----------------------------------------------------------------------
+# Común
+# ----------------------------------------------------------------------
+
+def _tabla_usuarios(auth_manager: AuthManager, mostrar_fecha: bool) -> list:
+    """Dibuja la tabla de usuarios y devuelve la lista cruda."""
+    usuarios = auth_manager.listar_usuarios()
+
+    if not usuarios:
+        st.info("No hay usuarios registrados")
+        return []
+
+    filas = []
+    for u in usuarios:
+        fila = {
+            "Usuario": u["usuario"],
+            "Rol": u["rol"].upper(),
+            "Activo": "✅ Sí" if u["activo"] else "❌ No",
+        }
+        if mostrar_fecha:
+            fecha = u.get("fecha_creacion")
+            fila["Fecha Creación"] = fecha[:10] if fecha else "—"
+        filas.append(fila)
+
+    st.dataframe(pd.DataFrame(filas), use_container_width=True, hide_index=True)
+    return usuarios
