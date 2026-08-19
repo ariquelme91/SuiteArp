@@ -2541,17 +2541,13 @@ def main():
             "💰 COMPENSACIONES", "⚙️ CONFIGURACIÓN",
             "👥 GESTIÓN DE USUARIOS"
         ])
-        tab7 = None
     else:
-        # User solo ve: Calculadora, Propuestas, Compensaciones
-        tab1, tab2, tab3 = st.tabs([
-            "🧮 CALCULADORA", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES"
+        # User ve: Calculadora, Análisis, Propuestas, Compensaciones, Configuración
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
+            "💰 COMPENSACIONES", "⚙️ CONFIGURACIÓN"
         ])
-        tab4 = None  # No hay tab 4 para users
-        tab5 = None  # No hay tab 5 para users
         tab6 = None  # No hay tab 6 para users
-        tab7 = None  # No hay tab 7 para users
 
     with tab1:
         # === TAB CALCULADORA ===
@@ -2618,37 +2614,43 @@ def main():
 
             search_employee_section()
 
-    # Renderizar tabs según rol
-    if st.session_state.rol == "admin":
-        # ADMIN: tab4 = COMPENSACIONES
-        with tab4:
-            # === TAB COMPENSACIONES ===
-            from src.analysis.compensaciones_ui import show_compensations_section
-            buk_client = get_buk_client()
-            show_compensations_section(buk_client)
+    with tab2:
+        # === TAB ANÁLISIS ===
+        from src.analysis.streamlit_ui import show_analysis_section
+        show_analysis_section()
 
-        with tab5:
-            # === TAB CONFIGURACIÓN ===
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                if st.button("← Volver", use_container_width=True, key="back_from_config"):
-                    st.session_state.main_tab = "propuestas"
-                    st.rerun()
+    with tab3:
+        # === TAB PROPUESTAS ===
+        # Detectar si hay empleado seleccionado desde ANÁLISIS
+        if st.session_state.selected_employee:
+            employee = st.session_state.selected_employee
+            st.write(f"**Empleado seleccionado**: {employee.name} ({employee.rut})")
 
-            configuration_section()
+        proposals_section()
 
+    with tab4:
+        # === TAB COMPENSACIONES ===
+        from src.analysis.compensaciones_ui import show_compensations_section
+        buk_client = get_buk_client()
+        show_compensations_section(buk_client)
+
+    with tab5:
+        # === TAB CONFIGURACIÓN ===
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            if st.button("← Volver", use_container_width=True, key="back_from_config"):
+                st.session_state.main_tab = "propuestas"
+                st.rerun()
+
+        configuration_section()
+
+    # TAB GESTIÓN DE USUARIOS (Solo para admin)
+    if st.session_state.rol == "admin" and tab6:
         with tab6:
             # === TAB GESTIÓN DE USUARIOS ===
             db_manager = AnalysisDBManager()
             auth_manager = AuthManager()
             render_user_management(auth_manager)
-    else:
-        # USER: tab3 = COMPENSACIONES
-        with tab3:
-            # === TAB COMPENSACIONES ===
-            from src.analysis.compensaciones_ui import show_compensations_section
-            buk_client = get_buk_client()
-            show_compensations_section(buk_client)
 
 
 if __name__ == "__main__":
