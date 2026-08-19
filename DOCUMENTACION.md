@@ -271,19 +271,25 @@ Ver [MIGRACION.md](MIGRACION.md) para el procedimiento completo.
 
 Ninguna impide operar, pero conviene tenerlas a la vista:
 
-1. **`app.py` tiene 2.650 líneas** con toda la UI. Partirlo por pestaña
+1. **`app.py` tiene ~2.550 líneas** con toda la UI. Partirlo por pestaña
    facilitaría el mantenimiento.
-2. **`calculate_compensation_metrics` está duplicada** en `app.py` (líneas 160 y
-   1026). La segunda anula a la primera — hay que verificar cuál es la vigente
-   antes de tocarla.
-3. **Tabla de ANÁLISIS construida fila por fila.** Cada empleado genera ~24
+2. **Tabla de ANÁLISIS construida fila por fila.** Cada empleado genera ~24
    elementos de Streamlit; por eso está paginada a 25 filas. Sin la paginación,
    244 empleados saturaban el render y dejaban en blanco las pestañas
    siguientes. Un `st.dataframe` sería más liviano, pero se pierden los botones
    por fila.
-4. **`use_container_width` está deprecado** en Streamlit y deja de funcionar
-   después del 31-12-2025. Hay que migrarlo a `width='stretch'`.
-5. **Documentos antiguos desactualizados** (`ARCHITECTURE.md`, `README.md`,
+3. **Documentos antiguos desactualizados** (`ARCHITECTURE.md`, `README.md`,
    etc.): son previos a la autenticación y nombran mal la variable del token.
-6. **Scripts sueltos en la raíz** — más de 20 utilidades de exploración
+4. **Scripts sueltos en la raíz** — más de 20 utilidades de exploración
    mezcladas con el código de la app.
+
+### Resueltas
+
+- ~~`use_container_width` deprecado~~ — migradas las 54 ocurrencias a
+  `width='stretch'` (agosto 2026).
+- ~~`calculate_compensation_metrics` duplicada~~ — eliminada la definición
+  muerta junto con `get_median_from_db`, que solo ella usaba. Al quitarla salió
+  a la luz un `KeyError` que estaba tapando: el llamador leía `bonus_annual`
+  pero la función vigente devuelve esa clave como `bono_anualizado`, así que la
+  tabla «Análisis de Compratio y Mediana» fallaba cada vez que se abría.
+  Corregido (agosto 2026).
