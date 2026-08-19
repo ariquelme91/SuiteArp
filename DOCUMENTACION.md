@@ -97,6 +97,31 @@ previas siguen funcionando.
 
 Para cambiar una clave, se reemplaza la línea existente de esa persona.
 
+### Planificación de dotación
+
+La pestaña **DOTACIÓN** (solo admin) cruza tres cosas:
+
+1. **El plan** — cargos requeridos por empresa, área y período, en `plan_dotacion`.
+2. **La realidad** — personas por área y cargo, desde la última carga de Buk.
+3. **El costo** — lo que cuesta cubrir cada vacante.
+
+La vacante se calcula **por cargo, no por área**: un área puede estar completa en
+número y aun así faltarle un cargo concreto mientras le sobra otro.
+
+El costo no es el sueldo bruto. `PayrollEngine` entrega el **costo empresa**:
+sueldo base, gratificación legal y aportes patronales (SIS, AFC y mutual). El
+sueldo base sale de dos fuentes, en este orden:
+
+1. El sueldo de referencia, si RR.HH. ya definió cuánto pagará.
+2. La banda de mercado del nivel HAY. Como la banda está en compensación anual
+   y ésta equivale a `base × (12 + target)`, se invierte esa fórmula.
+
+Sin nivel HAY ni sueldo de referencia la posición queda **sin estimar** y el
+panel lo advierte, en vez de inventar una cifra.
+
+> `nivel_hay` está cargado en el 33% de la dotación total, pero en **4Life
+> Seguros de Vida está al 100%** — por eso el panel abre en esa empresa.
+
 ### Permisos por rol
 
 | Pestaña | USER | ADMIN |
@@ -105,6 +130,7 @@ Para cambiar una clave, se reemplaza la línea existente de esa persona.
 | 📊 ANÁLISIS | ✅ | ✅ |
 | 📝 PROPUESTAS | ✅ | ✅ |
 | 💰 COMPENSACIONES | ✅ | ✅ |
+| 🧭 DOTACIÓN | ❌ | ✅ |
 | ⚙️ CONFIGURACIÓN | ❌ | ✅ |
 | 👥 GESTIÓN DE USUARIOS | ❌ | ✅ |
 
@@ -137,6 +163,8 @@ crean** (`app.py`, función `main()`), no se ocultan con CSS.
 
 | Archivo | Qué hace |
 |---|---|
+| `dotacion_manager.py` | Plan de dotación, control plan vs real y costeo de posiciones |
+| `dotacion_ui.py` | Pestaña DOTACIÓN (solo admin) |
 | `db_manager.py` | Acceso a `analysis.db` (34 métodos públicos) |
 | `data_loader.py` | ETL desde Buk hacia SQLite |
 | `salary_analyzer.py` | Historial de sueldos y cambios de cargo |
@@ -177,6 +205,7 @@ pueden borrarse sin afectarla.
 | `compensation_levels` | 16 | Bandas de mercado por nivel HAY |
 | `compensation_averages` | 12 | Promedios calculados por nivel |
 | `ipc_history` | 10 | IPC mensual |
+| `plan_dotacion` | — | Plan de dotación: cargos requeridos por empresa, área y período |
 | `employee_manual_values` | 2 | Nivel HAY y target cargados a mano |
 | `uf_history` | 1 | Valor UF |
 | `company_cache`, `supervisor_cache`, `area_cache` | — | Caché de nombres desde Buk |

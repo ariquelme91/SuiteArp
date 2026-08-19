@@ -94,7 +94,26 @@
       "Bash(rm -rf src/ui)",
       "Bash(python -m py_compile app.py main.py)",
       "Bash(python backup.py)",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(git commit -q -m ' *)",
+      "Bash(cp app.py /tmp/app_backup_predelete.py)",
+      "Bash(cp app.py \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\app_backup_predelete.py\")",
+      "Bash(python -)",
+      "Bash(git fetch *)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Bash(ls /c/Windows/Fonts/ 2>/dev/null | grep -iE \"^\\(consola|dejavu|cascadia|arial|calibri|seguiemj|segoeui|times|georgia|verdana\\)\" | head -25)",
+      "Bash(PYTHONIOENCODING=utf-8 grep -n \"✅\\\\|❌\\\\|⚠️\\\\|🧮\\\\|📊\\\\|📝\\\\|💰\\\\|⚙️\\\\|👥\" DOCUMENTACION.md MIGRACION.md)",
+      "Bash(PYTHONIOENCODING=utf-8 python generar_pdf_docs.py)",
+      "Bash(python -m pip install pypdfium2 --quiet)",
+      "Bash(python -c \"import pypdfium2; print\\('pypdfium2 OK', pypdfium2.V_PYPDFIUM2\\)\")",
+      "Bash(python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\patch_lista.py\")",
+      "Bash(python -m py_compile generar_pdf_docs.py)",
+      "Bash(PYTHONIOENCODING=utf-8 sed -n '/def _leer_lista/,/^    # --- constructores/p' generar_pdf_docs.py)",
+      "Bash(printf '\\\\n# PDF generado por generar_pdf_docs.py\\\\nSuite_ARP_IA_Documentacion.pdf\\\\n')",
+      "Bash(PYTHONIOENCODING=utf-8 python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\test_dotacion.py\")",
+      "Bash(python -m py_compile app.py src/analysis/dotacion_ui.py src/analysis/dotacion_manager.py)",
+      "Bash(python -m py_compile src/analysis/dotacion_ui.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\test_secrets.py\")"
     ]
   }
 }

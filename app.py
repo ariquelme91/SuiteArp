@@ -2444,10 +2444,10 @@ def main():
 
     # Pestañas principales - Variar según rol
     if st.session_state.rol == "admin":
-        # Admin ve: Calculadora, Análisis, Propuestas, Compensaciones, Configuración, Gestión de Usuarios
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        # Admin ve todo, incluida la planificación de dotación
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
             "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES", "⚙️ CONFIGURACIÓN",
+            "💰 COMPENSACIONES", "🧭 DOTACIÓN", "⚙️ CONFIGURACIÓN",
             "👥 GESTIÓN DE USUARIOS"
         ])
     else:
@@ -2458,6 +2458,7 @@ def main():
         ])
         tab5 = None
         tab6 = None
+        tab7 = None
 
     with tab1:
         # === TAB CALCULADORA ===
@@ -2533,6 +2534,11 @@ def main():
     # TABS solo para admin
     if st.session_state.rol == "admin":
         with tab5:
+            # === TAB DOTACIÓN ===
+            from src.analysis.dotacion_ui import show_dotacion_section
+            show_dotacion_section(get_payroll_engine())
+
+        with tab6:
             # === TAB CONFIGURACIÓN ===
             col1, col2 = st.columns([1, 2])
             with col1:
@@ -2542,7 +2548,7 @@ def main():
 
             configuration_section()
 
-        with tab6:
+        with tab7:
             # === TAB GESTIÓN DE USUARIOS ===
             db_manager = AnalysisDBManager()
             auth_manager = AuthManager()
