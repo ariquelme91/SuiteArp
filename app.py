@@ -943,10 +943,10 @@ def proposal_section():
 
             # Guardar datos de compensación (usar keys correctas de los widgets)
             st.session_state.compensation_data = {
-                "nivel_hay_actual_input": st.session_state.get("nivel_hay_actual_input", ""),
-                "nivel_hay_prop_input": st.session_state.get("nivel_hay_prop_input", ""),
-                "target_actual": st.session_state.get("target_actual_input", 0.0),
-                "target_propuesta_input": st.session_state.get("target_prop_input", 0.0),
+                "nivel_hay_actual_input": str(st.session_state.get("nivel_hay_actual_input", "")),
+                "nivel_hay_prop_input": str(st.session_state.get("nivel_hay_prop_input", "")),
+                "target_actual": float(st.session_state.get("target_actual_input", 0.0)) if st.session_state.get("target_actual_input") is not None else 0.0,
+                "target_propuesta_input": float(st.session_state.get("target_prop_input", 0.0)) if st.session_state.get("target_prop_input") is not None else 0.0,
                 "mercado": mercado_comparacion
             }
 
