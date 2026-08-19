@@ -2,6 +2,10 @@
 
 Sistema modular e interactivo para automatizar el proceso de **Propuestas de Renta** integrándose directamente con la API de Buk y calculando la estructura salarial chilena completa.
 
+> ⚠️ **Este documento es anterior al sistema de autenticación (agosto 2026).**
+> La referencia vigente es **[DOCUMENTACION.md](DOCUMENTACION.md)**; para
+> respaldos y cambios de hosting, **[MIGRACION.md](MIGRACION.md)**.
+
 ## 📋 Características
 
 ✅ **Integración API Buk** - Consulta datos de colaboradores en tiempo real
@@ -78,14 +82,14 @@ pip install -r requirements.txt
 
 2. Editar `.env` con sus credenciales:
    ```env
-   BUK_AUTH_TOKEN=your_auth_token_here
+   BUK_API_TOKEN=your_auth_token_here
    BUK_SUBDOMAIN=your_subdomain_here
    DEBUG=False
    APP_MODE=cli
    ```
 
    **Dónde obtener las credenciales:**
-   - `BUK_AUTH_TOKEN`: Generar en Portal Buk → Configuración → API → Personal Access Tokens
+   - `BUK_API_TOKEN`: Generar en Portal Buk → Configuración → API → Personal Access Tokens
    - `BUK_SUBDOMAIN`: El subdominio de su empresa en Buk (ej: si accede a `empresa.buk.cl`, use `empresa`)
 
 ### Paso 5: Validar Parámetros Mensuales
@@ -225,7 +229,7 @@ $ python main.py
 
 ## 🐛 Troubleshooting
 
-### Error: `BUK_AUTH_TOKEN` no está configurado
+### Error: `BUK_API_TOKEN` no está configurado
 
 ```
 Solución: Crear archivo .env con credenciales válidas
@@ -292,7 +296,7 @@ Propuesta_Renta_12345678-9_20260814_143022.xlsx
 
 ⚠️ **IMPORTANTE:**
 - Nunca commitear el archivo `.env` a Git
-- No compartir `BUK_AUTH_TOKEN` por canales inseguros
+- No compartir `BUK_API_TOKEN` por canales inseguros
 - El archivo `.gitignore` debe incluir:
   ```
   .env

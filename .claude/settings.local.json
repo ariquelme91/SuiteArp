@@ -74,7 +74,27 @@
       "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\\\\\" -Force | Where-Object {$_.Name -eq \"__init__.py\"})",
       "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\" -Recurse -Name \"__pycache__\" -ErrorAction SilentlyContinue | ForEach-Object { Remove-Item -Path $_ -Recurse -Force -ErrorAction SilentlyContinue }; Write-Output \"Listo\")",
-      "Bash(python init_users.py)"
+      "Bash(python init_users.py)",
+      "Bash(python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\test_auth.py\")",
+      "Bash(python -m pip install py-spy --quiet)",
+      "Bash(python -c \"import py_spy\")",
+      "Bash(python -m pip install py-spy)",
+      "Bash(python -m py_spy dump --pid 33720)",
+      "Bash(python -c \"import streamlit; print\\('Streamlit local:', streamlit.__version__\\)\")",
+      "Bash(python -m py_compile app.py src/analysis/streamlit_ui.py)",
+      "Bash(rm -f .streamlit/config.toml)",
+      "Bash(rmdir .streamlit)",
+      "Bash(python -c ' *)",
+      "Bash(grep -i \"\\\\.db$\")",
+      "Bash(python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\test_secrets.py\")",
+      "Bash(tee \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\secrets_generado.toml\")",
+      "Bash(git check-ignore *)",
+      "Bash(python \"C:\\\\Users\\\\ARIQUE~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-ariquelme-propuestas-de-renta\\\\098023b5-f8f6-4e8a-9bb9-bfdf08cc776a\\\\scratchpad\\\\test_hash_truncado.py\")",
+      "Bash(python -m py_compile src/auth_manager.py src/login_page.py)",
+      "Bash(rm -rf src/ui)",
+      "Bash(python -m py_compile app.py main.py)",
+      "Bash(python backup.py)",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }

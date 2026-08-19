@@ -17,7 +17,7 @@ pip install -r requirements.txt
 Crear archivo `.env` en la raíz del proyecto:
 
 ```env
-BUK_AUTH_TOKEN=Pegar_tu_token_aqui
+BUK_API_TOKEN=Pegar_tu_token_aqui
 BUK_SUBDOMAIN=tu_subdominio_buk
 DEBUG=False
 APP_MODE=cli

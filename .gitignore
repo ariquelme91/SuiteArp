@@ -65,3 +65,9 @@ credentials.json
 
 # Streamlit secrets (contraseñas)
 .streamlit/secrets.toml
+
+# Respaldos generados por backup.py (pueden contener credenciales)
+backups/
+
+# BD local de usuarios (contiene hashes; en la nube se usan Secrets)
+src/analysis/data/auth.db
