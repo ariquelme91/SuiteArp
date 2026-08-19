@@ -1427,9 +1427,9 @@ def comparison_section(payroll_engine=None):
             target_actual = st.session_state.get("target_actual_input", 0.0)
             target_propuesto = st.session_state.get("target_prop_input", 0.0)
 
-            # Calcular bonos y compensaciones
-            sal_base_actual = employee.base_salary
-            sal_base_propuesto = proposal_base_salary if 'proposal_base_salary' in locals() else sal_base_actual
+            # Calcular bonos y compensaciones desde el comparison
+            sal_base_actual = float(comparison.current.base_salary) if comparison and comparison.current else employee.base_salary
+            sal_base_propuesto = float(comparison.proposal.base_salary) if comparison and comparison.proposal else sal_base_actual
 
             bono_actual = target_actual * sal_base_actual if target_actual > 0 else 0
             bono_propuesto = target_propuesto * sal_base_propuesto if target_propuesto > 0 else 0
