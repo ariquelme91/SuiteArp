@@ -123,97 +123,6 @@ def get_payroll_engine():
     return PayrollEngine(parameters)
 
 
-@st.cache_data(ttl=3600)
-def get_median_from_db(nivel_hay, mercado):
-    """Obtiene mediana de la BD con caching - sin bloqueos."""
-    if not nivel_hay:
-        return None
-
-    try:
-        import sqlite3
-        import os
-
-        # Ruta de la BD
-        db_path = os.path.join(os.path.dirname(__file__), "src", "analysis", "data", "compensation.db")
-
-        if not os.path.exists(db_path):
-            return None
-
-        mercado_key = "mercado_financiero" if "Financiero" in str(mercado) else "mercado_seguros"
-
-        conn = sqlite3.connect(db_path, timeout=2)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        cursor.execute(
-            f"SELECT {mercado_key} FROM compensation_levels WHERE nivel = ?",
-            (str(nivel_hay),)
-        )
-        result = cursor.fetchone()
-        conn.close()
-
-        return float(result[0]) if result and result[0] else None
-    except Exception as e:
-        return None
-
-
-def calculate_compensation_metrics(base_salary_actual, base_salary_proposal,
-                                    target_actual, target_propuesta,
-                                    nivel_hay_actual, nivel_hay_propuesta, mercado):
-    """Calcula métricas de compensación anual."""
-    try:
-        # Convertir a float si es necesario
-        base_salary_actual = float(base_salary_actual) if base_salary_actual else 0
-        base_salary_proposal = float(base_salary_proposal) if base_salary_proposal else 0
-        target_actual = float(target_actual) if target_actual else 0
-        target_propuesta = float(target_propuesta) if target_propuesta else 0
-
-        # Actual
-        annual_salary_actual = base_salary_actual * 12
-        bonus_annual_actual = target_actual * base_salary_actual
-        total_annual_actual = annual_salary_actual + bonus_annual_actual
-
-        # Propuesta
-        annual_salary_proposal = base_salary_proposal * 12
-        bonus_annual_proposal = target_propuesta * base_salary_proposal
-        total_annual_proposal = annual_salary_proposal + bonus_annual_proposal
-
-        # Obtener mediana
-        median = get_median_from_db(nivel_hay_actual, mercado)
-        if not median:
-            median = 100000000  # Valor por defecto si no hay mediana
-
-        # Calcular Compratio
-        compratio_actual = (total_annual_actual / median * 100) if median > 0 else 0
-        compratio_proposal = (total_annual_proposal / median * 100) if median > 0 else 0
-
-        # Calcular % variable
-        variable_pct_actual = (bonus_annual_actual / total_annual_actual * 100) if total_annual_actual > 0 else 0
-        variable_pct_proposal = (bonus_annual_proposal / total_annual_proposal * 100) if total_annual_proposal > 0 else 0
-
-        result = {
-            'actual': {
-                'annual_compensation': total_annual_actual,
-                'median': median,
-                'compratio_pct': compratio_actual,
-                'variable_pct': variable_pct_actual,
-                'bonus_annual': bonus_annual_actual
-            },
-            'propuesta': {
-                'annual_compensation': total_annual_proposal,
-                'median': median,
-                'compratio_pct': compratio_proposal,
-                'variable_pct': variable_pct_proposal,
-                'bonus_annual': bonus_annual_proposal
-            }
-        }
-        return result
-    except Exception as e:
-        import logging
-        logging.error(f"Error en calculate_compensation_metrics: {e}")
-        return None
-
-
 def get_company_logo(company_name: str):
     """Obtiene la ruta del logo según la empresa."""
     try:
@@ -277,7 +186,7 @@ def search_employee_section():
         if search_by == "RUT":
             search_input = st.text_input("Ingrese RUT (ej: 12.345.678-9)").strip()
 
-        if st.button("🔎 Buscar", use_container_width=True) or search_by == "Ver Todos":
+        if st.button("🔎 Buscar", width='stretch') or search_by == "Ver Todos":
             if search_by != "Ver Todos" and not search_input:
                 st.warning("Por favor ingrese un valor para buscar")
                 return
@@ -343,7 +252,7 @@ def search_employee_section():
             with col4:
                 st.write(employee.job_title[:20] + "..." if employee.job_title and len(employee.job_title) > 20 else employee.job_title or "N/A")
             with col5:
-                if st.button("Seleccionar", key=f"select_{idx}", use_container_width=True):
+                if st.button("Seleccionar", key=f"select_{idx}", width='stretch'):
                     st.session_state.current_employee = employee
                     st.session_state.search_results = None
                     st.session_state.propuestas_subtab = "propuesta"
@@ -925,7 +834,7 @@ def proposal_section():
     st.divider()
 
     # Botón para crear propuesta
-    if st.button("✅ Crear Propuesta", use_container_width=True, type="primary"):
+    if st.button("✅ Crear Propuesta", width='stretch', type="primary"):
         with st.spinner("Calculando propuesta..."):
             simulator = Simulator(payroll_engine)
 
@@ -1121,7 +1030,7 @@ def comparison_section(payroll_engine=None):
 
     import pandas as pd
     df_comparison = pd.DataFrame(comp_data)
-    st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+    st.dataframe(df_comparison, width='stretch', hide_index=True)
 
     st.divider()
 
@@ -1170,7 +1079,7 @@ def comparison_section(payroll_engine=None):
             st.write(f"• **Mercado:** {comp_data.get('mercado', '—')}")
 
         # Botón para calcular compensación
-        if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", use_container_width=True):
+        if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", width='stretch'):
             st.session_state.show_compensation = True
 
         # Mostrar análisis si se presionó el botón
@@ -1220,19 +1129,19 @@ def comparison_section(payroll_engine=None):
                                     format_peso_chileno(metrics['actual']['median']),
                                     f"{metrics['actual']['compratio_pct']:.1f}%",
                                     f"{metrics['actual']['variable_pct']:.1f}%",
-                                    format_peso_chileno(metrics['actual']['bonus_annual']),
+                                    format_peso_chileno(metrics['actual']['bono_anualizado']),
                                 ],
                                 "Propuesta": [
                                     format_peso_chileno(metrics['propuesta']['annual_compensation']),
                                     format_peso_chileno(metrics['propuesta']['median']),
                                     f"{metrics['propuesta']['compratio_pct']:.1f}%",
                                     f"{metrics['propuesta']['variable_pct']:.1f}%",
-                                    format_peso_chileno(metrics['propuesta']['bonus_annual']),
+                                    format_peso_chileno(metrics['propuesta']['bono_anualizado']),
                                 ]
                             }
 
                             df_comp = pd.DataFrame(comp_table_data)
-                            st.dataframe(df_comp, use_container_width=True, hide_index=True)
+                            st.dataframe(df_comp, width='stretch', hide_index=True)
 
                             # Resumen de cambios
                             st.divider()
@@ -1340,7 +1249,7 @@ def comparison_section(payroll_engine=None):
                 })
 
         df = pd.DataFrame(history_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width='stretch', hide_index=True)
 
         # Resumen (usando datos filtrados)
         col1, col2, col3 = st.columns(3)
@@ -1369,7 +1278,7 @@ def comparison_section(payroll_engine=None):
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("📄 Descargar Excel", use_container_width=True):
+        if st.button("📄 Descargar Excel", width='stretch'):
             filename = f"Propuesta_Renta_{employee.rut.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             excel_exporter = ExcelExporter()
 
@@ -1415,7 +1324,7 @@ def comparison_section(payroll_engine=None):
                 st.error("❌ Error al generar Excel")
 
     with col2:
-        if st.button("📑 Descargar PDF", use_container_width=True):
+        if st.button("📑 Descargar PDF", width='stretch'):
             filename = f"Propuesta_Renta_{employee.rut.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             pdf_exporter = PDFExporter()
 
@@ -1604,7 +1513,7 @@ def configuration_section():
         afp_uno = st.number_input("Uno %", value=float(afp_rates.get("uno", 10.46)), step=0.01, format="%.2f", key="afp_uno")
 
     # Botón para guardar cambios
-    if st.button("💾 Guardar Cambios", use_container_width=True, type="primary"):
+    if st.button("💾 Guardar Cambios", width='stretch', type="primary"):
         # Actualizar parámetros
         parameters["uf_value"] = uf_value
         parameters["utm_value"] = utm_value
@@ -1652,7 +1561,7 @@ def configuration_section():
 
     import pandas as pd
     df_summary = pd.DataFrame(summary_data)
-    st.dataframe(df_summary, use_container_width=True, hide_index=True)
+    st.dataframe(df_summary, width='stretch', hide_index=True)
 
     st.divider()
 
@@ -1672,7 +1581,7 @@ def configuration_section():
             new_ipc = st.number_input("Valor IPC:", min_value=0.0, step=0.0001, format="%.4f", key="new_ipc_val")
         with col_btn:
             st.write("")  # Spacing
-            if st.button("Guardar IPC", use_container_width=True, key="save_ipc_btn"):
+            if st.button("Guardar IPC", width='stretch', key="save_ipc_btn"):
                 if new_mes and new_ipc > 0:
                     if db.upsert_ipc(new_mes, new_ipc):
                         st.success(f"✅ IPC {new_mes}: {new_ipc:.4f} guardado")
@@ -1684,7 +1593,7 @@ def configuration_section():
 
     with col2:
         st.write("")  # Spacing
-        if st.button("🔄 Recargar", use_container_width=True, key="reload_ipc"):
+        if st.button("🔄 Recargar", width='stretch', key="reload_ipc"):
             st.rerun()
 
     st.divider()
@@ -1699,7 +1608,7 @@ def configuration_section():
         df_ipc = df_ipc[["Mes", "IPC (%)"]]
 
         st.caption(f"Total de registros: {len(ipc_history)}")
-        st.dataframe(df_ipc, use_container_width=True, hide_index=True)
+        st.dataframe(df_ipc, width='stretch', hide_index=True)
     else:
         st.info("No hay IPCs registrados")
 
@@ -1725,9 +1634,9 @@ def configuration_section():
                 st.success(f"✅ Archivo cargado: {len(df_comp)} niveles")
 
                 with st.expander("👁️ Vista previa"):
-                    st.dataframe(df_comp, use_container_width=True, hide_index=True)
+                    st.dataframe(df_comp, width='stretch', hide_index=True)
 
-                if st.button("💾 Guardar en Base de Datos", type="primary", use_container_width=True, key="save_comp_btn"):
+                if st.button("💾 Guardar en Base de Datos", type="primary", width='stretch', key="save_comp_btn"):
                     with st.spinner("Cargando compensaciones..."):
                         insertados = 0
                         errores = 0
@@ -1768,7 +1677,7 @@ def configuration_section():
         df_comp_display.columns = ["Nivel", "Mercado Financiero", "Mercado Seguros", "Descripción"]
 
         st.caption(f"Total registros: {len(compensaciones)}")
-        st.dataframe(df_comp_display, use_container_width=True, hide_index=True)
+        st.dataframe(df_comp_display, width='stretch', hide_index=True)
     else:
         st.info("No hay compensaciones cargadas. Carga un archivo Excel.")
 
@@ -1788,7 +1697,7 @@ def configuration_section():
             new_uf = st.number_input("Valor UF:", min_value=0.0, step=0.01, format="%.2f", key="new_uf_val")
         with col_btn:
             st.write("")  # Spacing
-            if st.button("Guardar UF", use_container_width=True, key="save_uf_btn"):
+            if st.button("Guardar UF", width='stretch', key="save_uf_btn"):
                 if new_mes_uf and new_uf > 0:
                     if db.upsert_uf(new_mes_uf, new_uf):
                         st.success(f"✅ UF {new_mes_uf}: ${new_uf:,.2f} guardada")
@@ -1800,7 +1709,7 @@ def configuration_section():
 
     with col2:
         st.write("")  # Spacing
-        if st.button("🔄 Recargar", use_container_width=True, key="reload_uf"):
+        if st.button("🔄 Recargar", width='stretch', key="reload_uf"):
             st.rerun()
 
     st.divider()
@@ -1815,7 +1724,7 @@ def configuration_section():
         df_uf = df_uf[["Mes", "UF ($)"]]
 
         st.caption(f"Total de registros: {len(uf_history)}")
-        st.dataframe(df_uf, use_container_width=True, hide_index=True)
+        st.dataframe(df_uf, width='stretch', hide_index=True)
     else:
         st.info("No hay UF registradas")
 
@@ -1856,7 +1765,7 @@ def configuration_section():
         )
 
         # Botón para calcular promedios
-        if st.button("🧮 Calcular Promedios (Prueba)", use_container_width=True, key="calc_averages"):
+        if st.button("🧮 Calcular Promedios (Prueba)", width='stretch', key="calc_averages"):
             try:
                 from src.analysis.internal_competitiveness import InternalCompetitivenessCalculator
 
@@ -1885,7 +1794,7 @@ def configuration_section():
                             })
 
                     df_promedios = pd.DataFrame(tabla_promedios)
-                    st.dataframe(df_promedios, use_container_width=True, hide_index=True)
+                    st.dataframe(df_promedios, width='stretch', hide_index=True)
 
                     # GUARDAR AUTOMÁTICAMENTE
                     st.divider()
@@ -1941,7 +1850,7 @@ def configuration_section():
 
         df_bd = pd.DataFrame(tabla_bd)
         st.caption(f"Total de niveles: {len(promedios_bd)}")
-        st.dataframe(df_bd, use_container_width=True, hide_index=True)
+        st.dataframe(df_bd, width='stretch', hide_index=True)
     else:
         st.info("No hay promedios calculados aún. Haz clic en 'Calcular Promedios' arriba.")
 
@@ -1964,7 +1873,7 @@ def configuration_section():
     with col2:
         st.write("")  # Spacing
 
-    if empresa_detalle and st.button("📥 Generar Excel de Detalle", use_container_width=True, key="gen_detalle_excel"):
+    if empresa_detalle and st.button("📥 Generar Excel de Detalle", width='stretch', key="gen_detalle_excel"):
         try:
             from src.analysis.compensation_calculator import CompensationCalculator
             from io import BytesIO
@@ -2203,7 +2112,7 @@ def calculator_section():
     st.divider()
 
     # Botón para calcular
-    if st.button("🧮 Calcular Liquidación", use_container_width=True, type="primary"):
+    if st.button("🧮 Calcular Liquidación", width='stretch', type="primary"):
         with st.spinner("Calculando..."):
             # Si es líquido objetivo, calcular el sueldo base necesario
             if salary_method == "Líquido Objetivo":
@@ -2266,7 +2175,7 @@ def calculator_section():
             }
             import pandas as pd
             df_haberes = pd.DataFrame(haberes_data)
-            st.dataframe(df_haberes, use_container_width=True, hide_index=True)
+            st.dataframe(df_haberes, width='stretch', hide_index=True)
 
             st.markdown(f"**Total Imponible: ${calc.total_taxable:,.0f}**")
 
@@ -2282,7 +2191,7 @@ def calculator_section():
                 ]
             }
             df_descuentos = pd.DataFrame(descuentos_data)
-            st.dataframe(df_descuentos, use_container_width=True, hide_index=True)
+            st.dataframe(df_descuentos, width='stretch', hide_index=True)
 
             st.markdown(f"**Total Descuentos: ${calc.total_discounts:,.0f}**")
 
@@ -2302,7 +2211,7 @@ def calculator_section():
                 ]
             }
             df_no_imponibles = pd.DataFrame(no_imponibles_data)
-            st.dataframe(df_no_imponibles, use_container_width=True, hide_index=True)
+            st.dataframe(df_no_imponibles, width='stretch', hide_index=True)
 
             st.markdown(f"**Total: ${calc.total_non_taxable:,.0f}**")
 
@@ -2314,7 +2223,7 @@ def calculator_section():
                 "Monto": [f"${parking_discount:,.0f}"]
             }
             df_otros = pd.DataFrame(otros_data)
-            st.dataframe(df_otros, use_container_width=True, hide_index=True)
+            st.dataframe(df_otros, width='stretch', hide_index=True)
 
             st.markdown(f"**Total: ${parking_discount:,.0f}**")
 
@@ -2366,7 +2275,7 @@ def calculator_section():
             ]
         }
         df_aportes = pd.DataFrame(aportes_data)
-        st.dataframe(df_aportes, use_container_width=True, hide_index=True)
+        st.dataframe(df_aportes, width='stretch', hide_index=True)
 
         st.markdown(f"**Total Aportes Empleador: ${total_aportes_empleador:,.0f} ({pct_aportes:.2f}%)**")
 
@@ -2401,7 +2310,7 @@ def calculator_section():
         col1, col2, col3 = st.columns([1, 1, 2])
 
         with col1:
-            if st.button("📥 Excel", use_container_width=True, key="export_excel_calc"):
+            if st.button("📥 Excel", width='stretch', key="export_excel_calc"):
                 try:
                     from src.exporter import ExcelExporter
                     import tempfile
@@ -2430,7 +2339,7 @@ def calculator_section():
                     st.error(f"❌ Error al generar Excel: {str(e)}")
 
         with col2:
-            if st.button("📄 PDF", use_container_width=True, key="export_pdf_calc"):
+            if st.button("📄 PDF", width='stretch', key="export_pdf_calc"):
                 try:
                     import tempfile
 
@@ -2517,7 +2426,7 @@ def main():
             st.markdown(f"**👤 {st.session_state.usuario}**")
             st.caption(f"Rol: {st.session_state.rol.upper()}")
         with col2:
-            if st.button("🚪 Logout", use_container_width=True):
+            if st.button("🚪 Logout", width='stretch'):
                 st.session_state.authenticated = False
                 st.session_state.usuario = None
                 st.session_state.rol = None
@@ -2580,11 +2489,11 @@ def main():
             # Sección de creación de propuesta
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
-                if st.button("← Volver a Buscar", use_container_width=True, key="back_to_search"):
+                if st.button("← Volver a Buscar", width='stretch', key="back_to_search"):
                     st.session_state.propuestas_subtab = "buscar"
                     st.rerun()
             with col3:
-                if st.button("Ver Comparativa →", use_container_width=True, key="to_comparison"):
+                if st.button("Ver Comparativa →", width='stretch', key="to_comparison"):
                     st.session_state.propuestas_subtab = "comparativa"
                     st.rerun()
 
@@ -2594,11 +2503,11 @@ def main():
             # Sección de comparativa
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
-                if st.button("← Crear Propuesta", use_container_width=True, key="back_to_proposal"):
+                if st.button("← Crear Propuesta", width='stretch', key="back_to_proposal"):
                     st.session_state.propuestas_subtab = "propuesta"
                     st.rerun()
             with col3:
-                if st.button("Buscar Nuevo →", use_container_width=True, key="search_new"):
+                if st.button("Buscar Nuevo →", width='stretch', key="search_new"):
                     st.session_state.propuestas_subtab = "buscar"
                     st.rerun()
 
@@ -2609,7 +2518,7 @@ def main():
             col1, col2, col3 = st.columns([2, 1, 1])
             with col3:
                 if st.session_state.current_employee:
-                    if st.button("Crear Propuesta →", use_container_width=True, key="to_proposal"):
+                    if st.button("Crear Propuesta →", width='stretch', key="to_proposal"):
                         st.session_state.propuestas_subtab = "propuesta"
                         st.rerun()
 
@@ -2627,7 +2536,7 @@ def main():
             # === TAB CONFIGURACIÓN ===
             col1, col2 = st.columns([1, 2])
             with col1:
-                if st.button("← Volver", use_container_width=True, key="back_from_config"):
+                if st.button("← Volver", width='stretch', key="back_from_config"):
                     st.session_state.main_tab = "propuestas"
                     st.rerun()
 

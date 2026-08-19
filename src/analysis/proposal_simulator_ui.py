@@ -503,7 +503,7 @@ def show_proposal_simulator():
         })
 
         df_comparativo = pd.DataFrame(comparativo_data)
-        st.dataframe(df_comparativo, use_container_width=True, hide_index=True)
+        st.dataframe(df_comparativo, width='stretch', hide_index=True)
 
         # SECCIÓN 4: Comparativa Compensación
         st.divider()
@@ -541,7 +541,7 @@ def show_proposal_simulator():
         }
 
         df_comparativa = pd.DataFrame(comparativa_data)
-        st.dataframe(df_comparativa, use_container_width=True, hide_index=True)
+        st.dataframe(df_comparativa, width='stretch', hide_index=True)
 
         # SECCIÓN 5: Impacto Presupuestario
         st.divider()
@@ -618,7 +618,7 @@ def show_proposal_simulator():
                     data=pdf_buffer.getvalue(),
                     file_name=f"propuesta_renta_{empleado.get('rut').replace('.', '').replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
-                    use_container_width=True
+                    width='stretch'
                 )
             except Exception as e:
                 st.error(f"Error generando PDF: {str(e)}")
@@ -637,7 +637,7 @@ def show_proposal_simulator():
             )
 
         with col2:
-            if st.button("💾 Guardar", use_container_width=True, key="prop_guardar"):
+            if st.button("💾 Guardar", width='stretch', key="prop_guardar"):
                 simulacion = {
                     'nombre': nombre_sim,
                     'fecha': datetime.now().isoformat(),
@@ -863,7 +863,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
             }
 
             df = pd.DataFrame(datos_tabla)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width='stretch', hide_index=True)
 
             # RESUMEN DE CAMBIOS
             st.divider()

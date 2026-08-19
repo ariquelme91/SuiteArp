@@ -72,7 +72,7 @@ def _render_modo_secrets(auth_manager: AuthManager):
             )
 
             generar = st.form_submit_button(
-                "🔑 Generar línea", use_container_width=True, type="primary"
+                "🔑 Generar línea", width='stretch', type="primary"
             )
 
         if generar:
@@ -176,7 +176,7 @@ def _render_modo_local(auth_manager: AuthManager):
             )
 
             submit_crear = st.form_submit_button(
-                "✅ Crear Usuario", use_container_width=True, type="primary"
+                "✅ Crear Usuario", width='stretch', type="primary"
             )
 
         if submit_crear:
@@ -210,7 +210,7 @@ def _render_modo_local(auth_manager: AuthManager):
             )
 
             submit_cambiar = st.form_submit_button(
-                "✅ Cambiar Contraseña", use_container_width=True, type="primary"
+                "✅ Cambiar Contraseña", width='stretch', type="primary"
             )
 
         if submit_cambiar:
@@ -252,5 +252,5 @@ def _tabla_usuarios(auth_manager: AuthManager, mostrar_fecha: bool) -> list:
             fila["Fecha Creación"] = fecha[:10] if fecha else "—"
         filas.append(fila)
 
-    st.dataframe(pd.DataFrame(filas), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(filas), width='stretch', hide_index=True)
     return usuarios

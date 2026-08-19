@@ -270,7 +270,7 @@ def show_compensations_section(buk_client: BukClient):
         }
 
         df_percentiles = pd.DataFrame(percentiles_data)
-        st.dataframe(df_percentiles, use_container_width=True, hide_index=True)
+        st.dataframe(df_percentiles, width='stretch', hide_index=True)
 
         # Métricas técnicas
         st.divider()
@@ -433,7 +433,7 @@ def show_compensations_section(buk_client: BukClient):
     # Mostrar tabla con destaque del nivel actual y target
     st.dataframe(
         df_tabla,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         height=400
     )
@@ -637,7 +637,7 @@ def show_compensations_section(buk_client: BukClient):
                 data=pdf_buffer.getvalue(),
                 file_name=f"analisis_compensacion_{empleado.get('rut').replace('.', '').replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
                 mime="application/pdf",
-                use_container_width=True
+                width='stretch'
             )
         except Exception as e:
             st.error(f"Error generando PDF: {str(e)}")

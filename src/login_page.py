@@ -79,7 +79,7 @@ def render_login_page(auth_manager: AuthManager):
             with col1:
                 login_button = st.form_submit_button(
                     "🔓 Iniciar Sesión",
-                    use_container_width=True,
+                    width='stretch',
                     type="primary"
                 )
 

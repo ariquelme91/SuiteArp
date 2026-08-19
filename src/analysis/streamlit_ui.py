@@ -268,7 +268,7 @@ def show_analysis_section(buk_client: BukClient):
             df_manual = df_manual[["rut", "nombre", "cargo", "nivel_hay_manual", "target_manual", "fecha_actualizacion"]]
             df_manual.columns = ["RUT", "Nombre", "Cargo", "Nivel HAY", "Target", "Última Actualización"]
 
-            st.dataframe(df_manual, use_container_width=True, hide_index=True)
+            st.dataframe(df_manual, width='stretch', hide_index=True)
 
     # Gráficos
     st.divider()
@@ -512,7 +512,7 @@ def show_analysis_section(buk_client: BukClient):
                                     return [''] * len(row)
 
                                 styled_df = hist_df_display.style.apply(estilo_fila, axis=1)
-                                st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                                st.dataframe(styled_df, width='stretch', hide_index=True)
                                 st.info(f"Total de períodos: {len(hist_data)}")
                                 st.caption("🔵 Celeste = Aumento sobrepasa el IPC | Blanco = Aumento igual o menor al IPC")
                             else:
