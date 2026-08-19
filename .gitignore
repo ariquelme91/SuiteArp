@@ -71,3 +71,6 @@ backups/
 
 # BD local de usuarios (contiene hashes; en la nube se usan Secrets)
 src/analysis/data/auth.db
+
+# PDF generado por generar_pdf_docs.py
+Suite_ARP_IA_Documentacion.pdf
