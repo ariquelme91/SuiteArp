@@ -9,6 +9,14 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from .simulator import ComparisonResult
 import logging
+import io
+import base64
+from typing import List, Dict, Optional, Tuple
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -560,8 +568,161 @@ class PDFExporter:
             logger.error(traceback.format_exc())
             return False
 
+    def _calculate_ipc_adjusted_salary(self, salary_history: list, ipc_history: List[Dict]) -> Tuple[list, list, list]:
+        """
+        Calcula el sueldo ajustado por IPC para cada período del historial.
+
+        Args:
+            salary_history: Lista de registros con start_date y base_wage
+            ipc_history: Lista de registros con mes y valor_ipc
+
+        Returns:
+            Tupla con (fechas, sueldos_reales, sueldos_ipc)
+        """
+        if not salary_history:
+            return [], [], []
+
+        # Ordenar historial por fecha ascendente (más antiguo primero)
+        sorted_history = sorted(salary_history, key=lambda x: x.get("start_date", ""))
+
+        # Crear diccionario de IPC indexado por mes (YYYY-MM)
+        ipc_dict = {record['mes']: record['valor_ipc'] for record in ipc_history}
+
+        dates = []
+        real_salaries = []
+        ipc_salaries = []
+
+        initial_salary = None
+        initial_month = None
+
+        for i, record in enumerate(sorted_history):
+            start_date = record.get("start_date", "")
+            wage = record.get("base_wage", 0)
+
+            if not start_date or not wage:
+                continue
+
+            # Extraer mes en formato YYYY-MM
+            month_key = start_date[:7]
+            dates.append(month_key)
+            real_salaries.append(wage)
+
+            # Calcular sueldo ajustado por IPC
+            if i == 0:
+                # Primer registro (más antiguo)
+                initial_salary = wage
+                initial_month = month_key
+                ipc_salaries.append(wage)
+            else:
+                # Calcular el sueldo si se hubiera ajustado solo por IPC
+                # desde el salario inicial
+                try:
+                    ipc_value_initial = ipc_dict.get(initial_month)
+                    ipc_value_current = ipc_dict.get(month_key)
+
+                    if ipc_value_initial and ipc_value_current and ipc_value_initial > 0:
+                        # Sueldo IPC = Sueldo Inicial * (IPC_actual / IPC_inicial)
+                        ipc_adjusted = initial_salary * (ipc_value_current / ipc_value_initial)
+                        ipc_salaries.append(ipc_adjusted)
+                    else:
+                        # Si no hay datos de IPC, usar el sueldo real
+                        ipc_salaries.append(wage)
+                except Exception as e:
+                    logger.warning(f"Error calculando IPC ajustado: {e}")
+                    ipc_salaries.append(wage)
+
+        return dates, real_salaries, ipc_salaries
+
+    def _generate_salary_evolution_chart(self, salary_history: list, ipc_history: List[Dict]) -> Tuple[Optional[Image], list]:
+        """
+        Genera un gráfico de evolución salarial con matplotlib y lo retorna como Image para PDF.
+
+        Args:
+            salary_history: Lista de registros con start_date y base_wage
+            ipc_history: Lista de registros con mes y valor_ipc
+
+        Returns:
+            Tupla con (Objeto Image de reportlab, lista de puntos de ajuste) o (None, []) si hay error
+        """
+        try:
+            import tempfile
+            import os
+
+            # Filtrar historial
+            filtered_history = [record for record in salary_history
+                               if record.get("start_date", "")[:7] > "2019-05"]
+
+            if len(filtered_history) < 2:
+                return None, []
+
+            dates, real_salaries, ipc_salaries = self._calculate_ipc_adjusted_salary(
+                filtered_history, ipc_history
+            )
+
+            if not dates:
+                return None, []
+
+            # Crear figura con estilo limpio
+            fig, ax = plt.subplots(figsize=(10, 5), dpi=100)
+            fig.patch.set_facecolor('white')
+            ax.set_facecolor('#F9F9F9')
+
+            # Convertir fechas a índices para plotear
+            x_indices = np.arange(len(dates))
+
+            # Plotear líneas
+            ax.plot(x_indices, real_salaries, color='#1F4E78', linewidth=2.5,
+                   label='Sueldo Real (Efectivo)', marker='o', markersize=6, zorder=3)
+            ax.plot(x_indices, ipc_salaries, color='#A0A0A0', linewidth=2,
+                   linestyle='--', label='Sueldo Ajustado por IPC (Contractual)',
+                   marker='s', markersize=4, zorder=2)
+
+            # Marcar ajustes reales (donde sueldo real > sueldo IPC)
+            adjustment_points = []
+            for i, (real, ipc) in enumerate(zip(real_salaries, ipc_salaries)):
+                if real > ipc * 1.01:  # 1% de tolerancia para evitar ruido
+                    ax.scatter(i, real, marker='o', s=150, color='#FF8C00',
+                              edgecolors='#E67E00', linewidths=1.5, zorder=4)
+                    adjustment_points.append((dates[i], real, ipc))
+
+            # Formato de ejes
+            ax.set_xticks(x_indices[::max(1, len(x_indices)//6)])
+            ax.set_xticklabels([dates[i] for i in x_indices[::max(1, len(x_indices)//6)]],
+                              rotation=45, ha='right', fontsize=9)
+
+            ax.set_ylabel('Pesos Chilenos ($)', fontsize=10, fontweight='bold')
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e6:.0f}M' if x >= 1e6 else f'${x/1e3:.0f}K'))
+
+            # Leyenda
+            ax.legend(loc='upper left', fontsize=9, framealpha=0.95)
+
+            # Grid
+            ax.grid(True, alpha=0.3, linestyle=':', zorder=0)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+
+            plt.tight_layout()
+
+            # Guardar en archivo temporal
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                tmp_path = tmp.name
+                plt.savefig(tmp_path, format='png', dpi=100, bbox_inches='tight')
+
+            plt.close(fig)
+
+            # Crear objeto Image de reportlab
+            img = Image(tmp_path, width=6.5*inch, height=3.25*inch)
+
+            return img, adjustment_points
+
+        except Exception as e:
+            logger.error(f"Error generando gráfico de evolución salarial: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None, []
+
     def _add_salary_history_to_pdf(self, story, salary_history: list):
-        """Agrega historial de sueldos a una segunda página del PDF."""
+        """Agrega historial de sueldos con gráfico a una segunda página del PDF."""
         # Título
         title_style = ParagraphStyle(
             'HistoryTitle',
@@ -581,6 +742,72 @@ class PDFExporter:
         if not filtered_history:
             story.append(Paragraph("No hay registro de historial de sueldos disponible.", self.styles['Normal']))
             return
+
+        # Obtener datos de IPC desde la base de datos
+        try:
+            from .analysis.db_manager import AnalysisDBManager
+            db_manager = AnalysisDBManager()
+            ipc_history = db_manager.get_ipc_history()
+        except Exception as e:
+            logger.warning(f"No se pudo obtener historial de IPC: {e}")
+            ipc_history = []
+
+        # Generar gráfico de evolución salarial
+        if ipc_history and len(filtered_history) >= 2:
+            chart_result = self._generate_salary_evolution_chart(filtered_history, ipc_history)
+            if chart_result and chart_result[0]:
+                chart_img, adjustment_points = chart_result
+                story.append(chart_img)
+                story.append(Spacer(1, 0.2 * inch))
+
+                # Agregar tabla explicativa de ajustes reales
+                if adjustment_points:
+                    explanation_style = ParagraphStyle(
+                        'ExplanationTitle',
+                        parent=self.styles['Normal'],
+                        fontSize=10,
+                        fontName='Helvetica-Bold',
+                        textColor=colors.HexColor("#1F4E78"),
+                        spaceAfter=6,
+                    )
+                    story.append(Paragraph("Ajustes Salariales Realizados", explanation_style))
+
+                    # Obtener los 2 mayores ajustes
+                    sorted_adjustments = sorted(
+                        adjustment_points,
+                        key=lambda x: ((x[1] - x[2]) / x[2]) * 100 if x[2] > 0 else 0,
+                        reverse=True
+                    )[:2]
+
+                    adjustment_data = [["Mes", "Aumento vs IPC", "% vs IPC", "Detalles del Ajuste"]]
+
+                    for month, real_salary, ipc_salary in sorted_adjustments:
+                        real_component = real_salary - ipc_salary
+                        real_component_pct = ((real_component) / ipc_salary * 100) if ipc_salary > 0 else 0
+
+                        adjustment_data.append([
+                            month,
+                            f"${real_component:,.0f}",
+                            f"{real_component_pct:.1f}%",
+                            f"Ajuste real adicional por encima de IPC"
+                        ])
+
+                    adjustment_table = Table(adjustment_data, colWidths=[1.2*inch, 1.2*inch, 1.0*inch, 2.1*inch])
+                    adjustment_table.setStyle(TableStyle([
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("FONTSIZE", (0, 0), (-1, -1), 8),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                        ("TOPPADDING", (0, 0), (-1, -1), 2),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                        ("ALIGN", (1, 0), (-1, -1), "CENTER"),
+                        ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F5F5F5")),
+                    ]))
+                    story.append(adjustment_table)
+                    story.append(Spacer(1, 0.2 * inch))
 
         # Preparar datos para la tabla
         history_data = [["Periodo", "Sueldo Base", "Variación ($)", "Variación (%)"]]
