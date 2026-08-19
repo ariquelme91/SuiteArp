@@ -792,7 +792,9 @@ def proposal_section():
                     comp_data = db_manager.get_compensation_by_level(int(nivel_hay_actual_str))
                     avg_data = db_manager.get_compensation_average_by_level(nivel_hay_actual_str)
 
-                    mercado_val = comp_data.get('mercado_financiero', 0) if comp_data else 0
+                    # Seleccionar el campo correcto según el mercado elegido
+                    mercado_field = 'mercado_seguros' if mercado_actual_comp == 'Mercado Seguros' else 'mercado_financiero'
+                    mercado_val = comp_data.get(mercado_field, 0) if comp_data else 0
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
                     st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
@@ -864,10 +866,13 @@ def proposal_section():
                     comp_data = db_manager.get_compensation_by_level(int(nivel_hay_prop_str))
                     avg_data = db_manager.get_compensation_average_by_level(nivel_hay_prop_str)
 
-                    mercado_val = comp_data.get('mercado_financiero', 0) if comp_data else 0
+                    # Seleccionar el campo correcto según el mercado elegido
+                    mercado_comparacion_prop = st.session_state.get('mercado_comparacion_info_prop', 'Mercado Financiero')
+                    mercado_field = 'mercado_seguros' if mercado_comparacion_prop == 'Mercado Seguros' else 'mercado_financiero'
+                    mercado_val = comp_data.get(mercado_field, 0) if comp_data else 0
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
-                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, Mercado Financiero): **${mercado_val:,.0f}**")
+                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, {mercado_comparacion_prop}): **${mercado_val:,.0f}**")
 
                     # Gap vs Mercado
                     if mercado_val > 0:
