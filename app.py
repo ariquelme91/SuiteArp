@@ -17,8 +17,8 @@ from src.exporter import ExcelExporter
 from src.pdf_exporter import PDFExporter
 from src.pdf_exporter_calc import PDFExporterCalc
 from src.auth_manager import AuthManager
-from src.ui.login_page import render_login_page
-from src.ui.user_management import render_user_management
+from src.login_page import render_login_page
+from src.user_management import render_user_management
 from src.analysis.db_manager import AnalysisDBManager
 
 # Cargar variables de entorno

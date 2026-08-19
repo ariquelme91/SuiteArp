@@ -71,7 +71,8 @@
       "Bash(netstat -ano)",
       "Bash(findstr :8501)",
       "Bash(pkill -f \"streamlit run\")",
-      "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\ariquelme\\\\propuestas de renta\\\\src\\\\\" -Force | Where-Object {$_.Name -eq \"__init__.py\"})"
     ]
   }
 }
