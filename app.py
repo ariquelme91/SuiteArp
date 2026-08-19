@@ -2614,15 +2614,6 @@ def main():
                         st.rerun()
 
             search_employee_section()
-
-    with tab2:
-        # === TAB ANÁLISIS ===
-        from src.analysis.streamlit_ui import show_analysis_section
-        buk_client = get_buk_client()
-        show_analysis_section(buk_client)
-
-    with tab3:
-        # === TAB PROPUESTAS ===
         # Detectar si hay empleado seleccionado desde ANÁLISIS
         if st.session_state.selected_employee:
             employee = st.session_state.selected_employee
