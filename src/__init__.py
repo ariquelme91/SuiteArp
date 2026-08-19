@@ -4,7 +4,6 @@ from .buk_client import BukClient, Employee
 from .payroll_engine import PayrollEngine, PayrollCalculation
 from .simulator import Simulator, ComparisonResult
 from .exporter import ExcelExporter
-from .ui import InteractiveUI
 
 __all__ = [
     "BukClient",
@@ -14,7 +13,6 @@ __all__ = [
     "Simulator",
     "ComparisonResult",
     "ExcelExporter",
-    "InteractiveUI",
 ]
 
 __version__ = "1.0.0"
