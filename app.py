@@ -638,23 +638,29 @@ def proposal_section():
 
         col_comp_actual, col_comp_propuesta = st.columns(2)
 
-        # DATOS ACTUALES (readonly)
+        # DATOS ACTUALES (editable)
         with col_comp_actual:
             st.caption("💰 Datos Actuales")
 
             st.text("Nivel HAY")
             hay_actual_comp = st.session_state.get("nivel_hay_actual_input", "")
-            # Permitir edición si no tiene valor, solo lectura si lo tiene
-            st.text_input("Nivel HAY Actual", value=hay_actual_comp, disabled=bool(hay_actual_comp), label_visibility="collapsed", key="nivel_hay_actual_input")
+            # Inicializar en session_state si no existe
+            if "nivel_hay_actual_input" not in st.session_state:
+                st.session_state.nivel_hay_actual_input = ""
+            # Campo siempre editable para permitir cambios
+            st.text_input("Nivel HAY Actual", value=st.session_state.nivel_hay_actual_input, label_visibility="collapsed", key="nivel_hay_actual_input", placeholder="Ej: 16, 18, 20")
 
             st.text("Target (rentas)")
-            target_actual_comp = st.session_state.get("target_actual_input", 0.0)
-            # Permitir edición si es 0, solo lectura si tiene valor
-            st.number_input("Target Actual", value=float(target_actual_comp) if target_actual_comp else 0.0, disabled=bool(target_actual_comp), label_visibility="collapsed", key="target_actual_input", step=0.1)
+            if "target_actual_input" not in st.session_state:
+                st.session_state.target_actual_input = 0.0
+            # Campo siempre editable
+            st.number_input("Target Actual", value=float(st.session_state.target_actual_input), label_visibility="collapsed", key="target_actual_input", step=0.1, min_value=0.0)
 
             st.text("Tipo de Mercado")
-            mercado_actual_comp = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
-            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, disabled=True, label_visibility="collapsed", key="mercado_comparacion_main")
+            if "mercado_comparacion_main" not in st.session_state:
+                st.session_state.mercado_comparacion_main = "Mercado Financiero"
+            mercado_actual_comp = st.session_state.mercado_comparacion_main
+            st.selectbox("Mercado Actual", options=["Mercado Financiero", "Mercado Seguros"], index=0 if mercado_actual_comp == "Mercado Financiero" else 1, label_visibility="collapsed", key="mercado_comparacion_main")
 
         # DATOS PROPUESTOS (editable)
         with col_comp_propuesta:
@@ -726,16 +732,10 @@ def proposal_section():
             st.divider()
 
             # Obtener nivel HAY actual y calcular bono
-            nivel_hay_actual_str = st.session_state.get("nivel_hay_actual_input", "")
+            nivel_hay_actual_str = st.session_state.get("nivel_hay_actual_input", "").strip()
             target_actual_input = st.session_state.get("target_actual_input", 0.0)
 
-            # Buscar monto en BD si existe nivel
-            if nivel_hay_actual_str:
-                monto_nivel_actual = get_median_from_db(nivel_hay_actual_str, mercado_actual_comp) or 0
-            else:
-                monto_nivel_actual = 0
-
-            # Calcular bono si hay target (incluso sin nivel HAY)
+            # Calcular bono (incluso sin nivel HAY)
             bono_target_actual = target_actual_input * sal_base_actual if target_actual_input > 0 else 0
 
             # Siempre mostrar Bono Target (aunque sea $0)
@@ -746,7 +746,7 @@ def proposal_section():
             st.divider()
 
             # Mostrar valores de Mercado y Promedio Interno
-            if nivel_hay_actual_str:
+            if nivel_hay_actual_str and nivel_hay_actual_str.isdigit():
                 try:
                     from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
@@ -760,8 +760,10 @@ def proposal_section():
 
                     st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
                     st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
-                except:
+                except Exception as e:
                     st.caption(f"📊 Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
+            elif nivel_hay_actual_str:
+                st.warning(f"⚠️ Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
             else:
                 st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
 
@@ -787,7 +789,7 @@ def proposal_section():
             st.divider()
 
             # Obtener nivel HAY propuesto y calcular bono
-            nivel_hay_prop_str = st.session_state.get("nivel_hay_prop_input", "")
+            nivel_hay_prop_str = st.session_state.get("nivel_hay_prop_input", "").strip()
             target_prop_input = st.session_state.get("target_prop_input", 0.0)
 
             # Siempre mostrar Bono Target
@@ -799,7 +801,7 @@ def proposal_section():
             st.divider()
 
             # Mostrar valores de Mercado y Promedio Interno
-            if nivel_hay_prop_str:
+            if nivel_hay_prop_str and nivel_hay_prop_str.isdigit():
                 try:
                     from src.analysis.db_manager import AnalysisDBManager
                     db_manager = AnalysisDBManager()
@@ -813,8 +815,10 @@ def proposal_section():
 
                     st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, Mercado Financiero): **${mercado_val:,.0f}**")
                     st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
-                except:
+                except Exception as e:
                     st.caption(f"📊 Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
+            elif nivel_hay_prop_str:
+                st.warning(f"⚠️ Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
             else:
                 st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
 
