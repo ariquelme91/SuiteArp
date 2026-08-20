@@ -17,7 +17,7 @@ from src.exporter import ExcelExporter
 from src.pdf_exporter import PDFExporter
 from src.pdf_exporter_calc import PDFExporterCalc
 from src.auth_manager import AuthManager
-from src.branding import LOGO_PATH, logo_base64
+from src.branding import LOGO_HORIZONTAL_PATH, LOGO_PATH, logo_base64
 from src.login_page import render_login_page
 from src.user_management import render_user_management
 from src.analysis.db_manager import AnalysisDBManager
@@ -46,7 +46,8 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     .app-logo img {
-        height: 84px;
+        width: 280px;
+        height: auto;
     }
     .success-box {
         background-color: #d4edda;
@@ -2446,10 +2447,10 @@ def main():
                    help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
     # Header
-    if os.path.exists(LOGO_PATH):
+    if os.path.exists(LOGO_HORIZONTAL_PATH):
         st.markdown(
             f'<div class="app-logo">'
-            f'<img src="data:image/png;base64,{logo_base64()}" />'
+            f'<img src="data:image/png;base64,{logo_base64(LOGO_HORIZONTAL_PATH)}" />'
             f'</div>',
             unsafe_allow_html=True,
         )
