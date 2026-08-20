@@ -207,6 +207,29 @@ class AnalysisDBManager:
                     """
                 )
 
+                # Configuración de beneficios adicionales (fila única, id=1)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS beneficios_config (
+                        id INTEGER PRIMARY KEY CHECK (id = 1),
+                        aguinaldo_navidad REAL DEFAULT 60000,
+                        aguinaldo_fiestas_patrias REAL DEFAULT 60000,
+                        gift_card REAL DEFAULT 50000,
+                        bono_vacaciones_monto REAL DEFAULT 200000,
+                        bono_vacaciones_tope_renta REAL DEFAULT 2500000,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    INSERT OR IGNORE INTO beneficios_config (
+                        id, aguinaldo_navidad, aguinaldo_fiestas_patrias, gift_card,
+                        bono_vacaciones_monto, bono_vacaciones_tope_renta
+                    ) VALUES (1, 60000, 60000, 50000, 200000, 2500000)
+                    """
+                )
+
                 # Tabla de propuestas de renta creadas desde la interfaz principal (Propuestas)
                 cursor.execute(
                     """
@@ -640,6 +663,73 @@ class AnalysisDBManager:
         except Exception as e:
             logger.error(f"Error obteniendo propuestas de renta: {e}")
             return []
+
+    # ===== BENEFICIOS ADICIONALES (Configuración) =====
+
+    _BENEFICIOS_DEFAULT = {
+        "aguinaldo_navidad": 60000,
+        "aguinaldo_fiestas_patrias": 60000,
+        "gift_card": 50000,
+        "bono_vacaciones_monto": 200000,
+        "bono_vacaciones_tope_renta": 2500000,
+    }
+
+    def get_beneficios_config(self) -> Dict[str, Any]:
+        """Obtiene los montos vigentes de beneficios adicionales desde la BD."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM beneficios_config WHERE id = 1")
+                row = cursor.fetchone()
+                if row:
+                    return dict(row)
+        except Exception as e:
+            logger.error(f"Error obteniendo config de beneficios: {e}")
+        return dict(self._BENEFICIOS_DEFAULT)
+
+    def save_beneficios_config(self, data: Dict[str, Any]) -> bool:
+        """Guarda los montos de beneficios adicionales en la BD (fila única).
+
+        Args:
+            data: Dict con aguinaldo_navidad, aguinaldo_fiestas_patrias,
+                gift_card, bono_vacaciones_monto, bono_vacaciones_tope_renta
+
+        Returns:
+            True si fue exitoso
+        """
+        try:
+            from datetime import datetime
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO beneficios_config (
+                        id, aguinaldo_navidad, aguinaldo_fiestas_patrias, gift_card,
+                        bono_vacaciones_monto, bono_vacaciones_tope_renta, fecha_actualizacion
+                    ) VALUES (1, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        aguinaldo_navidad = excluded.aguinaldo_navidad,
+                        aguinaldo_fiestas_patrias = excluded.aguinaldo_fiestas_patrias,
+                        gift_card = excluded.gift_card,
+                        bono_vacaciones_monto = excluded.bono_vacaciones_monto,
+                        bono_vacaciones_tope_renta = excluded.bono_vacaciones_tope_renta,
+                        fecha_actualizacion = excluded.fecha_actualizacion
+                    """,
+                    (
+                        data.get("aguinaldo_navidad", self._BENEFICIOS_DEFAULT["aguinaldo_navidad"]),
+                        data.get("aguinaldo_fiestas_patrias", self._BENEFICIOS_DEFAULT["aguinaldo_fiestas_patrias"]),
+                        data.get("gift_card", self._BENEFICIOS_DEFAULT["gift_card"]),
+                        data.get("bono_vacaciones_monto", self._BENEFICIOS_DEFAULT["bono_vacaciones_monto"]),
+                        data.get("bono_vacaciones_tope_renta", self._BENEFICIOS_DEFAULT["bono_vacaciones_tope_renta"]),
+                        datetime.now().isoformat(),
+                    ),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error guardando config de beneficios: {e}")
+            return False
 
     def log_export(self, export_data: Dict[str, Any]) -> bool:
         """Guarda un log de exportación (Excel/PDF).

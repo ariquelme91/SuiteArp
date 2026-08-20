@@ -133,16 +133,13 @@ def get_payroll_engine():
 
 
 def get_beneficios_config():
-    """Obtiene los montos vigentes de beneficios adicionales (costo empresa)."""
-    with open("config/parameters.json") as f:
-        parameters = json.load(f)
-    return parameters.get("beneficios", {
-        "aguinaldo_navidad": 60000,
-        "aguinaldo_fiestas_patrias": 60000,
-        "gift_card": 50000,
-        "bono_vacaciones_monto": 200000,
-        "bono_vacaciones_tope_renta": 2500000,
-    })
+    """Obtiene los montos vigentes de beneficios adicionales (costo empresa).
+
+    Se guardan en la BD (no en config/parameters.json) para que las
+    actualizaciones hechas desde la app no se pierdan en cada rerun/reinicio
+    normal del proceso.
+    """
+    return AnalysisDBManager().get_beneficios_config()
 
 
 def get_company_logo(company_name: str):
@@ -1624,7 +1621,7 @@ def configuration_section():
     st.subheader(":material/payments: Beneficios Adicionales (Costo Empresa)")
     st.caption("Montos anuales de referencia. No afectan AFP/Salud/Impuesto ni el líquido del trabajador — solo se usan para costear el total anual.")
 
-    beneficios = parameters.get("beneficios", {})
+    beneficios = AnalysisDBManager().get_beneficios_config()
 
     col_ben1, col_ben2 = st.columns(2)
 
@@ -1688,19 +1685,24 @@ def configuration_section():
             "modelo": afp_modelo,
             "uno": afp_uno
         }
-        parameters["beneficios"] = {
+        # Guardar en archivo
+        with open("config/parameters.json", "w") as f:
+            json.dump(parameters, f, indent=2)
+
+        # Beneficios adicionales se guardan en la BD (no en el JSON), para que
+        # una actualización hecha desde la app no se pierda en un rerun/reinicio.
+        beneficios_guardado_ok = AnalysisDBManager().save_beneficios_config({
             "aguinaldo_navidad": aguinaldo_navidad,
             "aguinaldo_fiestas_patrias": aguinaldo_fiestas_patrias,
             "gift_card": gift_card,
             "bono_vacaciones_monto": bono_vacaciones_monto,
             "bono_vacaciones_tope_renta": bono_vacaciones_tope_renta,
-        }
+        })
 
-        # Guardar en archivo
-        with open("config/parameters.json", "w") as f:
-            json.dump(parameters, f, indent=2)
-
-        st.success(":material/check_circle: Parámetros actualizados correctamente")
+        if beneficios_guardado_ok:
+            st.success(":material/check_circle: Parámetros actualizados correctamente")
+        else:
+            st.warning(":material/warning: Parámetros generales guardados, pero no se pudieron guardar los Beneficios Adicionales.")
         st.balloons()
 
     st.divider()
