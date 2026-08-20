@@ -2444,11 +2444,6 @@ def main():
 
         st.divider()
 
-        st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
-                   help="Muestra las secciones de análisis de compensación en PROPUESTAS")
-
-        st.divider()
-
         if st.session_state.rol == "admin":
             menu_options = [
                 "Calculadora", "Análisis", "Propuestas", "Compensaciones",
@@ -2481,6 +2476,11 @@ def main():
                 "nav-link-selected": {"background-color": "#3B78C3", "color": "#FFFFFF"},
             },
         )
+
+        # Opción propia del módulo Propuestas: solo se despliega si está seleccionado
+        if selected_section == "Propuestas":
+            st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
+                       help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
     # Header
     if os.path.exists(LOGO_HORIZONTAL_PATH):
