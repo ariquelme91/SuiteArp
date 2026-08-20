@@ -45,6 +45,7 @@ class PDFExporter:
         salary_history: list = None,
         proposal_reasons: list = None,
         compensation_data: dict = None,
+        beneficios_data: dict = None,
     ) -> bool:
         """
         Exporta comparativa a archivo PDF en formato Excel-like.
@@ -339,6 +340,58 @@ class PDFExporter:
                     ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
                 ]))
                 story.append(comp_table)
+
+            # Agregar tabla de Beneficios Adicionales si se proporciona beneficios_data
+            if beneficios_data:
+                story.append(Spacer(1, 0.3 * inch))
+
+                ben_title = ParagraphStyle(
+                    'BenTitle',
+                    parent=self.styles['Normal'],
+                    fontSize=11,
+                    textColor=colors.HexColor("#1F4E78"),
+                    fontName='Helvetica-Bold',
+                    spaceAfter=10,
+                    alignment=TA_CENTER,
+                )
+                story.append(Paragraph("BENEFICIOS ADICIONALES (COSTO EMPRESA, ANUAL)", ben_title))
+
+                ben_table_data = [
+                    ["Beneficio", "Actual", "Propuesta"],
+                    ["Aguinaldo de Navidad",
+                     f"{beneficios_data.get('aguinaldo_navidad_monto', 0):,.0f}",
+                     f"{beneficios_data.get('aguinaldo_navidad_monto', 0):,.0f}"],
+                    ["Aguinaldo Fiestas Patrias",
+                     f"{beneficios_data.get('aguinaldo_fiestas_patrias_monto', 0):,.0f}",
+                     f"{beneficios_data.get('aguinaldo_fiestas_patrias_monto', 0):,.0f}"],
+                    ["Gift Card",
+                     f"{beneficios_data.get('gift_card_monto', 0):,.0f}",
+                     f"{beneficios_data.get('gift_card_monto', 0):,.0f}"],
+                    ["Bono Vacaciones",
+                     f"{beneficios_data.get('bono_vacaciones_actual_monto', 0):,.0f}",
+                     f"{beneficios_data.get('bono_vacaciones_propuesta_monto', 0):,.0f}"],
+                    ["Total Beneficios Anuales",
+                     f"{beneficios_data.get('total_anual_actual', 0):,.0f}",
+                     f"{beneficios_data.get('total_anual_propuesta', 0):,.0f}"],
+                ]
+
+                ben_table = Table(ben_table_data, colWidths=[2.3 * inch, 1.35 * inch, 1.35 * inch])
+                ben_table.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                    ("BACKGROUND", (0, 1), (-1, -2), colors.HexColor("#E8F0F8")),
+                    ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#D4E4F0")),
+                    ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+                ]))
+                story.append(ben_table)
 
             # Agregar historial de sueldos si se proporciona
             if salary_history:

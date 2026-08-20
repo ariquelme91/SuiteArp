@@ -132,6 +132,19 @@ def get_payroll_engine():
     return PayrollEngine(parameters)
 
 
+def get_beneficios_config():
+    """Obtiene los montos vigentes de beneficios adicionales (costo empresa)."""
+    with open("config/parameters.json") as f:
+        parameters = json.load(f)
+    return parameters.get("beneficios", {
+        "aguinaldo_navidad": 60000,
+        "aguinaldo_fiestas_patrias": 60000,
+        "gift_card": 50000,
+        "bono_vacaciones_monto": 200000,
+        "bono_vacaciones_tope_renta": 2500000,
+    })
+
+
 def get_company_logo(company_name: str):
     """Obtiene la ruta del logo según la empresa."""
     try:
@@ -552,6 +565,79 @@ def proposal_section():
 
     st.divider()
 
+    # BENEFICIOS ADICIONALES (Costo Empresa - no afectan la liquidación del trabajador)
+    st.subheader(":material/payments: Beneficios Adicionales (Costo Empresa)")
+    st.caption("Montos anuales, editables en CONFIGURACIÓN. No afectan AFP/Salud/Impuesto ni el líquido del trabajador — solo se suman al costo anual para la empresa.")
+
+    beneficios_cfg = get_beneficios_config()
+    monto_aguinaldo_navidad = beneficios_cfg.get("aguinaldo_navidad", 60000)
+    monto_aguinaldo_fiestas = beneficios_cfg.get("aguinaldo_fiestas_patrias", 60000)
+    monto_gift_card = beneficios_cfg.get("gift_card", 50000)
+    monto_bono_vacaciones = beneficios_cfg.get("bono_vacaciones_monto", 200000)
+    tope_bono_vacaciones = beneficios_cfg.get("bono_vacaciones_tope_renta", 2500000)
+
+    # Elegibilidad automática del Bono Vacaciones: renta = Sueldo Base + Gratificación
+    renta_actual_ben = employee.base_salary + payroll_engine.calculate(base_salary=employee.base_salary).gratification
+    califica_bono_actual = renta_actual_ben < tope_bono_vacaciones
+
+    renta_propuesta_ben = proposal_base_salary + payroll_engine.calculate(base_salary=proposal_base_salary).gratification
+    califica_bono_propuesta = renta_propuesta_ben < tope_bono_vacaciones
+
+    col_ben_check, col_ben_bono = st.columns(2)
+
+    with col_ben_check:
+        st.caption("Aplican a este trabajador (empresa/caso a caso)")
+        chk_aguinaldo_navidad = st.checkbox(f"Aguinaldo de Navidad (${monto_aguinaldo_navidad:,.0f})", value=True, key="chk_aguinaldo_navidad")
+        chk_aguinaldo_fiestas = st.checkbox(f"Aguinaldo Fiestas Patrias (${monto_aguinaldo_fiestas:,.0f})", value=True, key="chk_aguinaldo_fiestas")
+        chk_gift_card = st.checkbox(f"Gift Card (${monto_gift_card:,.0f})", value=True, key="chk_gift_card")
+
+    with col_ben_bono:
+        st.caption(f"Bono Vacaciones — aplica si renta < ${tope_bono_vacaciones:,.0f}")
+        chk_bono_actual = st.checkbox(
+            f"Actual — renta ${renta_actual_ben:,.0f} ({':material/check_circle: califica' if califica_bono_actual else ':material/cancel: no califica'})",
+            value=califica_bono_actual, key="chk_bono_actual",
+        )
+        chk_bono_propuesta = st.checkbox(
+            f"Propuesta — renta ${renta_propuesta_ben:,.0f} ({':material/check_circle: califica' if califica_bono_propuesta else ':material/cancel: no califica'})",
+            value=califica_bono_propuesta, key="chk_bono_propuesta",
+        )
+
+    beneficios_actual_anual = (
+        (monto_aguinaldo_navidad if chk_aguinaldo_navidad else 0)
+        + (monto_aguinaldo_fiestas if chk_aguinaldo_fiestas else 0)
+        + (monto_gift_card if chk_gift_card else 0)
+        + (monto_bono_vacaciones if chk_bono_actual else 0)
+    )
+    beneficios_propuesta_anual = (
+        (monto_aguinaldo_navidad if chk_aguinaldo_navidad else 0)
+        + (monto_aguinaldo_fiestas if chk_aguinaldo_fiestas else 0)
+        + (monto_gift_card if chk_gift_card else 0)
+        + (monto_bono_vacaciones if chk_bono_propuesta else 0)
+    )
+
+    col_ben_total1, col_ben_total2 = st.columns(2)
+    with col_ben_total1:
+        st.metric("Beneficios Anuales — Actual", f"${beneficios_actual_anual:,.0f}")
+    with col_ben_total2:
+        st.metric("Beneficios Anuales — Propuesta", f"${beneficios_propuesta_anual:,.0f}")
+
+    st.session_state.beneficios_data = {
+        "aguinaldo_navidad_aplica": chk_aguinaldo_navidad,
+        "aguinaldo_navidad_monto": monto_aguinaldo_navidad if chk_aguinaldo_navidad else 0,
+        "aguinaldo_fiestas_patrias_aplica": chk_aguinaldo_fiestas,
+        "aguinaldo_fiestas_patrias_monto": monto_aguinaldo_fiestas if chk_aguinaldo_fiestas else 0,
+        "gift_card_aplica": chk_gift_card,
+        "gift_card_monto": monto_gift_card if chk_gift_card else 0,
+        "bono_vacaciones_actual_aplica": chk_bono_actual,
+        "bono_vacaciones_actual_monto": monto_bono_vacaciones if chk_bono_actual else 0,
+        "bono_vacaciones_propuesta_aplica": chk_bono_propuesta,
+        "bono_vacaciones_propuesta_monto": monto_bono_vacaciones if chk_bono_propuesta else 0,
+        "total_anual_actual": beneficios_actual_anual,
+        "total_anual_propuesta": beneficios_propuesta_anual,
+    }
+
+    st.divider()
+
     # INFORMACIÓN DE COMPENSACIÓN ACTUAL vs PROPUESTA (solo si está habilitado el Analizador)
     if st.session_state.get("enable_compensation_analysis", False):
         # Cargar Nivel HAY y Target desde múltiples fuentes (en orden de prioridad)
@@ -914,6 +1000,7 @@ def proposal_section():
             # Guardar propuesta en historial
             try:
                 db_manager = AnalysisDBManager()
+                beneficios_snapshot = st.session_state.get("beneficios_data", {})
                 proposal_record = {
                     "rut": employee.rut,
                     "nombre": employee.full_name,
@@ -927,13 +1014,22 @@ def proposal_section():
                     "target": float(st.session_state.get("target_prop_input", 0.0)),
                     "cambio_comp": 0,  # Se puede calcular después si es necesario
                     "cambio_comp_pct": 0,
-                    "comentarios": "Propuesta creada desde interfaz"
+                    "comentarios": "Propuesta creada desde interfaz",
+                    "aguinaldo_navidad_monto": beneficios_snapshot.get("aguinaldo_navidad_monto", 0),
+                    "aguinaldo_fiestas_patrias_monto": beneficios_snapshot.get("aguinaldo_fiestas_patrias_monto", 0),
+                    "gift_card_monto": beneficios_snapshot.get("gift_card_monto", 0),
+                    "bono_vacaciones_actual_monto": beneficios_snapshot.get("bono_vacaciones_actual_monto", 0),
+                    "bono_vacaciones_propuesta_monto": beneficios_snapshot.get("bono_vacaciones_propuesta_monto", 0),
+                    "beneficios_total_anual_actual": beneficios_snapshot.get("total_anual_actual", 0),
+                    "beneficios_total_anual_propuesta": beneficios_snapshot.get("total_anual_propuesta", 0),
                 }
-                db_manager.save_proposal(proposal_record)
+                guardado_ok = db_manager.save_proposal(proposal_record)
+                if not guardado_ok:
+                    st.warning(":material/warning: La propuesta se calculó, pero no se pudo guardar en el historial.")
             except Exception as e:
                 # No bloquear la creación de propuesta si falla el guardado en historial
                 logger.warning(f"Advertencia: No se pudo guardar propuesta en historial: {e}")
-                pass
+                st.warning(":material/warning: La propuesta se calculó, pero no se pudo guardar en el historial.")
 
             st.success(":material/check_circle: Propuesta calculada exitosamente")
             st.rerun()
@@ -1395,6 +1491,7 @@ def comparison_section(payroll_engine=None):
                 salary_history=salary_history,
                 proposal_reasons=st.session_state.get("proposal_reasons", []),
                 compensation_data=compensation_pdf_data,
+                beneficios_data=st.session_state.get("beneficios_data", {}),
             )
 
             if success:
@@ -1521,6 +1618,56 @@ def configuration_section():
     with col_afp4:
         afp_uno = st.number_input("Uno %", value=float(afp_rates.get("uno", 10.46)), step=0.01, format="%.2f", key="afp_uno")
 
+    st.divider()
+
+    # Beneficios adicionales (costo empresa, no afectan la liquidación)
+    st.subheader(":material/payments: Beneficios Adicionales (Costo Empresa)")
+    st.caption("Montos anuales de referencia. No afectan AFP/Salud/Impuesto ni el líquido del trabajador — solo se usan para costear el total anual.")
+
+    beneficios = parameters.get("beneficios", {})
+
+    col_ben1, col_ben2 = st.columns(2)
+
+    with col_ben1:
+        aguinaldo_navidad = st.number_input(
+            "Aguinaldo de Navidad ($)",
+            value=int(beneficios.get("aguinaldo_navidad", 60000)),
+            min_value=0,
+            step=1000,
+            key="cfg_aguinaldo_navidad",
+        )
+        aguinaldo_fiestas_patrias = st.number_input(
+            "Aguinaldo Fiestas Patrias ($)",
+            value=int(beneficios.get("aguinaldo_fiestas_patrias", 60000)),
+            min_value=0,
+            step=1000,
+            key="cfg_aguinaldo_fiestas_patrias",
+        )
+        gift_card = st.number_input(
+            "Gift Card ($)",
+            value=int(beneficios.get("gift_card", 50000)),
+            min_value=0,
+            step=1000,
+            key="cfg_gift_card",
+        )
+
+    with col_ben2:
+        bono_vacaciones_monto = st.number_input(
+            "Bono Vacaciones ($)",
+            value=int(beneficios.get("bono_vacaciones_monto", 200000)),
+            min_value=0,
+            step=1000,
+            key="cfg_bono_vacaciones_monto",
+        )
+        bono_vacaciones_tope_renta = st.number_input(
+            "Tope de Renta para Bono Vacaciones ($)",
+            value=int(beneficios.get("bono_vacaciones_tope_renta", 2500000)),
+            min_value=0,
+            step=10000,
+            key="cfg_bono_vacaciones_tope_renta",
+            help="Aplica si (Sueldo Base + Gratificación) es menor a este monto.",
+        )
+
     # Botón para guardar cambios
     if st.button(":material/save: Guardar Cambios", width='stretch', type="primary"):
         # Actualizar parámetros
@@ -1540,6 +1687,13 @@ def configuration_section():
             "provida": afp_provida,
             "modelo": afp_modelo,
             "uno": afp_uno
+        }
+        parameters["beneficios"] = {
+            "aguinaldo_navidad": aguinaldo_navidad,
+            "aguinaldo_fiestas_patrias": aguinaldo_fiestas_patrias,
+            "gift_card": gift_card,
+            "bono_vacaciones_monto": bono_vacaciones_monto,
+            "bono_vacaciones_tope_renta": bono_vacaciones_tope_renta,
         }
 
         # Guardar en archivo

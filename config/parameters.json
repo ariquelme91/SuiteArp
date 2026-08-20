@@ -23,6 +23,13 @@
   "sis_percent": 1.49,
   "tasa_mutual_base": 0.93,
   "gratificacion_max_percent": 25.0,
+  "beneficios": {
+    "aguinaldo_navidad": 60000,
+    "aguinaldo_fiestas_patrias": 60000,
+    "gift_card": 50000,
+    "bono_vacaciones_monto": 200000,
+    "bono_vacaciones_tope_renta": 2500000
+  },
   "tabla_impuesto_unico": [
     {
       "desde_utm": 0.0,

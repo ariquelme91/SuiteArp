@@ -207,6 +207,38 @@ class AnalysisDBManager:
                     """
                 )
 
+                # Tabla de propuestas de renta creadas desde la interfaz principal (Propuestas)
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS propuestas_renta (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        rut TEXT NOT NULL,
+                        nombre TEXT,
+                        empresa TEXT,
+                        cargo TEXT,
+                        sueldo_actual REAL,
+                        sueldo_propuesto REAL,
+                        diferencia_pesos REAL,
+                        diferencia_pct REAL,
+                        nivel_hay TEXT,
+                        target REAL,
+                        cambio_comp REAL,
+                        cambio_comp_pct REAL,
+                        comentarios TEXT,
+                        pdf_path TEXT,
+                        aguinaldo_navidad_monto REAL DEFAULT 0,
+                        aguinaldo_fiestas_patrias_monto REAL DEFAULT 0,
+                        gift_card_monto REAL DEFAULT 0,
+                        bono_vacaciones_actual_monto REAL DEFAULT 0,
+                        bono_vacaciones_propuesta_monto REAL DEFAULT 0,
+                        beneficios_total_anual_actual REAL DEFAULT 0,
+                        beneficios_total_anual_propuesta REAL DEFAULT 0,
+                        fecha_creacion TEXT,
+                        fecha_actualizacion TEXT
+                    )
+                    """
+                )
+
                 # Tabla de caché: Nombres de supervisores
                 cursor.execute(
                     """
@@ -518,7 +550,13 @@ class AnalysisDBManager:
     # ===== PROPOSAL HISTORY METHODS =====
 
     def save_proposal(self, proposal_data: Dict[str, Any]) -> bool:
-        """Guarda una propuesta creada en el historial.
+        """Guarda una propuesta creada en el historial (tabla `propuestas_renta`).
+
+        El monto de cada beneficio adicional (aguinaldos, gift card, bono
+        vacaciones) se guarda tal como se usó al momento de crear la
+        propuesta — es una foto histórica, no una referencia viva a
+        Configuración, para que la propuesta siga reflejando la realidad
+        del momento en que se generó aunque los montos suban después.
 
         Args:
             proposal_data: Diccionario con datos de la propuesta
@@ -532,14 +570,18 @@ class AnalysisDBManager:
                 cursor = conn.cursor()
 
                 cursor.execute(
-                    """INSERT INTO compensation_proposals (
+                    """INSERT INTO propuestas_renta (
                         rut, nombre, empresa, cargo,
                         sueldo_actual, sueldo_propuesto,
                         diferencia_pesos, diferencia_pct,
                         nivel_hay, target, cambio_comp, cambio_comp_pct,
                         comentarios, pdf_path,
+                        aguinaldo_navidad_monto, aguinaldo_fiestas_patrias_monto,
+                        gift_card_monto, bono_vacaciones_actual_monto,
+                        bono_vacaciones_propuesta_monto,
+                        beneficios_total_anual_actual, beneficios_total_anual_propuesta,
                         fecha_creacion, fecha_actualizacion
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         proposal_data.get("rut"),
                         proposal_data.get("nombre"),
@@ -555,6 +597,13 @@ class AnalysisDBManager:
                         proposal_data.get("cambio_comp_pct"),
                         proposal_data.get("comentarios"),
                         proposal_data.get("pdf_path"),
+                        proposal_data.get("aguinaldo_navidad_monto", 0),
+                        proposal_data.get("aguinaldo_fiestas_patrias_monto", 0),
+                        proposal_data.get("gift_card_monto", 0),
+                        proposal_data.get("bono_vacaciones_actual_monto", 0),
+                        proposal_data.get("bono_vacaciones_propuesta_monto", 0),
+                        proposal_data.get("beneficios_total_anual_actual", 0),
+                        proposal_data.get("beneficios_total_anual_propuesta", 0),
                         datetime.now().isoformat(),
                         datetime.now().isoformat(),
                     ),
@@ -565,6 +614,32 @@ class AnalysisDBManager:
         except Exception as e:
             logger.error(f"Error guardando propuesta: {e}")
             return False
+
+    def get_propuestas_renta(self, rut: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Obtiene las propuestas de renta guardadas, más recientes primero.
+
+        Args:
+            rut: Si se entrega, filtra solo las propuestas de ese trabajador.
+
+        Returns:
+            Lista de dicts con cada propuesta guardada (incluye el monto de
+            beneficios tal como se usó en el momento de creación).
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                cursor = conn.cursor()
+                if rut:
+                    cursor.execute(
+                        "SELECT * FROM propuestas_renta WHERE rut = ? ORDER BY fecha_creacion DESC",
+                        (rut,),
+                    )
+                else:
+                    cursor.execute("SELECT * FROM propuestas_renta ORDER BY fecha_creacion DESC")
+                return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"Error obteniendo propuestas de renta: {e}")
+            return []
 
     def log_export(self, export_data: Dict[str, Any]) -> bool:
         """Guarda un log de exportación (Excel/PDF).
