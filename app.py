@@ -750,6 +750,10 @@ def proposal_section():
 
         col_calc_actual, col_calc_prop = st.columns(2)
 
+        beneficios_data_comp = st.session_state.get("beneficios_data", {})
+        beneficios_anual_actual_comp = beneficios_data_comp.get("total_anual_actual", 0)
+        beneficios_anual_prop_comp = beneficios_data_comp.get("total_anual_propuesta", 0)
+
         # Obtener valores actuales de Haberes
         sal_base_actual = employee.base_salary
         grat_actual = payroll_engine.calculate(base_salary=sal_base_actual).gratification
@@ -788,7 +792,10 @@ def proposal_section():
             # Siempre mostrar Bono Target (aunque sea $0)
             st.metric(":material/payments: Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
 
-            total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
+            if beneficios_anual_actual_comp > 0:
+                st.metric(":material/payments: Beneficios Adicionales", f"${beneficios_anual_actual_comp:,.0f}")
+
+            total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual + beneficios_anual_actual_comp
             st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
             st.divider()
 
@@ -861,7 +868,10 @@ def proposal_section():
             bono_target_prop = target_prop_input * sal_base_prop
             st.metric(":material/payments: Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
 
-            total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop
+            if beneficios_anual_prop_comp > 0:
+                st.metric(":material/payments: Beneficios Adicionales", f"${beneficios_anual_prop_comp:,.0f}")
+
+            total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop + beneficios_anual_prop_comp
             st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
             st.divider()
 
