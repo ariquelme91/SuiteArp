@@ -5,7 +5,7 @@ import os
 
 import streamlit as st
 
-LOGO_PATH = os.path.join("assets", "logos", "rentanalytics.png")
+LOGO_PATH = os.path.join("assets", "logos", "rentanalyticsVF.png")
 
 
 @st.cache_data
