@@ -1,6 +1,7 @@
 """Aplicación web de Propuestas de Renta con Streamlit."""
 
 import streamlit as st
+from streamlit_option_menu import option_menu
 import os
 import json
 import pandas as pd
@@ -2446,6 +2447,41 @@ def main():
         st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
                    help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
+        st.divider()
+
+        if st.session_state.rol == "admin":
+            menu_options = [
+                "Calculadora", "Análisis", "Propuestas", "Compensaciones",
+                "Dotación", "Configuración", "Gestión de Usuarios",
+            ]
+            menu_icons = [
+                "calculator", "bar-chart-line", "file-earmark-text", "cash-coin",
+                "compass", "gear", "people",
+            ]
+        else:
+            menu_options = ["Calculadora", "Análisis", "Propuestas", "Compensaciones"]
+            menu_icons = ["calculator", "bar-chart-line", "file-earmark-text", "cash-coin"]
+
+        selected_section = option_menu(
+            menu_title=None,
+            options=menu_options,
+            icons=menu_icons,
+            default_index=0,
+            key="main_nav",
+            styles={
+                "container": {"padding": "0!important", "background-color": "#111111"},
+                "icon": {"color": "#3B78C3", "font-size": "16px"},
+                "nav-link": {
+                    "font-size": "14px",
+                    "text-align": "left",
+                    "margin": "2px",
+                    "color": "#FAFAFA",
+                    "--hover-color": "#222222",
+                },
+                "nav-link-selected": {"background-color": "#3B78C3", "color": "#FFFFFF"},
+            },
+        )
+
     # Header
     if os.path.exists(LOGO_HORIZONTAL_PATH):
         st.markdown(
@@ -2459,36 +2495,19 @@ def main():
         st.markdown('<p class="main-header">💰 Suite ARP IA</p>', unsafe_allow_html=True)
         st.markdown("Suite de compensaciones ARP")
 
-    # Pestañas principales - Variar según rol
-    if st.session_state.rol == "admin":
-        # Admin ve todo, incluida la planificación de dotación
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-            "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES", "🧭 DOTACIÓN", "⚙️ CONFIGURACIÓN",
-            "👥 GESTIÓN DE USUARIOS"
-        ])
-    else:
-        # User ve: Calculadora, Análisis, Propuestas, Compensaciones
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🧮 CALCULADORA", "📊 ANÁLISIS", "📝 PROPUESTAS",
-            "💰 COMPENSACIONES"
-        ])
-        tab5 = None
-        tab6 = None
-        tab7 = None
-
-    with tab1:
-        # === TAB CALCULADORA ===
+    # Secciones principales - Navegación en el menú lateral, según rol
+    if selected_section == "Calculadora":
+        # === SECCIÓN CALCULADORA ===
         calculator_section()
 
-    with tab2:
-        # === TAB ANÁLISIS ===
+    elif selected_section == "Análisis":
+        # === SECCIÓN ANÁLISIS ===
         from src.analysis.streamlit_ui import show_analysis_section
         buk_client = get_buk_client()
         show_analysis_section(buk_client)
 
-    with tab3:
-        # === TAB PROPUESTAS ===
+    elif selected_section == "Propuestas":
+        # === SECCIÓN PROPUESTAS ===
         # Detectar si hay empleado seleccionado desde ANÁLISIS
         if "empleado_para_propuesta" in st.session_state and st.session_state.empleado_para_propuesta:
             datos_emp = st.session_state.empleado_para_propuesta
@@ -2542,34 +2561,32 @@ def main():
 
             search_employee_section()
 
-    with tab4:
-        # === TAB COMPENSACIONES ===
+    elif selected_section == "Compensaciones":
+        # === SECCIÓN COMPENSACIONES ===
         from src.analysis.compensaciones_ui import show_compensations_section
         buk_client = get_buk_client()
         show_compensations_section(buk_client)
 
-    # TABS solo para admin
-    if st.session_state.rol == "admin":
-        with tab5:
-            # === TAB DOTACIÓN ===
-            from src.analysis.dotacion_ui import show_dotacion_section
-            show_dotacion_section(get_payroll_engine())
+    elif selected_section == "Dotación" and st.session_state.rol == "admin":
+        # === SECCIÓN DOTACIÓN ===
+        from src.analysis.dotacion_ui import show_dotacion_section
+        show_dotacion_section(get_payroll_engine())
 
-        with tab6:
-            # === TAB CONFIGURACIÓN ===
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                if st.button("← Volver", width='stretch', key="back_from_config"):
-                    st.session_state.main_tab = "propuestas"
-                    st.rerun()
+    elif selected_section == "Configuración" and st.session_state.rol == "admin":
+        # === SECCIÓN CONFIGURACIÓN ===
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            if st.button("← Volver", width='stretch', key="back_from_config"):
+                st.session_state.main_tab = "propuestas"
+                st.rerun()
 
-            configuration_section()
+        configuration_section()
 
-        with tab7:
-            # === TAB GESTIÓN DE USUARIOS ===
-            db_manager = AnalysisDBManager()
-            auth_manager = AuthManager()
-            render_user_management(auth_manager)
+    elif selected_section == "Gestión de Usuarios" and st.session_state.rol == "admin":
+        # === SECCIÓN GESTIÓN DE USUARIOS ===
+        db_manager = AnalysisDBManager()
+        auth_manager = AuthManager()
+        render_user_management(auth_manager)
 
 
 if __name__ == "__main__":
