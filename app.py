@@ -17,6 +17,7 @@ from src.exporter import ExcelExporter
 from src.pdf_exporter import PDFExporter
 from src.pdf_exporter_calc import PDFExporterCalc
 from src.auth_manager import AuthManager
+from src.branding import LOGO_PATH, logo_base64
 from src.login_page import render_login_page
 from src.user_management import render_user_management
 from src.analysis.db_manager import AnalysisDBManager
@@ -40,6 +41,12 @@ st.markdown("""
         font-weight: bold;
         color: #1F4E78;
         margin-bottom: 1rem;
+    }
+    .app-logo {
+        margin-bottom: 0.5rem;
+    }
+    .app-logo img {
+        height: 84px;
     }
     .success-box {
         background-color: #d4edda;
@@ -2439,8 +2446,17 @@ def main():
                    help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
     # Header
-    st.markdown('<p class="main-header">💰 Suite ARP IA</p>', unsafe_allow_html=True)
-    st.markdown("Suite de compensaciones ARP")
+    if os.path.exists(LOGO_PATH):
+        st.markdown(
+            f'<div class="app-logo">'
+            f'<img src="data:image/png;base64,{logo_base64()}" />'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        # Reserva por si el archivo del logo no está disponible.
+        st.markdown('<p class="main-header">💰 Suite ARP IA</p>', unsafe_allow_html=True)
+        st.markdown("Suite de compensaciones ARP")
 
     # Pestañas principales - Variar según rol
     if st.session_state.rol == "admin":

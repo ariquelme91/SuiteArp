@@ -1,19 +1,10 @@
 """Página de login para la aplicación."""
 
-import base64
 import os
 
 import streamlit as st
 from src.auth_manager import AuthManager
-
-_LOGO_PATH = os.path.join("assets", "logos", "rentanalytics.png")
-
-
-@st.cache_data
-def _logo_base64() -> str:
-    """Codifica el logo una sola vez (se cachea entre reruns)."""
-    with open(_LOGO_PATH, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+from src.branding import LOGO_PATH, logo_base64
 
 
 def render_login_page(auth_manager: AuthManager):
@@ -62,10 +53,10 @@ def render_login_page(auth_manager: AuthManager):
     col_left, col_center, col_right = st.columns([1, 2, 1])
 
     with col_center:
-        if os.path.exists(_LOGO_PATH):
+        if os.path.exists(LOGO_PATH):
             st.markdown(
                 f'<div class="login-logo">'
-                f'<img src="data:image/png;base64,{_logo_base64()}" />'
+                f'<img src="data:image/png;base64,{logo_base64()}" />'
                 f'</div>',
                 unsafe_allow_html=True,
             )
