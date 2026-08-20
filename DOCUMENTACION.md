@@ -125,6 +125,15 @@ sueldo base sale de dos fuentes, en este orden:
 Sin nivel HAY ni sueldo de referencia la posición queda **sin estimar** y el
 panel lo advierte, en vez de inventar una cifra.
 
+**Ajustar y quitar posiciones.** En *Editar plan*, la tabla del plan vigente es
+editable: se cambia la cantidad, el nivel o el sueldo directamente en la fila, o
+se marca **Quitar** para sacarla, y *Aplicar cambios* guarda todo junto.
+
+**Igualar plan al real.** En *Control por área*, al hacer clic en una fila se
+abre el detalle de esa área (las personas reales, con cargo, nivel y sueldo) y
+un botón que agrega al plan, con la cantidad de hoy, los cargos que todavía no
+estén planificados. No pisa los que ya se ajustaron a mano.
+
 > `nivel_hay` está cargado en el 33% de la dotación total, pero en **4Life
 > Seguros de Vida está al 100%** — por eso el panel abre en esa empresa.
 

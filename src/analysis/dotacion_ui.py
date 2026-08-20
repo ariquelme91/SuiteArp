@@ -142,8 +142,10 @@ def _control_por_area(gestor, empresa, periodo, resumen):
     } for f in filas])
 
     pesos = st.column_config.NumberColumn(format="$%,d", width="medium")
-    st.dataframe(
+    st.caption("Haz clic en una fila para ver a las personas del área y ajustar su plan.")
+    seleccion = st.dataframe(
         df, width="stretch", hide_index=True,
+        on_select="rerun", selection_mode="single-row", key="dot_tabla_areas",
         column_config={
             "Plan": st.column_config.NumberColumn(width="small"),
             "Real": st.column_config.NumberColumn(width="small"),
@@ -165,9 +167,14 @@ def _control_por_area(gestor, empresa, periodo, resumen):
     if SOBRE in conteo:
         st.caption(
             "ℹ️ Un área figura en **sobredotación** cuando tiene más gente que "
-            "posiciones planificadas. Si todavía no cargaste todos sus cargos, "
-            "es esperable: el estado compara el total del área."
+            "posiciones planificadas. Usa **Igualar plan al real** más abajo "
+            "para cargar de una vez los cargos que todavía no planificaste."
         )
+
+    filas_sel = seleccion["selection"]["rows"] if seleccion else []
+    if filas_sel:
+        area_elegida = df.iloc[filas_sel[0]]["Área"]
+        _detalle_area(gestor, empresa, periodo, area_elegida)
 
     with st.expander("Ver el detalle por cargo"):
         real_cargo = gestor.dotacion_real_por_cargo(empresa)
@@ -187,6 +194,41 @@ def _control_por_area(gestor, empresa, periodo, resumen):
             st.dataframe(pd.DataFrame(detalle), width="stretch", hide_index=True)
         else:
             st.caption("Todavía no hay posiciones en el plan.")
+
+
+def _detalle_area(gestor, empresa, periodo, area):
+    """Personas reales del área elegida, con acceso rápido a igualar el plan."""
+    st.divider()
+    col_titulo, col_boton = st.columns([3, 1])
+    with col_titulo:
+        st.markdown(f"##### 👥 {area} — dotación real")
+    with col_boton:
+        if st.button("✅ Igualar plan al real", width="stretch", key="dot_igualar",
+                     help="Agrega al plan, con la cantidad de hoy, los cargos de "
+                          "esta área que todavía no estén planificados. No toca "
+                          "los que ya ajustaste a mano."):
+            ok, msg = gestor.igualar_plan_area(empresa, area, periodo)
+            (st.success if ok else st.info)(msg)
+            if ok:
+                st.rerun()
+
+    personas = gestor.empleados_de_area(empresa, area)
+    if not personas:
+        st.caption("No hay personas cargadas en esta área.")
+        return
+
+    st.dataframe(
+        pd.DataFrame([{
+            "Nombre": p["nombre"],
+            "Cargo": p["cargo_actual"],
+            "Nivel HAY": p["nivel_hay"] or "—",
+            "Sueldo actual": p["sueldo_actual"] or 0,
+        } for p in personas]),
+        width="stretch", hide_index=True,
+        column_config={
+            "Sueldo actual": st.column_config.NumberColumn(format="$%,d"),
+        },
+    )
 
 
 def _vacantes_y_costo(gestor, empresa, periodo, resumen):
@@ -309,7 +351,7 @@ def _editar_plan(gestor, empresa, periodo):
             else:
                 st.error(msg)
 
-    # --- Plan vigente y borrado ---
+    # --- Plan vigente: ajustar y quitar en la misma tabla ---
     st.divider()
     st.subheader(f"Plan cargado para {periodo}")
 
@@ -318,29 +360,103 @@ def _editar_plan(gestor, empresa, periodo):
         st.caption("Todavía no hay posiciones en el plan de esta empresa.")
         return
 
-    st.dataframe(
-        pd.DataFrame([{
-            "Área": p["area"],
-            "Cargo": p["cargo"],
-            "Nivel": p["nivel_hay"] or "—",
-            "Cantidad": p["cantidad"],
-            "Sueldo ref.": format_peso_chileno(p["sueldo_referencia"]) if p["sueldo_referencia"] else "—",
-            "Target": p["target_rentas"] or 0,
-            "Notas": p["notas"] or "",
-        } for p in plan]),
-        width="stretch", hide_index=True,
+    st.caption(
+        "Edita la cantidad o cualquier dato directamente en la tabla. "
+        "Para sacar una posición del plan, marca **Quitar** y guarda: "
+        "los cambios se aplican todos juntos."
     )
 
-    etiquetas = {f"{p['area']} · {p['cargo']} ({p['cantidad']})": p["id"] for p in plan}
-    col_sel, col_btn = st.columns([3, 1])
-    with col_sel:
-        a_borrar = st.selectbox("Quitar del plan", list(etiquetas), key="dot_borrar")
-    with col_btn:
-        st.write("")
-        if st.button("🗑️ Quitar", width="stretch"):
-            ok, msg = gestor.eliminar_posicion(etiquetas[a_borrar])
+    original = pd.DataFrame([{
+        "Quitar": False,
+        "Área": p["area"],
+        "Cargo": p["cargo"],
+        "Cantidad": int(p["cantidad"]),
+        "Nivel": p["nivel_hay"] or "",
+        "Sueldo ref.": float(p["sueldo_referencia"] or 0),
+        "Target": float(p["target_rentas"] or 0),
+        "Notas": p["notas"] or "",
+    } for p in plan])
+
+    editado = st.data_editor(
+        original,
+        width="stretch", hide_index=True, num_rows="fixed",
+        key="dot_editor_plan",
+        column_config={
+            "Quitar": st.column_config.CheckboxColumn(
+                "Quitar", help="Marca para sacar esta posición del plan", width="small"),
+            # Área y cargo identifican la línea: para cambiarlos, se quita y
+            # se vuelve a agregar desde el formulario de arriba.
+            "Área": st.column_config.TextColumn(disabled=True),
+            "Cargo": st.column_config.TextColumn(disabled=True),
+            "Cantidad": st.column_config.NumberColumn(min_value=1, max_value=200, step=1),
+            "Nivel": st.column_config.TextColumn(
+                help="Nivel HAY, para estimar el sueldo desde la banda", width="small"),
+            "Sueldo ref.": st.column_config.NumberColumn(
+                min_value=0, step=50_000, format="$%d",
+                help="0 = usar la banda de mercado del nivel"),
+            "Target": st.column_config.NumberColumn(min_value=0.0, max_value=12.0, step=0.5),
+        },
+    )
+
+    por_quitar = int(editado["Quitar"].sum())
+    if por_quitar:
+        st.warning(f"Se quitarán {por_quitar} posición(es) del plan al guardar.")
+
+    if st.button("💾 Aplicar cambios", width="stretch", type="primary",
+                 key="dot_aplicar"):
+        _aplicar_cambios(gestor, empresa, periodo, plan, editado)
+
+
+def _aplicar_cambios(gestor, empresa, periodo, plan, editado):
+    """Aplica bajas y ediciones de la tabla del plan."""
+    quitadas, actualizadas, errores = 0, 0, []
+
+    for posicion, (_, fila) in zip(plan, editado.iterrows()):
+        if fila["Quitar"]:
+            ok, msg = gestor.eliminar_posicion(posicion["id"])
             if ok:
-                st.success(msg)
-                st.rerun()
+                quitadas += 1
             else:
-                st.error(msg)
+                errores.append(msg)
+            continue
+
+        # Solo se reescribe la línea si algo cambió de verdad.
+        nivel = (fila["Nivel"] or "").strip() or None
+        sueldo = float(fila["Sueldo ref."]) or None
+        sin_cambios = (
+            int(fila["Cantidad"]) == posicion["cantidad"]
+            and nivel == (posicion["nivel_hay"] or None)
+            and sueldo == (posicion["sueldo_referencia"] or None)
+            and float(fila["Target"]) == float(posicion["target_rentas"] or 0)
+            and (fila["Notas"] or "").strip() == (posicion["notas"] or "")
+        )
+        if sin_cambios:
+            continue
+
+        ok, msg = gestor.guardar_posicion(
+            empresa=empresa, area=posicion["area"], cargo=posicion["cargo"],
+            cantidad=int(fila["Cantidad"]), periodo=periodo, nivel_hay=nivel,
+            sueldo_referencia=sueldo, target_rentas=float(fila["Target"]),
+            mercado=posicion["mercado"], notas=(fila["Notas"] or "").strip() or None,
+        )
+        if ok:
+            actualizadas += 1
+        else:
+            errores.append(msg)
+
+    if errores:
+        for e in errores:
+            st.error(e)
+        return
+
+    if not quitadas and not actualizadas:
+        st.info("No había cambios que guardar.")
+        return
+
+    partes = []
+    if quitadas:
+        partes.append(f"{quitadas} quitada(s)")
+    if actualizadas:
+        partes.append(f"{actualizadas} actualizada(s)")
+    st.success("Plan actualizado: " + " y ".join(partes))
+    st.rerun()

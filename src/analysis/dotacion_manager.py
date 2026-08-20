@@ -196,6 +196,21 @@ class DotacionManager:
         except sqlite3.Error:
             return []
 
+    def empleados_de_area(self, empresa: str, area: str) -> List[Dict]:
+        """Personas reales de un área, para revisar el detalle antes de planificar."""
+        try:
+            with self._conn() as conn:
+                filas = conn.execute("""
+                    SELECT nombre, cargo_actual, nivel_hay, sueldo_actual, fecha_ingreso
+                    FROM employee_analysis
+                    WHERE empresa = ? AND area = ?
+                    ORDER BY cargo_actual, nombre
+                """, (empresa, area)).fetchall()
+            return [dict(f) for f in filas]
+        except sqlite3.Error as e:
+            logger.error(f"Leyendo empleados del área: {e}")
+            return []
+
     def cargos_de(self, empresa: str, area: str = None) -> List[str]:
         try:
             sql = ("SELECT DISTINCT cargo_actual FROM employee_analysis "
@@ -337,6 +352,55 @@ class DotacionManager:
 
         return {"total": total, "por_area": por_area,
                 "personas": personas, "sin_sueldo": sin_sueldo}
+
+    def igualar_plan_area(self, empresa: str, area: str, periodo: str) -> tuple:
+        """Rellena en el plan los cargos del área que todavía no están planificados.
+
+        Cada cargo real que falte en el plan se agrega con la cantidad que
+        tiene hoy, así el área deja de figurar en sobredotación por cargos
+        que simplemente no se habían cargado. No toca los cargos que ya
+        están en el plan: si esa cantidad se definió a mano, se respeta.
+        """
+        try:
+            with self._conn() as conn:
+                ya_planificados = {
+                    fila["cargo"] for fila in conn.execute(
+                        "SELECT cargo FROM plan_dotacion WHERE empresa=? AND area=? AND periodo=?",
+                        (empresa, area, periodo)
+                    ).fetchall()
+                }
+        except sqlite3.Error as e:
+            logger.error(f"Leyendo plan del área: {e}")
+            return False, f"Error: {e}"
+
+        reales = self.dotacion_real_por_cargo(empresa)
+        cargos_del_area = {
+            cargo: cantidad for (a, cargo), cantidad in reales.items()
+            if a == area and cargo
+        }
+
+        if not cargos_del_area:
+            return False, "Esta área no tiene personas cargadas desde Buk."
+
+        faltantes = {
+            cargo: cantidad for cargo, cantidad in cargos_del_area.items()
+            if cargo not in ya_planificados
+        }
+        if not faltantes:
+            return False, "Todos los cargos de esta área ya están en el plan."
+
+        agregados = 0
+        for cargo, cantidad in faltantes.items():
+            nivel = self.niveles_hay_de(empresa, area, cargo)
+            ok, _ = self.guardar_posicion(
+                empresa=empresa, area=area, cargo=cargo, cantidad=cantidad,
+                periodo=periodo, nivel_hay=nivel,
+                notas="Cargado automáticamente al igualar con la dotación real",
+            )
+            if ok:
+                agregados += 1
+
+        return True, f"Se agregaron {agregados} cargo(s) al plan con la cantidad que tienen hoy"
 
     # ------------------------------------------------------------------
     # Control: plan contra realidad
