@@ -1,7 +1,19 @@
 """Página de login para la aplicación."""
 
+import base64
+import os
+
 import streamlit as st
 from src.auth_manager import AuthManager
+
+_LOGO_PATH = os.path.join("assets", "logos", "rentanalytics.png")
+
+
+@st.cache_data
+def _logo_base64() -> str:
+    """Codifica el logo una sola vez (se cachea entre reruns)."""
+    with open(_LOGO_PATH, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 
 def render_login_page(auth_manager: AuthManager):
@@ -17,6 +29,13 @@ def render_login_page(auth_manager: AuthManager):
     .login-container {
         max-width: 400px;
         margin: 50px auto;
+    }
+    .login-logo {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .login-logo img {
+        width: 240px;
     }
     .login-title {
         text-align: center;
@@ -43,8 +62,17 @@ def render_login_page(auth_manager: AuthManager):
     col_left, col_center, col_right = st.columns([1, 2, 1])
 
     with col_center:
-        st.markdown('<div class="login-title">💰 Suite ARP IA</div>', unsafe_allow_html=True)
-        st.markdown('<div class="login-subtitle">Sistema de Compensaciones</div>', unsafe_allow_html=True)
+        if os.path.exists(_LOGO_PATH):
+            st.markdown(
+                f'<div class="login-logo">'
+                f'<img src="data:image/png;base64,{_logo_base64()}" />'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            # Reserva por si el archivo del logo no está disponible.
+            st.markdown('<div class="login-title">💰 Suite ARP IA</div>', unsafe_allow_html=True)
+            st.markdown('<div class="login-subtitle">Sistema de Compensaciones</div>', unsafe_allow_html=True)
 
         # Problema de configuración, no de credenciales: sin esto el usuario
         # solo vería "contraseña inválida" y no sabría que el fallo está
