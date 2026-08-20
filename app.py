@@ -29,7 +29,7 @@ load_dotenv()
 # Configuración de Streamlit
 st.set_page_config(
     page_title="Suite ARP IA",
-    page_icon="💰",
+    page_icon=":material/payments:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -118,7 +118,7 @@ def get_buk_client():
     subdomain = os.getenv("BUK_SUBDOMAIN")
 
     if not api_token or not subdomain:
-        st.error("❌ Variables de entorno BUK_API_TOKEN y BUK_SUBDOMAIN no configuradas")
+        st.error(":material/cancel: Variables de entorno BUK_API_TOKEN y BUK_SUBDOMAIN no configuradas")
         st.stop()
 
     db_manager = AnalysisDBManager()
@@ -188,14 +188,14 @@ def search_employee_section():
     col_search, col_extras = st.columns([1, 1])
 
     with col_search:
-        st.header("🔍 Buscar Colaborador")
+        st.header(":material/search: Buscar Colaborador")
         search_by = st.radio("Buscar por:", ["RUT", "Ver Todos"], horizontal=True)
 
         search_input = ""
         if search_by == "RUT":
             search_input = st.text_input("Ingrese RUT (ej: 12.345.678-9)").strip()
 
-        if st.button("🔎 Buscar", width='stretch') or search_by == "Ver Todos":
+        if st.button(":material/search: Buscar", width='stretch') or search_by == "Ver Todos":
             if search_by != "Ver Todos" and not search_input:
                 st.warning("Por favor ingrese un valor para buscar")
                 return
@@ -208,24 +208,24 @@ def search_employee_section():
                     employee = buk_client.search_employee(rut=search_input)
                     if employee:
                         st.session_state.current_employee = employee
-                        st.success(f"✅ Colaborador encontrado: {employee.full_name}")
+                        st.success(f":material/check_circle: Colaborador encontrado: {employee.full_name}")
                         # Auto-navegar a Crear Propuesta
                         st.session_state.propuestas_subtab = "propuesta"
                         st.rerun()
                     else:
-                        st.error("❌ Colaborador no encontrado")
+                        st.error(":material/cancel: Colaborador no encontrado")
                 elif search_by == "Ver Todos":
                     # Obtener todos los empleados activos (cacheado por 1 hora)
                     employees_sorted = get_all_active_employees()
                     if employees_sorted:
                         st.session_state.search_results = employees_sorted
-                        st.success(f"✅ Total de {len(employees_sorted)} colaborador(es) activo(s) (datos en caché)")
+                        st.success(f":material/check_circle: Total de {len(employees_sorted)} colaborador(es) activo(s) (datos en caché)")
                     else:
-                        st.error("❌ No se encontraron colaboradores")
+                        st.error(":material/cancel: No se encontraron colaboradores")
 
     with col_extras:
-        st.header("⚙️ Extras")
-        st.info("💡 Usa el checkbox en la barra lateral para habilitar el Analizador de Renta")
+        st.header(":material/settings: Extras")
+        st.info(":material/lightbulb: Usa el checkbox en la barra lateral para habilitar el Analizador de Renta")
 
     st.divider()
 
@@ -236,7 +236,7 @@ def search_employee_section():
         # Mini buscador en tiempo real
         col1, col2 = st.columns([4, 1])
         with col1:
-            search_filter = st.text_input("🔎 Filtrar por nombre...", placeholder="Ej: Angel, Riquelme, etc", key="employee_filter")
+            search_filter = st.text_input(":material/search: Filtrar por nombre...", placeholder="Ej: Angel, Riquelme, etc", key="employee_filter")
 
         # Filtrar resultados
         if search_filter:
@@ -247,7 +247,7 @@ def search_employee_section():
         else:
             filtered_results = st.session_state.search_results
 
-        st.subheader(f"📋 Seleccione un colaborador: ({len(filtered_results)} de {len(st.session_state.search_results)})")
+        st.subheader(f":material/assignment: Seleccione un colaborador: ({len(filtered_results)} de {len(st.session_state.search_results)})")
 
         for idx, employee in enumerate(filtered_results):
             col1, col2, col3, col4, col5 = st.columns([2, 1.5, 2, 2, 1])
@@ -265,7 +265,7 @@ def search_employee_section():
                     st.session_state.current_employee = employee
                     st.session_state.search_results = None
                     st.session_state.propuestas_subtab = "propuesta"
-                    st.success(f"✅ {employee.full_name} seleccionado")
+                    st.success(f":material/check_circle: {employee.full_name} seleccionado")
                     st.rerun()
 
 
@@ -294,7 +294,7 @@ def employee_card(employee):
 def proposal_section():
     """Sección de creación de propuesta."""
     if not st.session_state.current_employee:
-        st.warning("⚠️ Seleccione un colaborador primero")
+        st.warning(":material/warning: Seleccione un colaborador primero")
         return
 
     employee = st.session_state.current_employee
@@ -302,9 +302,9 @@ def proposal_section():
     # Mostrar estado de Analizador de Renta al inicio
     is_analysis_enabled = st.session_state.get("enable_compensation_analysis", False)
     if is_analysis_enabled:
-        st.info("✅ **Analizador de Renta HABILITADO** - Las secciones de compensación aparecerán abajo")
+        st.info(":material/check_circle: **Analizador de Renta HABILITADO** - Las secciones de compensación aparecerán abajo")
     else:
-        st.warning("⭕ **Analizador de Renta DESHABILITADO** - Marca el checkbox en 'Buscar Colaborador' para habilitar")
+        st.warning(":material/radio_button_unchecked: **Analizador de Renta DESHABILITADO** - Marca el checkbox en 'Buscar Colaborador' para habilitar")
 
     st.divider()
 
@@ -318,7 +318,7 @@ def proposal_section():
             st.info("Logo no disponible")
 
     with col_title:
-        st.header(f"📝 Propuesta de Renta - {employee.full_name}")
+        st.header(f":material/edit_note: Propuesta de Renta - {employee.full_name}")
 
     # Información del empleado en cards compactos
     col1, col2, col3, col4 = st.columns(4)
@@ -342,7 +342,7 @@ def proposal_section():
     col_motivo, col_cambios = st.columns([1, 1])
 
     with col_motivo:
-        st.subheader("🎯 Motivo de la Propuesta")
+        st.subheader(":material/track_changes: Motivo de la Propuesta")
         motivos_options = [
             "Mérito",
             "Retención",
@@ -360,7 +360,7 @@ def proposal_section():
         )
 
     with col_cambios:
-        st.subheader("📋 Cambios Organizacionales")
+        st.subheader(":material/assignment: Cambios Organizacionales")
         change_company = st.checkbox("¿Cambiará de empresa?", key="change_company")
         change_position = st.checkbox("¿Cambiará de cargo?", key="change_position")
         change_supervisor = st.checkbox("¿Cambiará de jefatura?", key="change_supervisor")
@@ -385,7 +385,7 @@ def proposal_section():
     st.divider()
 
     # Haberes Actuales y Propuestos (lado a lado)
-    st.subheader("📊 Haberes Actuales vs Propuestos")
+    st.subheader(":material/bar_chart: Haberes Actuales vs Propuestos")
 
     # Obtener UF para valores sugeridos
     db_mgr = AnalysisDBManager()
@@ -411,7 +411,7 @@ def proposal_section():
 
     # HABERES ACTUALES
     with col_actual:
-        st.caption("💰 Haberes Actuales")
+        st.caption(":material/payments: Haberes Actuales")
 
         st.text("Colación")
         current_collation = st.number_input("Colación", value=st.session_state.col_actual, min_value=0, label_visibility="collapsed", key="col_actual", step=1000)
@@ -430,7 +430,7 @@ def proposal_section():
 
     # HABERES PROPUESTOS
     with col_propuesto:
-        st.caption("📈 Haberes Propuestos")
+        st.caption(":material/trending_up: Haberes Propuestos")
 
         st.text("Colación")
         proposal_collation = st.number_input("Colación", value=st.session_state.col_prop, min_value=0, label_visibility="collapsed", key="col_prop", step=1000)
@@ -447,7 +447,7 @@ def proposal_section():
     st.divider()
 
     # NUEVO SUELDO BASE
-    st.subheader("💼 Cómo ingresar el nuevo sueldo")
+    st.subheader(":material/work: Cómo ingresar el nuevo sueldo")
 
     payroll_engine = get_payroll_engine()
 
@@ -505,7 +505,7 @@ def proposal_section():
                 key="percent_base"
             )
             proposal_base_salary = int(employee.base_salary * (1 + porcentaje_aumento / 100))
-            st.info(f"**Base actual:** ${employee.base_salary:,.0f} → **Nueva base:** ${proposal_base_salary:,.0f}")
+            st.info(f"**Base actual:** ${employee.base_salary:,.0f} :material/arrow_forward: **Nueva base:** ${proposal_base_salary:,.0f}")
 
         elif input_type == "Sueldo Líquido":
             st.caption("Sueldo Líquido a Recibir")
@@ -527,7 +527,7 @@ def proposal_section():
                 )
             else:
                 proposal_base_salary = employee.base_salary
-            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
+            st.info(f"**Líquido actual:** ${current_liquid:,.0f} :material/arrow_forward: **Líquido objetivo:** ${target_liquid:,.0f}")
 
         else:  # % sobre el sueldo líquido
             st.caption("Porcentaje de aumento")
@@ -548,7 +548,7 @@ def proposal_section():
                 pension_fund=employee.pension_fund,
                 has_parking=has_parking,
             )
-            st.info(f"**Líquido actual:** ${current_liquid:,.0f} → **Líquido objetivo:** ${target_liquid:,.0f}")
+            st.info(f"**Líquido actual:** ${current_liquid:,.0f} :material/arrow_forward: **Líquido objetivo:** ${target_liquid:,.0f}")
 
     st.divider()
 
@@ -598,13 +598,13 @@ def proposal_section():
         if "mercado_comparacion_info_prop" not in st.session_state:
             st.session_state.mercado_comparacion_info_prop = "Mercado Financiero"
 
-        st.subheader("💡 Información de Compensación")
+        st.subheader(":material/lightbulb: Información de Compensación")
 
         col_comp_actual, col_comp_propuesta = st.columns(2)
 
         # DATOS ACTUALES (editable)
         with col_comp_actual:
-            st.caption("💰 Datos Actuales")
+            st.caption(":material/payments: Datos Actuales")
 
             st.text("Nivel HAY")
             hay_actual_comp = st.session_state.get("nivel_hay_actual_input", "")
@@ -628,7 +628,7 @@ def proposal_section():
 
         # DATOS PROPUESTOS (editable)
         with col_comp_propuesta:
-            st.caption("📈 Datos Propuestos")
+            st.caption(":material/trending_up: Datos Propuestos")
 
             st.text("Nivel HAY")
             st.text_input(
@@ -663,7 +663,7 @@ def proposal_section():
         st.divider()
 
         # CALCULADOR DE COMPENSACIÓN REAL basado en Nivel HAY × Target
-        st.subheader("💰 Compensación Real por Nivel HAY")
+        st.subheader(":material/payments: Compensación Real por Nivel HAY")
 
         col_calc_actual, col_calc_prop = st.columns(2)
 
@@ -686,7 +686,7 @@ def proposal_section():
         monto_nivel_prop = 0
 
         with col_calc_actual:
-            st.caption("💰 ACTUAL")
+            st.caption(":material/payments: ACTUAL")
 
             st.metric("Sueldo Base x12", f"${sal_base_anual:,.0f}")
             st.metric("Gratificación x12", f"${grat_anual:,.0f}")
@@ -703,7 +703,7 @@ def proposal_section():
             bono_target_actual = target_actual_input * sal_base_actual if target_actual_input > 0 else 0
 
             # Siempre mostrar Bono Target (aunque sea $0)
-            st.metric("💰 Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
+            st.metric(":material/payments: Bono Target", f"${bono_target_actual:,.0f}", delta=f"({target_actual_input} × ${sal_base_actual:,.0f})")
 
             total_actual_comp = sal_base_anual + grat_anual + col_anual + mob_anual + bono_target_actual
             st.metric("TOTAL ANUALIZADO", f"${total_actual_comp:,.0f}", delta_color="off")
@@ -723,34 +723,34 @@ def proposal_section():
                     mercado_val = comp_data.get(mercado_field, 0) if comp_data else 0
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
-                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Estudio de Mercado** (Nivel {nivel_hay_actual_str}, {mercado_actual_comp}): **${mercado_val:,.0f}**")
 
                     # Gap vs Mercado
                     if mercado_val > 0:
                         gap_mercado = total_actual_comp - mercado_val
                         pct_mercado = (gap_mercado / mercado_val * 100) if mercado_val != 0 else 0
-                        icon_mercado = "✅" if gap_mercado >= 0 else "⚠️"
+                        icon_mercado = ":material/check_circle:" if gap_mercado >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
                         st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
 
-                    st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
 
                     # Gap vs Promedio Interno
                     if promedio_val > 0:
                         gap_promedio = total_actual_comp - promedio_val
                         pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
-                        icon_promedio = "✅" if gap_promedio >= 0 else "⚠️"
+                        icon_promedio = ":material/check_circle:" if gap_promedio >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
                         st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
-                    st.caption(f"📊 Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
+                    st.caption(f":material/bar_chart: Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
             elif nivel_hay_actual_str:
-                st.warning(f"⚠️ Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
+                st.warning(f":material/warning: Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
             else:
-                st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
+                st.caption(":material/bar_chart: Ingresa Nivel HAY para ver la media de compensación")
 
         with col_calc_prop:
-            st.caption("📈 PROPUESTO")
+            st.caption(":material/trending_up: PROPUESTO")
 
             # Obtener valores propuestos
             sal_base_prop = int(proposal_base_salary) if 'proposal_base_salary' in locals() else sal_base_actual
@@ -776,7 +776,7 @@ def proposal_section():
 
             # Siempre mostrar Bono Target
             bono_target_prop = target_prop_input * sal_base_prop
-            st.metric("💰 Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
+            st.metric(":material/payments: Bono Target", f"${bono_target_prop:,.0f}", delta=f"({target_prop_input} × ${sal_base_prop:,.0f})")
 
             total_prop_comp = sal_base_anual_prop + grat_anual_prop + col_anual_prop + mob_anual_prop + bono_target_prop
             st.metric("TOTAL ANUALIZADO", f"${total_prop_comp:,.0f}", delta_color="off")
@@ -797,31 +797,31 @@ def proposal_section():
                     mercado_val = comp_data.get(mercado_field, 0) if comp_data else 0
                     promedio_val = avg_data.get('promedio_anualizado', 0) if avg_data else 0
 
-                    st.caption(f"📊 **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, {mercado_comparacion_prop}): **${mercado_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Estudio de Mercado** (Nivel {nivel_hay_prop_str}, {mercado_comparacion_prop}): **${mercado_val:,.0f}**")
 
                     # Gap vs Mercado
                     if mercado_val > 0:
                         gap_mercado = total_prop_comp - mercado_val
                         pct_mercado = (gap_mercado / mercado_val * 100) if mercado_val != 0 else 0
-                        icon_mercado = "✅" if gap_mercado >= 0 else "⚠️"
+                        icon_mercado = ":material/check_circle:" if gap_mercado >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
                         st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
 
-                    st.caption(f"📊 **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
 
                     # Gap vs Promedio Interno
                     if promedio_val > 0:
                         gap_promedio = total_prop_comp - promedio_val
                         pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
-                        icon_promedio = "✅" if gap_promedio >= 0 else "⚠️"
+                        icon_promedio = ":material/check_circle:" if gap_promedio >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
                         st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
-                    st.caption(f"📊 Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
+                    st.caption(f":material/bar_chart: Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
             elif nivel_hay_prop_str:
-                st.warning(f"⚠️ Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
+                st.warning(f":material/warning: Nivel HAY debe ser numérico (Ej: 16, 18, 20)")
             else:
-                st.caption("📊 Ingresa Nivel HAY para ver la media de compensación")
+                st.caption(":material/bar_chart: Ingresa Nivel HAY para ver la media de compensación")
 
     st.divider()
 
@@ -843,7 +843,7 @@ def proposal_section():
     st.divider()
 
     # Botón para crear propuesta
-    if st.button("✅ Crear Propuesta", width='stretch', type="primary"):
+    if st.button(":material/check_circle: Crear Propuesta", width='stretch', type="primary"):
         with st.spinner("Calculando propuesta..."):
             simulator = Simulator(payroll_engine)
 
@@ -935,7 +935,7 @@ def proposal_section():
                 logger.warning(f"Advertencia: No se pudo guardar propuesta en historial: {e}")
                 pass
 
-            st.success("✅ Propuesta calculada exitosamente")
+            st.success(":material/check_circle: Propuesta calculada exitosamente")
             st.rerun()
             st.rerun()
 
@@ -993,7 +993,7 @@ def comparison_section(payroll_engine=None):
             st.info("Logo no disponible")
 
     with col_title:
-        st.header(f"📊 Comparativa - {employee.full_name}")
+        st.header(f":material/bar_chart: Comparativa - {employee.full_name}")
 
     # Información organizacional
     st.subheader("Información de Empresa, Cargo, Jefe")
@@ -1044,7 +1044,7 @@ def comparison_section(payroll_engine=None):
     st.divider()
 
     # Resumen de impacto
-    st.subheader("📈 Resumen de Impacto")
+    st.subheader(":material/trending_up: Resumen de Impacto")
 
     col1, col2 = st.columns(2)
 
@@ -1068,7 +1068,7 @@ def comparison_section(payroll_engine=None):
 
     # Compensación Anual - Mostrar solo si el usuario habilitó el análisis
     if st.session_state.get("enable_compensation_analysis", False) and "compensation_data" in st.session_state:
-        st.subheader("💰 Análisis de Compensación Anual")
+        st.subheader(":material/payments: Análisis de Compensación Anual")
 
         comp_data = st.session_state.compensation_data
 
@@ -1076,19 +1076,19 @@ def comparison_section(payroll_engine=None):
         col_actual_resume, col_prop_resume = st.columns(2)
 
         with col_actual_resume:
-            st.write("**📊 Datos Actuales**")
+            st.write("**:material/bar_chart: Datos Actuales**")
             st.write(f"• **Nivel HAY:** {comp_data.get('nivel_hay_actual_input', '—')}")
             st.write(f"• **Target:** {comp_data.get('target_actual', 0.0):.1f} rentas")
             st.write(f"• **Mercado:** {comp_data.get('mercado', '—')}")
 
         with col_prop_resume:
-            st.write("**📈 Datos Propuestos**")
+            st.write("**:material/trending_up: Datos Propuestos**")
             st.write(f"• **Nivel HAY:** {comp_data.get('nivel_hay_prop_input', '—')}")
             st.write(f"• **Target:** {comp_data.get('target_propuesta_input', 0.0):.1f} rentas")
             st.write(f"• **Mercado:** {comp_data.get('mercado', '—')}")
 
         # Botón para calcular compensación
-        if st.button("🧮 Calcular Compensación Anual", key="btn_comp_calc", width='stretch'):
+        if st.button(":material/calculate: Calcular Compensación Anual", key="btn_comp_calc", width='stretch'):
             st.session_state.show_compensation = True
 
         # Mostrar análisis si se presionó el botón
@@ -1097,7 +1097,7 @@ def comparison_section(payroll_engine=None):
                 try:
                     # Verificar que comparison existe
                     if not comparison:
-                        st.error("❌ No hay comparativa disponible. Crea una propuesta primero.")
+                        st.error(":material/cancel: No hay comparativa disponible. Crea una propuesta primero.")
                         st.session_state.show_compensation = False
                     else:
                         # Obtener datos para el cálculo
@@ -1109,7 +1109,7 @@ def comparison_section(payroll_engine=None):
                         nivel_hay_propuesta = str(comp_data.get("nivel_hay_prop_input", nivel_hay_actual))
                         mercado = str(comp_data.get("mercado", "Mercado Financiero"))
 
-                        st.info(f"🔍 Debug: Base={base_salary_actual}, Target={target_actual}, Nivel={nivel_hay_actual}, Mercado={mercado}")
+                        st.info(f":material/search: Debug: Base={base_salary_actual}, Target={target_actual}, Nivel={nivel_hay_actual}, Mercado={mercado}")
 
                         # Calcular métricas
                         metrics = calculate_compensation_metrics(
@@ -1119,11 +1119,11 @@ def comparison_section(payroll_engine=None):
                         )
 
                         if metrics is None:
-                            st.error("❌ Error: función de cálculo retornó None")
+                            st.error(":material/cancel: Error: función de cálculo retornó None")
                         elif metrics:
                             # Tabla comparativa
                             st.divider()
-                            st.subheader("📊 Análisis de Compratio y Mediana")
+                            st.subheader(":material/bar_chart: Análisis de Compratio y Mediana")
 
                             comp_table_data = {
                                 "Métrica": [
@@ -1154,7 +1154,7 @@ def comparison_section(payroll_engine=None):
 
                             # Resumen de cambios
                             st.divider()
-                            st.subheader("⚖️ Análisis de Cambios")
+                            st.subheader(":material/balance: Análisis de Cambios")
 
                             col1, col2, col3 = st.columns(3)
                             with col1:
@@ -1182,36 +1182,36 @@ def comparison_section(payroll_engine=None):
 
                             # Análisis de equidad
                             st.divider()
-                            st.subheader("📈 Posicionamiento en Mercado")
+                            st.subheader(":material/trending_up: Posicionamiento en Mercado")
 
                             if metrics['actual']['median'] > 0:
                                 actual_compratio = metrics['actual']['compratio_pct']
                                 if actual_compratio < 80:
-                                    st.warning(f"⚠️ Compensación BAJO mercado (Compratio {actual_compratio:.1f}%)")
+                                    st.warning(f":material/warning: Compensación BAJO mercado (Compratio {actual_compratio:.1f}%)")
                                 elif actual_compratio < 100:
                                     st.info(f"ℹ️ Compensación en RANGO BAJO (Compratio {actual_compratio:.1f}%)")
                                 elif actual_compratio < 120:
-                                    st.success(f"✅ Compensación COMPETITIVA (Compratio {actual_compratio:.1f}%)")
+                                    st.success(f":material/check_circle: Compensación COMPETITIVA (Compratio {actual_compratio:.1f}%)")
                                 else:
-                                    st.error(f"⚠️ Compensación SOBRE mercado (Compratio {actual_compratio:.1f}%)")
+                                    st.error(f":material/warning: Compensación SOBRE mercado (Compratio {actual_compratio:.1f}%)")
 
                                 # Análisis de la propuesta
                                 proposal_compratio = metrics['propuesta']['compratio_pct']
                                 if proposal_compratio > actual_compratio:
-                                    st.success(f"✅ Propuesta MEJORA equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
+                                    st.success(f":material/check_circle: Propuesta MEJORA equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
                                 elif proposal_compratio == actual_compratio:
                                     st.info("ℹ️ Propuesta MANTIENE equidad actual")
                                 else:
-                                    st.warning(f"⚠️ Propuesta REDUCE equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
+                                    st.warning(f":material/warning: Propuesta REDUCE equidad: {proposal_compratio:.1f}% vs {actual_compratio:.1f}%")
                         else:
-                            st.error("❌ No se pudo calcular la compensación. Verifica que Nivel HAY esté completado.")
+                            st.error(":material/cancel: No se pudo calcular la compensación. Verifica que Nivel HAY esté completado.")
                 except Exception as e:
-                    st.error(f"❌ Error al calcular compensación: {str(e)}")
+                    st.error(f":material/cancel: Error al calcular compensación: {str(e)}")
 
         st.divider()
 
     # Historial de Sueldos
-    st.subheader("📈 Historial de Sueldos")
+    st.subheader(":material/trending_up: Historial de Sueldos")
 
     buk_client = get_buk_client()
     salary_history = buk_client.get_salary_history(employee.rut)
@@ -1282,12 +1282,12 @@ def comparison_section(payroll_engine=None):
     st.divider()
 
     # Exportar
-    st.subheader("💾 Exportar Propuesta")
+    st.subheader(":material/save: Exportar Propuesta")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("📄 Descargar Excel", width='stretch'):
+        if st.button(":material/description: Descargar Excel", width='stretch'):
             filename = f"Propuesta_Renta_{employee.rut.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             excel_exporter = ExcelExporter()
 
@@ -1315,7 +1315,7 @@ def comparison_section(payroll_engine=None):
                         file_name=filename,
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
-                st.success("✅ Excel generado correctamente")
+                st.success(":material/check_circle: Excel generado correctamente")
 
                 # Log exportación
                 try:
@@ -1330,10 +1330,10 @@ def comparison_section(payroll_engine=None):
                 except Exception as e:
                     logger.warning(f"No se pudo loguear exportación: {e}")
             else:
-                st.error("❌ Error al generar Excel")
+                st.error(":material/cancel: Error al generar Excel")
 
     with col2:
-        if st.button("📑 Descargar PDF", width='stretch'):
+        if st.button(":material/bookmark: Descargar PDF", width='stretch'):
             filename = f"Propuesta_Renta_{employee.rut.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             pdf_exporter = PDFExporter()
 
@@ -1405,7 +1405,7 @@ def comparison_section(payroll_engine=None):
                         file_name=filename,
                         mime="application/pdf"
                     )
-                st.success("✅ PDF generado correctamente")
+                st.success(":material/check_circle: PDF generado correctamente")
 
                 # Log exportación
                 try:
@@ -1420,14 +1420,14 @@ def comparison_section(payroll_engine=None):
                 except Exception as e:
                     logger.warning(f"No se pudo loguear exportación PDF: {e}")
             else:
-                st.error("❌ Error al generar PDF")
+                st.error(":material/cancel: Error al generar PDF")
 
 
 def configuration_section():
     """Sección de configuración de parámetros."""
     import json
 
-    st.header("⚙️ Configuración de Parámetros")
+    st.header(":material/settings: Configuración de Parámetros")
 
     with open("config/parameters.json") as f:
         parameters = json.load(f)
@@ -1436,7 +1436,7 @@ def configuration_section():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.subheader("📊 Valores Mensuales")
+        st.subheader(":material/bar_chart: Valores Mensuales")
         uf_value = st.number_input(
             "UF Value",
             value=float(parameters.get("uf_value", 40873.77)),
@@ -1455,7 +1455,7 @@ def configuration_section():
         )
 
     with col2:
-        st.subheader("📏 Topes Previsionales")
+        st.subheader(":material/straighten: Topes Previsionales")
         tope_afp_uf = st.number_input(
             "Tope AFP (UF)",
             value=parameters.get("tope_afp_uf", 90.0),
@@ -1470,7 +1470,7 @@ def configuration_section():
         )
 
     with col3:
-        st.subheader("📈 Porcentajes")
+        st.subheader(":material/trending_up: Porcentajes")
         afp_percent = st.number_input(
             "AFP %",
             value=parameters.get("afp_percent", 10.0),
@@ -1493,7 +1493,7 @@ def configuration_section():
     st.divider()
 
     # Porcentajes de AFP por fondo
-    st.subheader("💳 Tasas AFP (Fondo + Comisión)")
+    st.subheader(":material/credit_card: Tasas AFP (Fondo + Comisión)")
     afp_rates = parameters.get("afp_rates", {
         "capital": 11.44,
         "cuprum": 11.44,
@@ -1522,7 +1522,7 @@ def configuration_section():
         afp_uno = st.number_input("Uno %", value=float(afp_rates.get("uno", 10.46)), step=0.01, format="%.2f", key="afp_uno")
 
     # Botón para guardar cambios
-    if st.button("💾 Guardar Cambios", width='stretch', type="primary"):
+    if st.button(":material/save: Guardar Cambios", width='stretch', type="primary"):
         # Actualizar parámetros
         parameters["uf_value"] = uf_value
         parameters["utm_value"] = utm_value
@@ -1546,17 +1546,17 @@ def configuration_section():
         with open("config/parameters.json", "w") as f:
             json.dump(parameters, f, indent=2)
 
-        st.success("✅ Parámetros actualizados correctamente")
+        st.success(":material/check_circle: Parámetros actualizados correctamente")
         st.balloons()
 
     st.divider()
 
-    st.info("💡 **Edita los valores manualmente** (UF, UTM, IMM) en los campos arriba y haz clic en '💾 Guardar Cambios' para actualizar")
+    st.info(":material/lightbulb: **Edita los valores manualmente** (UF, UTM, IMM) en los campos arriba y haz clic en ':material/save: Guardar Cambios' para actualizar")
 
     st.divider()
 
     # Mostrar tabla resumen
-    st.subheader("📋 Resumen Actual")
+    st.subheader(":material/assignment: Resumen Actual")
     summary_data = {
         "Parámetro": ["UF", "UTM", "IMM", "Tope AFP (UF)", "Tope AFC (UF)"],
         "Valor": [
@@ -1575,7 +1575,7 @@ def configuration_section():
     st.divider()
 
     # Sección de IPC
-    st.subheader("📊 Histórico de IPC")
+    st.subheader(":material/bar_chart: Histórico de IPC")
 
     db = AnalysisDBManager()
 
@@ -1593,7 +1593,7 @@ def configuration_section():
             if st.button("Guardar IPC", width='stretch', key="save_ipc_btn"):
                 if new_mes and new_ipc > 0:
                     if db.upsert_ipc(new_mes, new_ipc):
-                        st.success(f"✅ IPC {new_mes}: {new_ipc:.4f} guardado")
+                        st.success(f":material/check_circle: IPC {new_mes}: {new_ipc:.4f} guardado")
                         st.rerun()
                     else:
                         st.error("Error al guardar IPC")
@@ -1602,7 +1602,7 @@ def configuration_section():
 
     with col2:
         st.write("")  # Spacing
-        if st.button("🔄 Recargar", width='stretch', key="reload_ipc"):
+        if st.button(":material/refresh: Recargar", width='stretch', key="reload_ipc"):
             st.rerun()
 
     st.divider()
@@ -1624,14 +1624,14 @@ def configuration_section():
     st.divider()
 
     # Sección de Compensaciones
-    st.subheader("💰 Tabla de Compensaciones por Nivel")
+    st.subheader(":material/payments: Tabla de Compensaciones por Nivel")
 
     col1, col2 = st.columns([3, 1])
 
     with col1:
         st.caption("Carga/Actualiza tabla de compensaciones")
         uploaded_comp = st.file_uploader(
-            "📥 Selecciona archivo Excel",
+            ":material/download: Selecciona archivo Excel",
             type=["xlsx", "xls"],
             key="comp_uploader",
             help="Columnas: Nivel | Mercado Financiero | Mercado Seguros | Descripción"
@@ -1640,12 +1640,12 @@ def configuration_section():
         if uploaded_comp is not None:
             try:
                 df_comp = pd.read_excel(uploaded_comp)
-                st.success(f"✅ Archivo cargado: {len(df_comp)} niveles")
+                st.success(f":material/check_circle: Archivo cargado: {len(df_comp)} niveles")
 
-                with st.expander("👁️ Vista previa"):
+                with st.expander(":material/visibility: Vista previa"):
                     st.dataframe(df_comp, width='stretch', hide_index=True)
 
-                if st.button("💾 Guardar en Base de Datos", type="primary", width='stretch', key="save_comp_btn"):
+                if st.button(":material/save: Guardar en Base de Datos", type="primary", width='stretch', key="save_comp_btn"):
                     with st.spinner("Cargando compensaciones..."):
                         insertados = 0
                         errores = 0
@@ -1665,11 +1665,11 @@ def configuration_section():
                                 st.warning(f"Error en fila {idx + 2}: {str(e)}")
                                 errores += 1
 
-                        st.success(f"✅ Guardado: {insertados} niveles, {errores} errores")
+                        st.success(f":material/check_circle: Guardado: {insertados} niveles, {errores} errores")
                         st.rerun()
 
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                st.error(f":material/cancel: Error: {str(e)}")
 
     with col2:
         total_comp = len(db.get_compensation_levels())
@@ -1693,7 +1693,7 @@ def configuration_section():
     st.divider()
 
     # Sección de UF
-    st.subheader("💵 Histórico de UF (Unidad de Fomento)")
+    st.subheader(":material/attach_money: Histórico de UF (Unidad de Fomento)")
 
     col1, col2 = st.columns([3, 1])
 
@@ -1709,7 +1709,7 @@ def configuration_section():
             if st.button("Guardar UF", width='stretch', key="save_uf_btn"):
                 if new_mes_uf and new_uf > 0:
                     if db.upsert_uf(new_mes_uf, new_uf):
-                        st.success(f"✅ UF {new_mes_uf}: ${new_uf:,.2f} guardada")
+                        st.success(f":material/check_circle: UF {new_mes_uf}: ${new_uf:,.2f} guardada")
                         st.rerun()
                     else:
                         st.error("Error al guardar UF")
@@ -1718,7 +1718,7 @@ def configuration_section():
 
     with col2:
         st.write("")  # Spacing
-        if st.button("🔄 Recargar", width='stretch', key="reload_uf"):
+        if st.button(":material/refresh: Recargar", width='stretch', key="reload_uf"):
             st.rerun()
 
     st.divider()
@@ -1740,14 +1740,14 @@ def configuration_section():
     st.divider()
 
     # Sección de Promedios de Compensación Interna
-    st.subheader("📈 Promedios de Compensación Interna (Competitividad)")
+    st.subheader(":material/trending_up: Promedios de Compensación Interna (Competitividad)")
 
     col1, col2 = st.columns([3, 1])
 
     with col1:
         st.caption("Calcula promedios de compensación anualizada por Nivel HAY")
         st.info(
-            "💡 Esta sección permite:\n"
+            ":material/lightbulb: Esta sección permite:\n"
             "1. **Seleccionar Empresa** para análisis específico\n"
             "2. **Calcular** promedios basándose en empleados cargados\n"
             "3. **Probar** en ambiente de prueba antes de producción\n"
@@ -1765,7 +1765,7 @@ def configuration_section():
     empresas = db.get_empresas()
 
     if not empresas:
-        st.warning("⚠️ No hay empresas cargadas. Carga datos primero en la pestaña ANÁLISIS.")
+        st.warning(":material/warning: No hay empresas cargadas. Carga datos primero en la pestaña ANÁLISIS.")
     else:
         empresa_seleccionada = st.selectbox(
             "Selecciona Empresa para calcular promedios:",
@@ -1774,7 +1774,7 @@ def configuration_section():
         )
 
         # Botón para calcular promedios
-        if st.button("🧮 Calcular Promedios (Prueba)", width='stretch', key="calc_averages"):
+        if st.button(":material/calculate: Calcular Promedios (Prueba)", width='stretch', key="calc_averages"):
             try:
                 from src.analysis.internal_competitiveness import InternalCompetitivenessCalculator
 
@@ -1783,12 +1783,12 @@ def configuration_section():
                     resultados = calculator.calcular_promedios(empresa=empresa_seleccionada)
 
                 if "error" in resultados:
-                    st.error(f"❌ {resultados['error']}")
+                    st.error(f":material/cancel: {resultados['error']}")
                 else:
-                    st.success(f"✅ Se calcularon promedios para {len(resultados)} niveles de {empresa_seleccionada}")
+                    st.success(f":material/check_circle: Se calcularon promedios para {len(resultados)} niveles de {empresa_seleccionada}")
 
                     # Mostrar tabla de promedios calculados
-                    st.subheader("📊 Promedios Calculados")
+                    st.subheader(":material/bar_chart: Promedios Calculados")
 
                     tabla_promedios = []
                     for nivel, datos in sorted(resultados.items()):
@@ -1810,7 +1810,7 @@ def configuration_section():
                     st.info("Guardando promedios en BD...")
 
                     if calculator.guardar_promedios(resultados):
-                        st.success("✅ Promedios guardados en BD correctamente")
+                        st.success(":material/check_circle: Promedios guardados en BD correctamente")
                         st.info("Los promedios están ahora disponibles en COMPENSACIONES para todos los empleados")
 
                         # Crear Excel para descarga
@@ -1821,7 +1821,7 @@ def configuration_section():
                         excel_buffer.seek(0)
 
                         st.download_button(
-                            label="📥 Descargar Excel con Promedios",
+                            label=":material/download: Descargar Excel con Promedios",
                             data=excel_buffer.getvalue(),
                             file_name=f"promedios_{empresa_seleccionada.replace(' ', '_')}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1830,17 +1830,17 @@ def configuration_section():
                         st.balloons()
                         st.rerun()
                     else:
-                        st.error("❌ Error al guardar promedios")
+                        st.error(":material/cancel: Error al guardar promedios")
 
             except ImportError as e:
-                st.error(f"❌ Error de importación: {str(e)}")
+                st.error(f":material/cancel: Error de importación: {str(e)}")
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                st.error(f":material/cancel: Error: {str(e)}")
 
     st.divider()
 
     # Mostrar promedios actuales en BD
-    st.subheader("📋 Promedios Almacenados en Base de Datos")
+    st.subheader(":material/assignment: Promedios Almacenados en Base de Datos")
 
     promedios_bd = db.get_compensation_averages()
 
@@ -1866,7 +1866,7 @@ def configuration_section():
     st.divider()
 
     # Sección de Detalle de Compensación por Empleado
-    st.subheader("📋 Detalle de Compensación por Empleado")
+    st.subheader(":material/assignment: Detalle de Compensación por Empleado")
 
     st.caption("Descarga Excel con desglose completo de compensación de cada empleado para validación")
 
@@ -1882,7 +1882,7 @@ def configuration_section():
     with col2:
         st.write("")  # Spacing
 
-    if empresa_detalle and st.button("📥 Generar Excel de Detalle", width='stretch', key="gen_detalle_excel"):
+    if empresa_detalle and st.button(":material/download: Generar Excel de Detalle", width='stretch', key="gen_detalle_excel"):
         try:
             from src.analysis.compensation_calculator import CompensationCalculator
             from io import BytesIO
@@ -1899,7 +1899,7 @@ def configuration_section():
             empleados = db.get_analysis_by_empresa_area(empresa=empresa_detalle)
 
             if not empleados:
-                st.error(f"❌ No hay empleados para {empresa_detalle}")
+                st.error(f":material/cancel: No hay empleados para {empresa_detalle}")
             else:
                 with st.spinner(f"Generando detalle para {len(empleados)} empleados..."):
                     datos_detalle = []
@@ -1937,7 +1937,7 @@ def configuration_section():
                                 "COMPENSACIÓN TOTAL ANUAL": round(componentes["total"], 2),
                             })
                         except Exception as e:
-                            st.warning(f"⚠️ Error con {emp.get('nombre')}: {str(e)}")
+                            st.warning(f":material/warning: Error con {emp.get('nombre')}: {str(e)}")
                             continue
 
                     if datos_detalle:
@@ -2009,27 +2009,27 @@ def configuration_section():
 
                         # Botón de descarga
                         st.download_button(
-                            label="📥 Descargar Excel Detallado",
+                            label=":material/download: Descargar Excel Detallado",
                             data=excel_buffer.getvalue(),
                             file_name=f"detalle_compensacion_{empresa_detalle.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             key="download_detalle"
                         )
 
-                        st.success(f"✅ Excel generado con {len(df_detalle)} empleados")
+                        st.success(f":material/check_circle: Excel generado con {len(df_detalle)} empleados")
 
                     else:
-                        st.error("❌ No se pudo procesar ningún empleado")
+                        st.error(":material/cancel: No se pudo procesar ningún empleado")
 
         except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
+            st.error(f":material/cancel: Error: {str(e)}")
             import traceback
             st.error(traceback.format_exc())
 
 
 def calculator_section():
     """Sección calculadora de sueldos."""
-    st.header("🧮 Calculadora de Sueldos")
+    st.header(":material/calculate: Calculadora de Sueldos")
 
     # Período actual
     from datetime import datetime
@@ -2052,7 +2052,7 @@ def calculator_section():
     col_left, col_right = st.columns(2)
 
     with col_left:
-        st.subheader("📊 Datos del Empleado")
+        st.subheader(":material/bar_chart: Datos del Empleado")
 
         salary_method = st.radio(
             "Ingresar:",
@@ -2098,7 +2098,7 @@ def calculator_section():
             other_taxable = st.number_input("Otros Imp.", value=0, min_value=0, step=1000, key="calc_other")
 
     with col_right:
-        st.subheader("⚙️ Opciones")
+        st.subheader(":material/settings: Opciones")
 
         contract_type = st.selectbox(
             "Tipo de Contrato",
@@ -2121,7 +2121,7 @@ def calculator_section():
     st.divider()
 
     # Botón para calcular
-    if st.button("🧮 Calcular Liquidación", width='stretch', type="primary"):
+    if st.button(":material/calculate: Calcular Liquidación", width='stretch', type="primary"):
         with st.spinner("Calculando..."):
             # Si es líquido objetivo, calcular el sueldo base necesario
             if salary_method == "Líquido Objetivo":
@@ -2157,12 +2157,12 @@ def calculator_section():
                 "periodo": datetime.now().strftime("%m-%Y")
             }
 
-            st.success("✅ Liquidación calculada")
+            st.success(":material/check_circle: Liquidación calculada")
 
     # Mostrar resultado si existe
     if "last_calculation" in st.session_state and st.session_state.last_calculation:
         st.divider()
-        st.subheader("📋 Resultado")
+        st.subheader(":material/assignment: Resultado")
 
         calc = st.session_state.last_calculation["calc"]
         has_parking = st.session_state.last_calculation.get("has_parking", False)
@@ -2311,7 +2311,7 @@ def calculator_section():
         with col1:
             st.metric("COSTOS EMPRESA (Total)", f"${total_costos_empresa:,.0f}")
         with col2:
-            st.metric("💰 LÍQUIDO (Empleado)", f"${final_liquid:,.0f}", delta=None)
+            st.metric(":material/payments: LÍQUIDO (Empleado)", f"${final_liquid:,.0f}", delta=None)
 
         st.divider()
 
@@ -2319,7 +2319,7 @@ def calculator_section():
         col1, col2, col3 = st.columns([1, 1, 2])
 
         with col1:
-            if st.button("📥 Excel", width='stretch', key="export_excel_calc"):
+            if st.button(":material/download: Excel", width='stretch', key="export_excel_calc"):
                 try:
                     from src.exporter import ExcelExporter
                     import tempfile
@@ -2336,19 +2336,19 @@ def calculator_section():
 
                     with open(temp_path, "rb") as f:
                         st.download_button(
-                            label="⬇️ Descargar Excel",
+                            label=":material/download: Descargar Excel",
                             data=f.read(),
                             file_name=f"Liquidacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                         )
 
                     os.remove(temp_path)
-                    st.success("✅ Excel generado")
+                    st.success(":material/check_circle: Excel generado")
                 except Exception as e:
-                    st.error(f"❌ Error al generar Excel: {str(e)}")
+                    st.error(f":material/cancel: Error al generar Excel: {str(e)}")
 
         with col2:
-            if st.button("📄 PDF", width='stretch', key="export_pdf_calc"):
+            if st.button(":material/description: PDF", width='stretch', key="export_pdf_calc"):
                 try:
                     import tempfile
 
@@ -2400,16 +2400,16 @@ def calculator_section():
 
                     with open(temp_path, "rb") as f:
                         st.download_button(
-                            label="⬇️ Descargar PDF",
+                            label=":material/download: Descargar PDF",
                             data=f.read(),
                             file_name=f"Liquidacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                             mime="application/pdf"
                         )
 
                     os.remove(temp_path)
-                    st.success("✅ PDF generado")
+                    st.success(":material/check_circle: PDF generado")
                 except Exception as e:
-                    st.error(f"❌ Error al generar PDF: {str(e)}")
+                    st.error(f":material/cancel: Error al generar PDF: {str(e)}")
 
 
 def main():
@@ -2427,15 +2427,15 @@ def main():
 
     # Sidebar: Información del usuario y logout
     with st.sidebar:
-        st.header("⚙️ Opciones Globales")
+        st.header(":material/settings: Opciones Globales")
 
         # Información del usuario
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(f"**👤 {st.session_state.usuario}**")
+            st.markdown(f"**:material/person: {st.session_state.usuario}**")
             st.caption(f"Rol: {st.session_state.rol.upper()}")
         with col2:
-            if st.button("🚪 Logout", width='stretch'):
+            if st.button(":material/logout: Logout", width='stretch'):
                 st.session_state.authenticated = False
                 st.session_state.usuario = None
                 st.session_state.rol = None
@@ -2479,7 +2479,7 @@ def main():
 
         # Opción propia del módulo Propuestas: solo se despliega si está seleccionado
         if selected_section == "Propuestas":
-            st.checkbox("📊 Habilitar Analizador de Renta", key="enable_compensation_analysis",
+            st.checkbox(":material/bar_chart: Habilitar Analizador de Renta", key="enable_compensation_analysis",
                        help="Muestra las secciones de análisis de compensación en PROPUESTAS")
 
     # Header
@@ -2517,7 +2517,7 @@ def main():
                 if employee:
                     st.session_state.current_employee = employee
                     st.session_state.propuestas_subtab = "propuesta"
-                    st.success(f"✅ Empleado cargado desde ANÁLISIS: {employee.full_name}")
+                    st.success(f":material/check_circle: Empleado cargado desde ANÁLISIS: {employee.full_name}")
                     del st.session_state.empleado_para_propuesta
             except:
                 pass
@@ -2526,11 +2526,11 @@ def main():
             # Sección de creación de propuesta
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
-                if st.button("← Volver a Buscar", width='stretch', key="back_to_search"):
+                if st.button(":material/arrow_back: Volver a Buscar", width='stretch', key="back_to_search"):
                     st.session_state.propuestas_subtab = "buscar"
                     st.rerun()
             with col3:
-                if st.button("Ver Comparativa →", width='stretch', key="to_comparison"):
+                if st.button("Ver Comparativa :material/arrow_forward:", width='stretch', key="to_comparison"):
                     st.session_state.propuestas_subtab = "comparativa"
                     st.rerun()
 
@@ -2540,11 +2540,11 @@ def main():
             # Sección de comparativa
             col1, col2, col3 = st.columns([1, 1, 1])
             with col1:
-                if st.button("← Crear Propuesta", width='stretch', key="back_to_proposal"):
+                if st.button(":material/arrow_back: Crear Propuesta", width='stretch', key="back_to_proposal"):
                     st.session_state.propuestas_subtab = "propuesta"
                     st.rerun()
             with col3:
-                if st.button("Buscar Nuevo →", width='stretch', key="search_new"):
+                if st.button("Buscar Nuevo :material/arrow_forward:", width='stretch', key="search_new"):
                     st.session_state.propuestas_subtab = "buscar"
                     st.rerun()
 
@@ -2555,7 +2555,7 @@ def main():
             col1, col2, col3 = st.columns([2, 1, 1])
             with col3:
                 if st.session_state.current_employee:
-                    if st.button("Crear Propuesta →", width='stretch', key="to_proposal"):
+                    if st.button("Crear Propuesta :material/arrow_forward:", width='stretch', key="to_proposal"):
                         st.session_state.propuestas_subtab = "propuesta"
                         st.rerun()
 
@@ -2576,7 +2576,7 @@ def main():
         # === SECCIÓN CONFIGURACIÓN ===
         col1, col2 = st.columns([1, 2])
         with col1:
-            if st.button("← Volver", width='stretch', key="back_from_config"):
+            if st.button(":material/arrow_back: Volver", width='stretch', key="back_from_config"):
                 st.session_state.main_tab = "propuestas"
                 st.rerun()
 

@@ -71,7 +71,7 @@ def render_login_page(auth_manager: AuthManager):
         if auth_manager.usuarios_invalidos:
             afectados = ", ".join(auth_manager.usuarios_invalidos)
             st.error(
-                f"⚠️ **Error de configuración** — el `password_hash` de "
+                f":material/warning: **Error de configuración** — el `password_hash` de "
                 f"**{afectados}** está incompleto en los Secrets de Streamlit.\n\n"
                 "Debe ser el valor completo (111 caracteres, termina en el hash), "
                 "sin recortes ni `...`. Estos usuarios no podrán ingresar hasta "
@@ -81,13 +81,13 @@ def render_login_page(auth_manager: AuthManager):
         # Formulario de login
         with st.form("login_form"):
             usuario = st.text_input(
-                "👤 Usuario",
+                ":material/person: Usuario",
                 placeholder="Ingresa tu usuario",
                 key="login_usuario"
             )
 
             password = st.text_input(
-                "🔐 Contraseña",
+                ":material/lock: Contraseña",
                 type="password",
                 placeholder="Ingresa tu contraseña",
                 key="login_password"
@@ -97,14 +97,14 @@ def render_login_page(auth_manager: AuthManager):
             col1, col2 = st.columns([1, 1])
             with col1:
                 login_button = st.form_submit_button(
-                    "🔓 Iniciar Sesión",
+                    ":material/lock_open: Iniciar Sesión",
                     width='stretch',
                     type="primary"
                 )
 
             if login_button:
                 if not usuario or not password:
-                    st.error("❌ Por favor completa usuario y contraseña")
+                    st.error(":material/cancel: Por favor completa usuario y contraseña")
                 else:
                     # Intentar autenticación
                     autenticado, user_data = auth_manager.authenticate(usuario, password)
@@ -116,11 +116,11 @@ def render_login_page(auth_manager: AuthManager):
                         st.session_state.rol = user_data["rol"]
                         st.session_state.user_id = user_data["id"]
 
-                        st.success(f"✅ Bienvenido {user_data['usuario']} ({user_data['rol'].upper()})")
+                        st.success(f":material/check_circle: Bienvenido {user_data['usuario']} ({user_data['rol'].upper()})")
                         st.balloons()
 
                         # Recargar la aplicación
                         st.rerun()
                     else:
-                        st.error("❌ Usuario o contraseña inválidos")
+                        st.error(":material/cancel: Usuario o contraseña inválidos")
 

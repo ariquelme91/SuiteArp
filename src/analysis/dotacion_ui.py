@@ -28,7 +28,7 @@ COLOR_ESTADO = {
 
 def show_dotacion_section(payroll_engine=None):
     """Renderiza la pestaña completa."""
-    st.header("🧭 Planificación de Dotación")
+    st.header(":material/explore: Planificación de Dotación")
     st.caption("Plan por empresa y área, contrastado con la dotación real y el costo de cubrir las vacantes.")
 
     db = AnalysisDBManager()
@@ -65,7 +65,7 @@ def show_dotacion_section(payroll_engine=None):
     st.divider()
 
     tab_control, tab_costo, tab_plan = st.tabs(
-        ["📊 Control por área", "💵 Vacantes y costo", "✏️ Editar plan"]
+        [":material/bar_chart: Control por área", ":material/payments: Vacantes y costo", ":material/edit: Editar plan"]
     )
 
     with tab_control:
@@ -113,7 +113,7 @@ def _metricas(r):
     if r["vacantes_sin_estimar"]:
         avisos.append(f"{r['vacantes_sin_estimar']} vacante(s) sin costo estimado")
     if avisos:
-        st.caption("⚠️ " + " · ".join(avisos))
+        st.caption(":material/warning: " + " · ".join(avisos))
 
 
 def _control_por_area(gestor, empresa, periodo, resumen):
@@ -201,9 +201,9 @@ def _detalle_area(gestor, empresa, periodo, area):
     st.divider()
     col_titulo, col_boton = st.columns([3, 1])
     with col_titulo:
-        st.markdown(f"##### 👥 {area} — dotación real")
+        st.markdown(f"##### :material/group: {area} — dotación real")
     with col_boton:
-        if st.button("✅ Igualar plan al real", width="stretch", key="dot_igualar",
+        if st.button(":material/check_circle: Igualar plan al real", width="stretch", key="dot_igualar",
                      help="Agrega al plan, con la cantidad de hoy, los cargos de "
                           "esta área que todavía no estén planificados. No toca "
                           "los que ya ajustaste a mano."):
@@ -331,7 +331,7 @@ def _editar_plan(gestor, empresa, periodo):
 
         notas = st.text_input("Notas", placeholder="ej: reemplazo, proyecto nuevo…")
 
-        guardar = st.form_submit_button("💾 Guardar en el plan", width="stretch",
+        guardar = st.form_submit_button(":material/save: Guardar en el plan", width="stretch",
                                         type="primary")
 
     if guardar:
@@ -402,7 +402,7 @@ def _editar_plan(gestor, empresa, periodo):
     if por_quitar:
         st.warning(f"Se quitarán {por_quitar} posición(es) del plan al guardar.")
 
-    if st.button("💾 Aplicar cambios", width="stretch", type="primary",
+    if st.button(":material/save: Aplicar cambios", width="stretch", type="primary",
                  key="dot_aplicar"):
         _aplicar_cambios(gestor, empresa, periodo, plan, editado)
 

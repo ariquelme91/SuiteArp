@@ -14,26 +14,26 @@ from src.utils.formatters import format_peso_chileno
 def show_compensations_section(buk_client: BukClient):
     """Muestra la sección de análisis de compensaciones."""
 
-    st.header("💰 Análisis de Compensaciones")
+    st.header(":material/payments: Análisis de Compensaciones")
     st.subheader("Comparativa de Niveles HAY y Mercados")
 
     db_manager = AnalysisDBManager()
 
     # SECCIÓN 1: Verificar datos cargados
     st.divider()
-    st.subheader("1️⃣ Estado de Datos")
+    st.subheader(":material/counter_1: Estado de Datos")
 
     total_niveles = len(db_manager.get_compensation_levels())
 
     if total_niveles == 0:
-        st.warning("⚠️ No hay tabla de compensaciones cargada. Ve a ⚙️ CONFIGURACIÓN → Tabla de Compensaciones para cargarla.")
+        st.warning(":material/warning: No hay tabla de compensaciones cargada. Ve a :material/settings: CONFIGURACIÓN → Tabla de Compensaciones para cargarla.")
         return
 
     col1, col2 = st.columns([3, 1])
 
     with col1:
-        st.success(f"✅ Tabla de compensaciones cargada con {total_niveles} niveles")
-        st.caption("Para actualizar, ve a ⚙️ CONFIGURACIÓN")
+        st.success(f":material/check_circle: Tabla de compensaciones cargada con {total_niveles} niveles")
+        st.caption("Para actualizar, ve a :material/settings: CONFIGURACIÓN")
 
     with col2:
         st.metric("Niveles disponibles", total_niveles)
@@ -42,18 +42,18 @@ def show_compensations_section(buk_client: BukClient):
     compensaciones = db_manager.get_compensation_levels()
 
     if not compensaciones:
-        st.warning("⚠️ No hay datos de compensaciones cargados. Carga el archivo Excel primero.")
+        st.warning(":material/warning: No hay datos de compensaciones cargados. Carga el archivo Excel primero.")
         return
 
     # SECCIÓN 2: Selector de empleado y configuración
     st.divider()
-    st.subheader("2️⃣ Análisis de Compensación")
+    st.subheader(":material/counter_2: Análisis de Compensación")
 
     # Obtener lista de empleados
     empleados = db_manager.get_analysis_by_empresa_area()
 
     if not empleados:
-        st.info("ℹ️ No hay empleados cargados. Carga primero desde la pestaña de Análisis.")
+        st.info(":material/info: No hay empleados cargados. Carga primero desde la pestaña de Análisis.")
         return
 
     # Crear diccionario empleado -> datos
@@ -132,26 +132,26 @@ def show_compensations_section(buk_client: BukClient):
     if (not nivel_base or not target_base) and (nivel_actual or target):
         col_save1, col_save2 = st.columns([4, 1])
         with col_save2:
-            if st.button("💾 Guardar valores", key=f"save_comp_{rut_empleado}"):
+            if st.button(":material/save: Guardar valores", key=f"save_comp_{rut_empleado}"):
                 if db_manager.save_manual_values(rut_empleado, nivel_actual, target):
-                    st.success("✅ Valores guardados")
+                    st.success(":material/check_circle: Valores guardados")
                     st.rerun()
                 else:
-                    st.error("❌ Error al guardar")
+                    st.error(":material/cancel: Error al guardar")
 
     # SECCIÓN 3: Cálculo de Compensación
     st.divider()
-    st.subheader("3️⃣ Cálculo de Compensación")
+    st.subheader(":material/counter_3: Cálculo de Compensación")
 
     if not nivel_actual or not target:
-        st.warning("⚠️ El empleado no tiene Nivel HAY o Target definido. Ingresa los valores arriba.")
+        st.warning(":material/warning: El empleado no tiene Nivel HAY o Target definido. Ingresa los valores arriba.")
         return
 
     try:
         nivel_actual = int(nivel_actual)
         target = float(target)
     except (ValueError, TypeError):
-        st.error("❌ Nivel HAY o Target inválido")
+        st.error(":material/cancel: Nivel HAY o Target inválido")
         return
 
     # Obtener mes actual (para UF)
@@ -161,7 +161,7 @@ def show_compensations_section(buk_client: BukClient):
     # Verificar que exista UF
     uf = db_manager.get_uf(mes_actual)
     if uf is None:
-        st.warning(f"⚠️ No hay UF registrada para {mes_actual}. Por favor cárgala en configuración.")
+        st.warning(f":material/warning: No hay UF registrada para {mes_actual}. Por favor cárgala en configuración.")
         return
 
     # Crear calculador
@@ -178,7 +178,7 @@ def show_compensations_section(buk_client: BukClient):
         sueldo_base = empleado.get("sueldo_actual", 0)
 
         if not sueldo_base:
-            st.error("❌ El empleado no tiene sueldo registrado")
+            st.error(":material/cancel: El empleado no tiene sueldo registrado")
             return
 
         # Crear calculador con IMM
@@ -194,7 +194,7 @@ def show_compensations_section(buk_client: BukClient):
         )
 
         # ===== DESGLOSE DE COMPONENTES (MENSUALIZADO) =====
-        st.subheader("📊 Desglose de Compensación (Mensual)")
+        st.subheader(":material/bar_chart: Desglose de Compensación (Mensual)")
 
         col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -233,11 +233,11 @@ def show_compensations_section(buk_client: BukClient):
         st.divider()
 
         # ===== MATRIZ DE PERCENTILES (ANÁLISIS TÉCNICO) =====
-        st.subheader("📊 Matriz de Percentiles y Análisis Técnico")
+        st.subheader(":material/bar_chart: Matriz de Percentiles y Análisis Técnico")
 
         # Desglose de componentes (Imponibles vs No Imponibles)
         st.divider()
-        st.subheader("📊 Desglose por Tipo de Componente")
+        st.subheader(":material/bar_chart: Desglose por Tipo de Componente")
 
         col1, col2 = st.columns(2)
 
@@ -274,7 +274,7 @@ def show_compensations_section(buk_client: BukClient):
 
         # Métricas técnicas
         st.divider()
-        st.subheader("⚙️ Métricas de Compensación")
+        st.subheader(":material/settings: Métricas de Compensación")
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -302,11 +302,11 @@ def show_compensations_section(buk_client: BukClient):
         with col4:
             # Color según compa ratio
             if resultado['compa_ratio'] < 90:
-                color_comp = "🔴"
+                color_comp = ":red[:material/circle:]"
             elif resultado['compa_ratio'] <= 105:
-                color_comp = "🟢"
+                color_comp = ":green[:material/circle:]"
             else:
-                color_comp = "🔵"
+                color_comp = ":blue[:material/circle:]"
 
             st.metric(
                 "Análisis",
@@ -317,7 +317,7 @@ def show_compensations_section(buk_client: BukClient):
         st.divider()
 
         # ===== TOTAL Y COMPARATIVA CON MERCADO (BANDAS) =====
-        st.subheader("💰 Posición en Banda de Compensación")
+        st.subheader(":material/payments: Posición en Banda de Compensación")
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -358,19 +358,19 @@ def show_compensations_section(buk_client: BukClient):
             with col1:
                 st.error("BAJO MERCADO (80-90%)")
             with col2:
-                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — ⚠️ Necesita ajuste salarial para entrar en banda competitiva (90-105%)")
+                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — :material/warning: Necesita ajuste salarial para entrar en banda competitiva (90-105%)")
         elif posicion <= 105:
             col1, col2 = st.columns([1, 2])
             with col1:
                 st.success("EN BANDA (90-105%)")
             with col2:
-                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — ✅ Posición competitiva en el mercado. Puede crecer dentro de la banda")
+                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — :material/check_circle: Posición competitiva en el mercado. Puede crecer dentro de la banda")
         else:
             col1, col2 = st.columns([1, 2])
             with col1:
                 st.warning("SOBRE PAGADO (105%+)")
             with col2:
-                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — ⚠️ Costo elevado respecto al mercado. Revisar justificación")
+                st.markdown(f"Posición: **{posicion:.1f}%** del P50 — :material/warning: Costo elevado respecto al mercado. Revisar justificación")
 
         # Info detallada técnica
         st.divider()
@@ -410,13 +410,13 @@ def show_compensations_section(buk_client: BukClient):
         )
 
     except ValueError as e:
-        st.error(f"❌ Error en cálculo: {str(e)}")
+        st.error(f":material/cancel: Error en cálculo: {str(e)}")
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f":material/cancel: Error: {str(e)}")
 
     # SECCIÓN 8: Tabla de todos los niveles
     st.divider()
-    st.subheader("8️⃣ Tabla de Referencia - Todos los Niveles")
+    st.subheader(":material/counter_8: Tabla de Referencia - Todos los Niveles")
 
     # Crear DataFrame para mostrar
     tabla_datos = []
@@ -440,7 +440,7 @@ def show_compensations_section(buk_client: BukClient):
 
     # SECCIÓN 5: Análisis de Competitividad Interna
     st.divider()
-    st.subheader("5️⃣ Análisis de Competitividad Interna")
+    st.subheader(":material/counter_5: Análisis de Competitividad Interna")
 
     # Verificar si hay promedios calculados - intentar con diferentes formatos
     nivel_str = str(nivel_actual)
@@ -450,7 +450,7 @@ def show_compensations_section(buk_client: BukClient):
     todos_promedios = db_manager.get_compensation_averages()
 
     if not promedios_internos and todos_promedios:
-        st.warning(f"⚠️ No hay promedio para nivel {nivel_str}. Niveles disponibles: {[p['nivel_hay'] for p in todos_promedios]}")
+        st.warning(f":material/warning: No hay promedio para nivel {nivel_str}. Niveles disponibles: {[p['nivel_hay'] for p in todos_promedios]}")
 
     if promedios_internos:
         from src.analysis.internal_competitiveness import InternalCompetitivenessCalculator
@@ -509,15 +509,15 @@ def show_compensations_section(buk_client: BukClient):
                 """
             )
         else:
-            st.warning(f"⚠️ {promedios_internos.get('error', 'Sin datos')}")
+            st.warning(f":material/warning: {promedios_internos.get('error', 'Sin datos')}")
     else:
-        st.info("ℹ️ No hay promedios de compensación interna calculados aún. Ve a ⚙️ CONFIGURACIÓN para calcularlos.")
+        st.info(":material/info: No hay promedios de compensación interna calculados aún. Ve a :material/settings: CONFIGURACIÓN para calcularlos.")
 
     st.divider()
 
     # SECCIÓN 6: Impacto de Incremento Propuesto
     st.divider()
-    st.subheader("6️⃣ Impacto Presupuestario del Incremento Propuesto")
+    st.subheader(":material/counter_6: Impacto Presupuestario del Incremento Propuesto")
 
     incremento_propuesto = resultado.get('incremento_recomendado', 0)
     if incremento_propuesto > 0:
@@ -565,12 +565,12 @@ def show_compensations_section(buk_client: BukClient):
             """
         )
     else:
-        st.success("✅ Empleado dentro de banda - No requiere incremento")
+        st.success(":material/check_circle: Empleado dentro de banda - No requiere incremento")
 
     st.divider()
 
     # SECCIÓN 7: Análisis de impacto histórico
-    st.subheader("7️⃣ Análisis Histórico y Contexto")
+    st.subheader(":material/counter_7: Análisis Histórico y Contexto")
 
     sueldo_actual = empleado.get("sueldo_actual", 0)
     aumento_total = empleado.get("aumento_total", 0)
@@ -633,7 +633,7 @@ def show_compensations_section(buk_client: BukClient):
             pdf_buffer = exporter.generate_pdf()
 
             st.download_button(
-                label="📄 Descargar PDF",
+                label=":material/picture_as_pdf: Descargar PDF",
                 data=pdf_buffer.getvalue(),
                 file_name=f"analisis_compensacion_{empleado.get('rut').replace('.', '').replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
                 mime="application/pdf",

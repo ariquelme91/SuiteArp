@@ -12,11 +12,11 @@ def render_user_management(auth_manager: AuthManager):
     Args:
         auth_manager: Gestor de autenticación
     """
-    st.title("👥 Gestión de Usuarios")
+    st.title(":material/group: Gestión de Usuarios")
 
     # Verificar que sea admin
     if st.session_state.get("rol") != "admin":
-        st.error("❌ Solo administradores pueden acceder a esta sección")
+        st.error(":material/cancel: Solo administradores pueden acceder a esta sección")
         return
 
     if auth_manager.modo_secrets:
@@ -31,7 +31,7 @@ def render_user_management(auth_manager: AuthManager):
 
 def _render_modo_secrets(auth_manager: AuthManager):
     """UI cuando los usuarios viven en los Secrets de Streamlit."""
-    tab1, tab2 = st.tabs(["📋 Usuarios Actuales", "➕ Agregar / Cambiar Clave"])
+    tab1, tab2 = st.tabs([":material/assignment: Usuarios Actuales", ":material/add: Agregar / Cambiar Clave"])
 
     with tab1:
         st.subheader("Usuarios Registrados")
@@ -54,12 +54,12 @@ def _render_modo_secrets(auth_manager: AuthManager):
 
         with st.form("form_generar_secret"):
             usuario = st.text_input(
-                "👤 Nombre de usuario",
+                ":material/person: Nombre de usuario",
                 placeholder="ej: Juan",
                 help="Mínimo 3 caracteres",
             )
             password = st.text_input(
-                "🔐 Contraseña",
+                ":material/lock: Contraseña",
                 type="password",
                 placeholder="ej: miclave123",
                 help="Mínimo 3 caracteres",
@@ -72,15 +72,15 @@ def _render_modo_secrets(auth_manager: AuthManager):
             )
 
             generar = st.form_submit_button(
-                "🔑 Generar línea", width='stretch', type="primary"
+                ":material/key: Generar línea", width='stretch', type="primary"
             )
 
         if generar:
             exito, resultado = auth_manager.generar_linea_secrets(usuario, password, rol)
             if not exito:
-                st.error(f"❌ {resultado}")
+                st.error(f":material/cancel: {resultado}")
             else:
-                st.success("✅ Línea generada. Cópiala y pégala en los Secrets:")
+                st.success(":material/check_circle: Línea generada. Cópiala y pégala en los Secrets:")
                 st.code(resultado, language="toml")
                 st.info(
                     "La contraseña queda hasheada: la línea no la revela. "
@@ -94,10 +94,10 @@ def _render_modo_secrets(auth_manager: AuthManager):
 
 def _render_modo_local(auth_manager: AuthManager):
     """UI cuando los usuarios viven en la BD local."""
-    st.caption("⚙️ Modo local: los usuarios se guardan en la base de datos del equipo.")
+    st.caption(":material/settings: Modo local: los usuarios se guardan en la base de datos del equipo.")
 
     tab1, tab2, tab3 = st.tabs(
-        ["📋 Usuarios Actuales", "➕ Crear Usuario", "🔑 Cambiar Contraseña"]
+        [":material/assignment: Usuarios Actuales", ":material/add: Crear Usuario", ":material/key: Cambiar Contraseña"]
     )
 
     # TAB 1: Listar usuarios y acciones
@@ -108,7 +108,7 @@ def _render_modo_local(auth_manager: AuthManager):
         if not usuarios:
             return
 
-        st.subheader("⚙️ Acciones")
+        st.subheader(":material/settings: Acciones")
         col1, col2 = st.columns(2)
 
         with col1:
@@ -126,10 +126,10 @@ def _render_modo_local(auth_manager: AuthManager):
                 if st.button("Actualizar Rol", key="btn_cambiar_rol"):
                     exito, mensaje = auth_manager.cambiar_rol(usuario_cambio, nuevo_rol)
                     if exito:
-                        st.success(f"✅ {mensaje}")
+                        st.success(f":material/check_circle: {mensaje}")
                         st.rerun()
                     else:
-                        st.error(f"❌ {mensaje}")
+                        st.error(f":material/cancel: {mensaje}")
 
         with col2:
             st.markdown("**Desactivar Usuario**")
@@ -149,10 +149,10 @@ def _render_modo_local(auth_manager: AuthManager):
                 if st.button("Desactivar", key="btn_desactivar", type="secondary"):
                     exito, mensaje = auth_manager.eliminar_usuario(usuario_desactivar)
                     if exito:
-                        st.success(f"✅ {mensaje}")
+                        st.success(f":material/check_circle: {mensaje}")
                         st.rerun()
                     else:
-                        st.error(f"❌ {mensaje}")
+                        st.error(f":material/cancel: {mensaje}")
 
     # TAB 2: Crear nuevo usuario
     with tab2:
@@ -160,10 +160,10 @@ def _render_modo_local(auth_manager: AuthManager):
 
         with st.form("form_crear_usuario"):
             nuevo_usuario = st.text_input(
-                "👤 Nombre de usuario", placeholder="ej: Juan", help="Mínimo 3 caracteres"
+                ":material/person: Nombre de usuario", placeholder="ej: Juan", help="Mínimo 3 caracteres"
             )
             nueva_password = st.text_input(
-                "🔐 Contraseña",
+                ":material/lock: Contraseña",
                 type="password",
                 placeholder="ej: miclave123",
                 help="Mínimo 3 caracteres",
@@ -176,7 +176,7 @@ def _render_modo_local(auth_manager: AuthManager):
             )
 
             submit_crear = st.form_submit_button(
-                "✅ Crear Usuario", width='stretch', type="primary"
+                ":material/check_circle: Crear Usuario", width='stretch', type="primary"
             )
 
         if submit_crear:
@@ -184,10 +184,10 @@ def _render_modo_local(auth_manager: AuthManager):
                 nuevo_usuario, nueva_password, rol_nuevo
             )
             if exito:
-                st.success(f"✅ {mensaje}")
+                st.success(f":material/check_circle: {mensaje}")
                 st.balloons()
             else:
-                st.error(f"❌ {mensaje}")
+                st.error(f":material/cancel: {mensaje}")
 
     # TAB 3: Cambiar contraseña propia
     with tab3:
@@ -195,37 +195,37 @@ def _render_modo_local(auth_manager: AuthManager):
         usuario_actual = st.session_state.get("usuario")
 
         with st.form("form_cambiar_password"):
-            st.info(f"👤 Cambiar contraseña para: **{usuario_actual}**")
+            st.info(f":material/person: Cambiar contraseña para: **{usuario_actual}**")
 
             password_actual = st.text_input(
-                "🔐 Contraseña Actual", type="password", placeholder="Ingresa tu contraseña actual"
+                ":material/lock: Contraseña Actual", type="password", placeholder="Ingresa tu contraseña actual"
             )
             password_nueva = st.text_input(
-                "🔑 Nueva Contraseña", type="password", placeholder="Ingresa la nueva contraseña"
+                ":material/key: Nueva Contraseña", type="password", placeholder="Ingresa la nueva contraseña"
             )
             password_confirmar = st.text_input(
-                "🔑 Confirmar Nueva Contraseña",
+                ":material/key: Confirmar Nueva Contraseña",
                 type="password",
                 placeholder="Confirma la nueva contraseña",
             )
 
             submit_cambiar = st.form_submit_button(
-                "✅ Cambiar Contraseña", width='stretch', type="primary"
+                ":material/check_circle: Cambiar Contraseña", width='stretch', type="primary"
             )
 
         if submit_cambiar:
             if not password_actual or not password_nueva:
-                st.error("❌ Completa todos los campos")
+                st.error(":material/cancel: Completa todos los campos")
             elif password_nueva != password_confirmar:
-                st.error("❌ Las contraseñas nuevas no coinciden")
+                st.error(":material/cancel: Las contraseñas nuevas no coinciden")
             else:
                 exito, mensaje = auth_manager.cambiar_password(
                     usuario_actual, password_actual, password_nueva
                 )
                 if exito:
-                    st.success(f"✅ {mensaje}")
+                    st.success(f":material/check_circle: {mensaje}")
                 else:
-                    st.error(f"❌ {mensaje}")
+                    st.error(f":material/cancel: {mensaje}")
 
 
 # ----------------------------------------------------------------------

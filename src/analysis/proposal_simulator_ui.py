@@ -16,7 +16,7 @@ import json
 def show_proposal_simulator():
     """Muestra el simulador de propuestas de renta."""
 
-    st.header("🎯 Simulador de Propuestas de Renta")
+    st.header(":material/track_changes: Simulador de Propuestas de Renta")
     st.subheader("Simula incrementos y compara posición vs mercado")
     # Updated: Add estacionamiento descuento
 
@@ -614,7 +614,7 @@ def show_proposal_simulator():
                 pdf_buffer = exporter.generate_pdf()
 
                 st.download_button(
-                    label="📄 Descargar PDF",
+                    label=":material/picture_as_pdf: Descargar PDF",
                     data=pdf_buffer.getvalue(),
                     file_name=f"propuesta_renta_{empleado.get('rut').replace('.', '').replace('-', '')}_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf",
@@ -625,7 +625,7 @@ def show_proposal_simulator():
 
         # SECCIÓN 7: Guardar Simulación
         st.divider()
-        st.subheader("7️⃣ Guardar Simulación")
+        st.subheader(":material/counter_7: Guardar Simulación")
 
         col1, col2 = st.columns([3, 1])
 
@@ -637,7 +637,7 @@ def show_proposal_simulator():
             )
 
         with col2:
-            if st.button("💾 Guardar", width='stretch', key="prop_guardar"):
+            if st.button(":material/save: Guardar", width='stretch', key="prop_guardar"):
                 simulacion = {
                     'nombre': nombre_sim,
                     'fecha': datetime.now().isoformat(),
@@ -655,12 +655,12 @@ def show_proposal_simulator():
                     st.session_state.simulaciones = []
 
                 st.session_state.simulaciones.append(simulacion)
-                st.success(f"✅ Simulación '{nombre_sim}' guardada")
+                st.success(f":material/check_circle: Simulación '{nombre_sim}' guardada")
 
         # SECCIÓN 8: Simulaciones Guardadas
         if 'simulaciones' in st.session_state and st.session_state.simulaciones:
             st.divider()
-            st.subheader("8️⃣ Simulaciones Guardadas")
+            st.subheader(":material/counter_8: Simulaciones Guardadas")
 
             for i, sim in enumerate(st.session_state.simulaciones):
                 col1, col2 = st.columns([4, 1])
@@ -673,12 +673,12 @@ def show_proposal_simulator():
                     )
 
                 with col2:
-                    if st.button("🗑️", key=f"prop_delete_{i}"):
+                    if st.button(":material/delete:", key=f"prop_delete_{i}"):
                         st.session_state.simulaciones.pop(i)
                         st.rerun()
 
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f":material/cancel: Error: {str(e)}")
         import traceback
         st.error(traceback.format_exc())
 
@@ -695,7 +695,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
     """
     from src.compensation_comparator import CompensationComparator, CompensationScenario
 
-    st.header("💰 Comparativa de Compensación Anual")
+    st.header(":material/payments: Comparativa de Compensación Anual")
 
     # Obtener empleados
     empleados = db_manager.get_analysis_by_empresa_area()
@@ -720,7 +720,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
     comparador = CompensationComparator(db_manager, payroll_engine)
 
     # INPUTS - ESCENARIO ACTUAL
-    st.subheader("📊 Escenario Actual")
+    st.subheader(":material/bar_chart: Escenario Actual")
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -761,7 +761,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
         )
 
     # INPUTS - ESCENARIO PROPUESTA
-    st.subheader("🎯 Escenario Propuesta")
+    st.subheader(":material/track_changes: Escenario Propuesta")
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -796,11 +796,11 @@ def show_compensation_comparison(db_manager, payroll_engine):
         )
 
     # BOTÓN CALCULAR
-    if st.button("🧮 Calcular Compensación", key="comp_calcular"):
+    if st.button(":material/calculate: Calcular Compensación", key="comp_calcular"):
         try:
             # Validar inputs
             if not nivel_actual_input or not nivel_prop_input:
-                st.error("❌ Nivel HAY requerido en ambos escenarios")
+                st.error(":material/cancel: Nivel HAY requerido en ambos escenarios")
                 return
 
             # Crear escenarios
@@ -829,7 +829,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
 
             # MOSTRAR TABLA COMPARATIVA
             st.divider()
-            st.subheader("📈 Tabla Comparativa")
+            st.subheader(":material/trending_up: Tabla Comparativa")
 
             # Preparar datos para tabla
             datos_tabla = {
@@ -867,7 +867,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
 
             # RESUMEN DE CAMBIOS
             st.divider()
-            st.subheader("📊 Resumen de Cambios")
+            st.subheader(":material/bar_chart: Resumen de Cambios")
 
             col1, col2, col3 = st.columns(3)
 
@@ -905,7 +905,7 @@ def show_compensation_comparison(db_manager, payroll_engine):
                     key="comp_comentarios"
                 )
 
-                if st.button("💾 Guardar Propuesta", key="comp_guardar"):
+                if st.button(":material/save: Guardar Propuesta", key="comp_guardar"):
                     # Guardar en tabla compensation_proposals
                     cambio = comparativa['cambio']['compensation_change']
                     cambio_pct = comparativa['cambio']['compensation_change_pct']
@@ -922,12 +922,12 @@ def show_compensation_comparison(db_manager, payroll_engine):
                     )
 
                     if success:
-                        st.success("✅ Propuesta guardada en base de datos")
+                        st.success(":material/check_circle: Propuesta guardada en base de datos")
                     else:
-                        st.error("❌ Error al guardar propuesta")
+                        st.error(":material/cancel: Error al guardar propuesta")
 
             with col2:
-                if st.button("📄 Exportar PDF", key="comp_pdf"):
+                if st.button(":material/picture_as_pdf: Exportar PDF", key="comp_pdf"):
                     try:
                         from src.pdf_exporter import PDFExporter
 
@@ -940,20 +940,20 @@ def show_compensation_comparison(db_manager, payroll_engine):
                         # Leer archivo PDF para descarga
                         with open(pdf_path, "rb") as pdf_file:
                             st.download_button(
-                                label="📥 Descargar PDF",
+                                label=":material/download: Descargar PDF",
                                 data=pdf_file,
                                 file_name=pdf_path.split("/")[-1],
                                 mime="application/pdf",
                                 key="comp_pdf_download"
                             )
 
-                        st.success(f"✅ PDF generado: {pdf_path}")
+                        st.success(f":material/check_circle: PDF generado: {pdf_path}")
                     except Exception as e:
-                        st.error(f"❌ Error al generar PDF: {str(e)}")
+                        st.error(f":material/cancel: Error al generar PDF: {str(e)}")
 
         except ValueError as e:
-            st.error(f"❌ Error en datos: {str(e)}")
+            st.error(f":material/cancel: Error en datos: {str(e)}")
         except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
+            st.error(f":material/cancel: Error: {str(e)}")
             import traceback
             st.error(traceback.format_exc())

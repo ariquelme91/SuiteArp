@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def show_analysis_section(buk_client: BukClient):
     """Muestra la sección de análisis de aumentos."""
 
-    st.header("📊 Análisis de Aumentos de Renta")
+    st.header(":material/bar_chart: Análisis de Aumentos de Renta")
     st.subheader("Suite de compensaciones ARP")
 
     # Inicializar BD
@@ -26,13 +26,13 @@ def show_analysis_section(buk_client: BukClient):
 
     # SECCIÓN 1: Cargar datos
     st.divider()
-    st.subheader("1️⃣ Cargar Datos desde Buk")
-    st.info("ℹ️ **Solo se analizan empleados VIGENTES** (status = activo) con historial de sueldos")
+    st.subheader(":material/counter_1: Cargar Datos desde Buk")
+    st.info(":material/info: **Solo se analizan empleados VIGENTES** (status = activo) con historial de sueldos")
 
     # Obtener empresas disponibles
     companies = buk_client.get_companies()
     if not companies:
-        st.error("❌ No se pudieron obtener empresas de Buk")
+        st.error(":material/cancel: No se pudieron obtener empresas de Buk")
         return
 
     company_dict = {comp["name"]: comp["id"] for comp in companies}
@@ -48,7 +48,7 @@ def show_analysis_section(buk_client: BukClient):
     )
 
     if not selected_companies:
-        st.warning("⚠️ Selecciona al menos una empresa")
+        st.warning(":material/warning: Selecciona al menos una empresa")
         return
 
     company_ids = [company_dict[name] for name in selected_companies]
@@ -56,12 +56,12 @@ def show_analysis_section(buk_client: BukClient):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("🔄 Cargar Empleados", width='stretch', type="primary"):
+        if st.button(":material/refresh: Cargar Empleados", width='stretch', type="primary"):
             with st.spinner(f"Cargando datos de {len(selected_companies)} empresa(s)..."):
                 loader = DataLoader(buk_client, db_manager)
                 loaded, errors, error_ruts = loader.load_all_employees(company_ids=company_ids)
 
-                st.success(f"✅ Datos cargados exitosamente")
+                st.success(f":material/check_circle: Datos cargados exitosamente")
                 col_a, col_b = st.columns(2)
                 with col_a:
                     st.metric("Empleados cargados", loaded)
@@ -72,9 +72,9 @@ def show_analysis_section(buk_client: BukClient):
                     st.info(f"RUTs omitidos (sin historial): {', '.join(error_ruts[:20])}")
 
     with col2:
-        if st.button("🗑️ Limpiar Datos", width='stretch'):
+        if st.button(":material/delete: Limpiar Datos", width='stretch'):
             if db_manager.clear_data():
-                st.success("✅ Datos eliminados")
+                st.success(":material/check_circle: Datos eliminados")
                 st.rerun()
 
     with col3:
@@ -83,13 +83,13 @@ def show_analysis_section(buk_client: BukClient):
 
     # SECCIÓN 2: Dashboard con filtros
     st.divider()
-    st.subheader("2️⃣ Dashboard Analítico")
+    st.subheader(":material/counter_2: Dashboard Analítico")
 
     # Obtener empresas y áreas para filtros
     empresas = db_manager.get_empresas()
 
     if not empresas:
-        st.info("ℹ️ No hay datos cargados. Carga primero los empleados desde Buk.")
+        st.info(":material/info: No hay datos cargados. Carga primero los empleados desde Buk.")
         return
 
     col1, col2 = st.columns(2)
@@ -113,7 +113,7 @@ def show_analysis_section(buk_client: BukClient):
 
     # Mostrar KPIs - Fila 1: Métricas Básicas
     st.divider()
-    st.subheader("📈 Métricas Clave")
+    st.subheader(":material/trending_up: Métricas Clave")
 
     kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
 
@@ -177,7 +177,7 @@ def show_analysis_section(buk_client: BukClient):
         )
 
     # Mostrar estadísticos detallados en expandible
-    with st.expander("📊 Estadísticos Detallados"):
+    with st.expander(":material/bar_chart: Estadísticos Detallados"):
         stat_col1, stat_col2 = st.columns(2)
 
         with stat_col1:
@@ -199,7 +199,7 @@ def show_analysis_section(buk_client: BukClient):
 
     # SECCIÓN 2B: Configurar Nivel HAY y Target manuales
     st.divider()
-    st.subheader("2B️⃣ Configurar Nivel HAY y Target Manuales")
+    st.subheader("2B Configurar Nivel HAY y Target Manuales")
     st.caption("Ingresa valores manuales para empleados sin Nivel HAY o Target en el sistema")
 
     # Obtener lista de empleados sin filtros
@@ -241,21 +241,21 @@ def show_analysis_section(buk_client: BukClient):
                 )
 
             with col3:
-                if st.button("💾 Guardar", key=f"btn_save_{rut}"):
+                if st.button(":material/save: Guardar", key=f"btn_save_{rut}"):
                     if nivel_hay_input or target_input:
                         if db_manager.save_manual_values(rut, nivel_hay_input or None, target_input or None):
-                            st.success("✅ Valores guardados correctamente")
+                            st.success(":material/check_circle: Valores guardados correctamente")
                             st.rerun()
                         else:
-                            st.error("❌ Error al guardar")
+                            st.error(":material/cancel: Error al guardar")
                     else:
-                        st.warning("⚠️ Ingresa al menos un valor")
+                        st.warning(":material/warning: Ingresa al menos un valor")
 
         # Mostrar tabla de valores guardados
         manual_data = db_manager.get_all_manual_values()
         if manual_data:
             st.divider()
-            st.subheader("📋 Valores Configurados Manualmente")
+            st.subheader(":material/assignment: Valores Configurados Manualmente")
 
             # Enriquecer datos con información de empleados
             for record in manual_data:
@@ -272,15 +272,15 @@ def show_analysis_section(buk_client: BukClient):
 
     # Gráficos
     st.divider()
-    st.subheader("📊 Visualizaciones")
+    st.subheader(":material/bar_chart: Visualizaciones")
 
     if analyses:
         df = pd.DataFrame(analyses)
 
         # SECCIÓN 3: Tabla detallada
         st.divider()
-        st.subheader("3️⃣ Tabla Detallada")
-        st.caption("⚠️ Indicador: Sin aumento real (aumentos < 5%)")
+        st.subheader(":material/counter_3: Tabla Detallada")
+        st.caption(":material/warning: Indicador: Sin aumento real (aumentos < 5%)")
 
         def calcular_antiguedad(fecha_ingreso_str):
             """Calcula antigüedad en años y meses desde fecha de ingreso."""
@@ -396,7 +396,7 @@ def show_analysis_section(buk_client: BukClient):
 
             nombre = row.get("nombre", "")
             sin_aumento_real = row.get("sin_aumento_real", False)
-            indicador = " ⚠️" if sin_aumento_real else ""
+            indicador = " :material/warning:" if sin_aumento_real else ""
             fecha_ingreso = row.get("fecha_ingreso", "")
             antiguedad = calcular_antiguedad(fecha_ingreso)
             rut = row.get("rut", "")
@@ -424,7 +424,7 @@ def show_analysis_section(buk_client: BukClient):
                 target = row.get("target")
                 st.write(target if (target and str(target).lower() != "nan") else "-")
             with col11:
-                if st.button("💰", key=f"prop_{idx}_{rut}", help="Crear propuesta de renta"):
+                if st.button(":material/attach_money:", key=f"prop_{idx}_{rut}", help="Crear propuesta de renta"):
                     # Guardar datos del empleado en session_state
                     st.session_state.empleado_para_propuesta = {
                         "rut": rut,
@@ -439,12 +439,12 @@ def show_analysis_section(buk_client: BukClient):
                     st.session_state.propuestas_subtab = "propuesta"
                     st.rerun()
             with col12:
-                if st.button("📋", key=f"btn_{idx}_{rut}", help="Ver historial"):
+                if st.button(":material/assignment:", key=f"btn_{idx}_{rut}", help="Ver historial"):
                     st.session_state[f"show_details_{idx}"] = not st.session_state.get(f"show_details_{idx}", False)
 
             # Mostrar detalles si está seleccionado
             if st.session_state.get(f"show_details_{idx}", False):
-                with st.expander(f"📊 Historial de Aumentos - {row.get('nombre', '')}"):
+                with st.expander(f":material/bar_chart: Historial de Aumentos - {row.get('nombre', '')}"):
                     try:
                         from src.buk_client import BukClient
                         import os
@@ -514,7 +514,7 @@ def show_analysis_section(buk_client: BukClient):
                                 styled_df = hist_df_display.style.apply(estilo_fila, axis=1)
                                 st.dataframe(styled_df, width='stretch', hide_index=True)
                                 st.info(f"Total de períodos: {len(hist_data)}")
-                                st.caption("🔵 Celeste = Aumento sobrepasa el IPC | Blanco = Aumento igual o menor al IPC")
+                                st.caption(":blue[:material/circle:] Celeste = Aumento sobrepasa el IPC | Blanco = Aumento igual o menor al IPC")
                             else:
                                 st.info("No hay historial de sueldos disponible")
                         else:
@@ -525,12 +525,12 @@ def show_analysis_section(buk_client: BukClient):
 
         # SECCIÓN 4: Exportar
         st.divider()
-        st.subheader("4️⃣ Exportar Datos")
+        st.subheader(":material/counter_4: Exportar Datos")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("📥 Descargar Excel", width='stretch'):
+            if st.button(":material/download: Descargar Excel", width='stretch'):
                 try:
                     from src.analysis.excel_exporter import ExcelExporter
 
@@ -553,15 +553,15 @@ def show_analysis_section(buk_client: BukClient):
                                 file_name=filename,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             )
-                        st.success("✅ Archivo generado")
+                        st.success(":material/check_circle: Archivo generado")
                     else:
-                        st.error("❌ Error al generar archivo")
+                        st.error(":material/cancel: Error al generar archivo")
 
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+                    st.error(f":material/cancel: Error: {str(e)}")
 
         with col2:
-            if st.button("🔌 JSON para API", width='stretch'):
+            if st.button(":material/api: JSON para API", width='stretch'):
                 try:
                     import json
 
@@ -582,6 +582,6 @@ def show_analysis_section(buk_client: BukClient):
                     )
 
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+                    st.error(f":material/cancel: Error: {str(e)}")
     else:
-        st.info("ℹ️ No hay datos para mostrar con los filtros seleccionados")
+        st.info(":material/info: No hay datos para mostrar con los filtros seleccionados")
