@@ -564,7 +564,7 @@ def proposal_section():
     st.divider()
 
     # BENEFICIOS ADICIONALES (Costo Empresa - no afectan la liquidación del trabajador)
-    st.subheader(":material/payments: Beneficios Adicionales (Costo Empresa)")
+    st.subheader(":material/payments: Beneficios Adicionales")
     st.caption("Montos anuales, editables en CONFIGURACIÓN. No afectan AFP/Salud/Impuesto ni el líquido del trabajador — solo se suman al costo anual para la empresa.")
 
     beneficios_cfg = get_beneficios_config()
@@ -1467,6 +1467,27 @@ def comparison_section(payroll_engine=None):
             mercado_actual = st.session_state.get("mercado_comparacion_main", "Mercado Financiero")
             mercado_propuesto = st.session_state.get("mercado_comparacion_info_prop", "Mercado Financiero")
 
+            # Mediana de mercado y Compratio (posición media) reales, calculados
+            # con el mismo motor que usa la pantalla de "Análisis de Compratio y
+            # Mediana" (src/compensation_comparator.py). Antes estos valores
+            # estaban hardcodeados como números de prueba fijos.
+            from src.compensation_comparator import CompensationComparator, CompensationScenario
+
+            comparador_pdf = CompensationComparator(AnalysisDBManager(), get_payroll_engine())
+            escenario_actual_pdf = CompensationScenario(
+                base_salary=sal_base_actual,
+                target_rentas=target_actual if target_actual else 0.0,
+                nivel_hay=str(nivel_hay_actual) if nivel_hay_actual and nivel_hay_actual != "—" else "0",
+                mercado=mercado_actual,
+            )
+            escenario_propuesto_pdf = CompensationScenario(
+                base_salary=sal_base_propuesto,
+                target_rentas=target_propuesto if target_propuesto else 0.0,
+                nivel_hay=str(nivel_hay_propuesto) if nivel_hay_propuesto and nivel_hay_propuesto != "—" else str(nivel_hay_actual) if nivel_hay_actual and nivel_hay_actual != "—" else "0",
+                mercado=mercado_propuesto,
+            )
+            metrics_pdf = comparador_pdf.compare(escenario_actual_pdf, escenario_propuesto_pdf)
+
             compensation_pdf_data = {
                 "bono_actual": bono_actual,
                 "bono_propuesto": bono_propuesto,
@@ -1474,10 +1495,10 @@ def comparison_section(payroll_engine=None):
                 "mercado_propuesto": mercado_propuesto,
                 "nivel_hay_actual": nivel_hay_actual,
                 "nivel_hay_propuesto": nivel_hay_propuesto,
-                "posicion_media_actual": 58,
-                "posicion_media_propuesto": 96,
-                "mediana_actual": 108045466,
-                "mediana_propuesto": 58879636,
+                "posicion_media_actual": metrics_pdf["actual"]["compratio_pct"],
+                "posicion_media_propuesto": metrics_pdf["propuesta"]["compratio_pct"],
+                "mediana_actual": metrics_pdf["actual"]["median"],
+                "mediana_propuesto": metrics_pdf["propuesta"]["median"],
                 "pct_variable_actual": (target_actual * 100) if target_actual > 0 else 0,
                 "pct_variable_propuesto": (target_propuesto * 100) if target_propuesto > 0 else 0,
                 "comp_anual_actual": sal_anual_actual + bono_actual,
