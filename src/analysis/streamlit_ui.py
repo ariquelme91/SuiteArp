@@ -409,8 +409,9 @@ def show_analysis_section(buk_client: BukClient):
                                         ipc_bd = db.get_ipc_cercano(periodo, tolerancia_meses=2)
                                         if ipc_bd is not None:
                                             ipc_valor = float(ipc_bd) * 100
-                                            # Tolerancia de 0.1% para redondeos
-                                            es_mayor_ipc = aumento_pct > (ipc_valor + 0.1)
+                                            # Tolerancia de 0.3 puntos porcentuales para
+                                            # redondeos de sueldo y pequeños desajustes de fecha
+                                            es_mayor_ipc = aumento_pct > (ipc_valor + 0.3)
                                         else:
                                             # Si no hay IPC registrado, asumir que sobrepasa
                                             es_mayor_ipc = True

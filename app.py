@@ -1797,8 +1797,19 @@ def configuration_section():
             if st.button("Guardar IPC", width='stretch', key="save_ipc_btn"):
                 if new_mes and new_ipc > 0:
                     if db.upsert_ipc(new_mes, new_ipc):
-                        st.success(f":material/check_circle: IPC {new_mes}: {new_ipc:.4f} guardado")
-                        st.rerun()
+                        # Comitear el histórico completo a GitHub, para que sobreviva
+                        # a un reinicio real del contenedor de Streamlit Cloud.
+                        ipc_sync_ok, ipc_sync_detalle = commit_json_file(
+                            "config/ipc_history.json",
+                            db.get_ipc_history_dict(),
+                            f"Actualizar IPC {new_mes}",
+                        )
+                        if ipc_sync_ok:
+                            st.success(f":material/check_circle: IPC {new_mes}: {new_ipc:.4f} guardado y sincronizado")
+                        elif not github_sync_configured():
+                            st.warning(f":material/warning: IPC {new_mes} guardado, pero sin sincronización con GitHub configurada — se perderá en un reinicio real de la app.")
+                        else:
+                            st.warning(f":material/warning: IPC {new_mes} guardado, pero no se pudo sincronizar con GitHub — se perderá en un reinicio real de la app.\n\n**Detalle:** {ipc_sync_detalle}")
                     else:
                         st.error("Error al guardar IPC")
                 else:

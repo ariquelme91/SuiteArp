@@ -120,6 +120,15 @@ class AnalysisDBManager:
                     )
                     """
                 )
+                ipc_seed = self._leer_ipc_seed_desde_archivo()
+                for mes_seed, valor_seed in ipc_seed.items():
+                    cursor.execute(
+                        """
+                        INSERT OR IGNORE INTO ipc_history (mes, valor_ipc, fecha_creacion, fecha_actualizacion)
+                        VALUES (?, ?, ?, ?)
+                        """,
+                        (mes_seed, valor_seed, datetime.now().isoformat(), datetime.now().isoformat())
+                    )
 
                 # Tabla de Compensaciones por Nivel (valores totales de referencia)
                 cursor.execute(
@@ -909,6 +918,29 @@ class AnalysisDBManager:
             logger.error(f"Error insertando IPC: {e}")
             return False
 
+    _IPC_HISTORY_FILE = "config/ipc_history.json"
+
+    def _leer_ipc_seed_desde_archivo(self) -> Dict[str, float]:
+        """Lee el histórico de IPC desde el archivo comiteado en git.
+
+        Se usa solo para poblar filas iniciales de `ipc_history` cuando el
+        contenedor se crea desde cero (ej. tras un reinicio en Streamlit
+        Cloud, que reclona el repo). El guardado desde la UI mantiene este
+        archivo actualizado vía commit automático a GitHub, así el próximo
+        contenedor arranca con el historial completo en vez de perder los
+        valores ingresados manualmente.
+        """
+        try:
+            with open(self._IPC_HISTORY_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return {mes: float(valor) for mes, valor in data.items()}
+        except Exception:
+            return {}
+
+    def get_ipc_history_dict(self) -> Dict[str, float]:
+        """Obtiene el histórico completo de IPC como {mes: valor_ipc}."""
+        return {row["mes"]: row["valor_ipc"] for row in self.get_ipc_history()}
+
     def get_ipc_history(self) -> List[Dict[str, Any]]:
         """Obtiene el historial de IPC."""
         try:
@@ -959,6 +991,12 @@ class AnalysisDBManager:
             mejor_diff = None
 
             for mes_row, valor in rows:
+                # Ignorar filas legacy tipo "índice" (ej: 100.0, 131.5) que coexisten
+                # en la misma tabla con otro formato: una tasa IPC real por período
+                # nunca debería superar 100% (1.0 en decimal).
+                if valor is None or valor > 1.0:
+                    continue
+
                 try:
                     fecha_row = datetime.strptime(mes_row, "%Y-%m")
                 except ValueError:
