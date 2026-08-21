@@ -22,6 +22,7 @@ from src.branding import LOGO_HORIZONTAL_PATH, LOGO_PATH, logo_base64
 from src.login_page import render_login_page
 from src.user_management import render_user_management
 from src.analysis.db_manager import AnalysisDBManager
+from src.github_sync import commit_json_file, is_configured as github_sync_configured
 
 # Cargar variables de entorno
 load_dotenv()
@@ -823,15 +824,15 @@ def proposal_section():
                         direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
                         st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
 
-                    st.caption(f":material/bar_chart: **Promedio Interno** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Mediana Interna** (Nivel {nivel_hay_actual_str}): **${promedio_val:,.0f}**")
 
-                    # Gap vs Promedio Interno
+                    # Gap vs Mediana Interna
                     if promedio_val > 0:
                         gap_promedio = total_actual_comp - promedio_val
                         pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
                         icon_promedio = ":material/check_circle:" if gap_promedio >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
-                        st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
+                        st.caption(f"{icon_promedio} {direction} de la mediana: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
                     st.caption(f":material/bar_chart: Nivel {nivel_hay_actual_str}: Datos no disponibles en BD")
             elif nivel_hay_actual_str:
@@ -900,15 +901,15 @@ def proposal_section():
                         direction = "ARRIBA" if gap_mercado >= 0 else "DEBAJO"
                         st.caption(f"{icon_mercado} {direction} del mercado: **${abs(gap_mercado):,.0f}** ({pct_mercado:+.1f}%)")
 
-                    st.caption(f":material/bar_chart: **Promedio Interno** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
+                    st.caption(f":material/bar_chart: **Mediana Interna** (Nivel {nivel_hay_prop_str}): **${promedio_val:,.0f}**")
 
-                    # Gap vs Promedio Interno
+                    # Gap vs Mediana Interna
                     if promedio_val > 0:
                         gap_promedio = total_prop_comp - promedio_val
                         pct_promedio = (gap_promedio / promedio_val * 100) if promedio_val != 0 else 0
                         icon_promedio = ":material/check_circle:" if gap_promedio >= 0 else ":material/warning:"
                         direction = "ARRIBA" if gap_promedio >= 0 else "DEBAJO"
-                        st.caption(f"{icon_promedio} {direction} del promedio: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
+                        st.caption(f"{icon_promedio} {direction} de la mediana: **${abs(gap_promedio):,.0f}** ({pct_promedio:+.1f}%)")
                 except Exception as e:
                     st.caption(f":material/bar_chart: Nivel {nivel_hay_prop_str}: Datos no disponibles en BD")
             elif nivel_hay_prop_str:
@@ -1699,18 +1700,33 @@ def configuration_section():
         with open("config/parameters.json", "w") as f:
             json.dump(parameters, f, indent=2)
 
-        # Beneficios adicionales se guardan en la BD (no en el JSON), para que
-        # una actualización hecha desde la app no se pierda en un rerun/reinicio.
-        beneficios_guardado_ok = AnalysisDBManager().save_beneficios_config({
+        # Beneficios adicionales se guardan en la BD, para que una
+        # actualización hecha desde la app esté disponible de inmediato.
+        beneficios_dict = {
             "aguinaldo_navidad": aguinaldo_navidad,
             "aguinaldo_fiestas_patrias": aguinaldo_fiestas_patrias,
             "gift_card": gift_card,
             "bono_vacaciones_monto": bono_vacaciones_monto,
             "bono_vacaciones_tope_renta": bono_vacaciones_tope_renta,
-        })
+        }
+        beneficios_guardado_ok = AnalysisDBManager().save_beneficios_config(beneficios_dict)
 
+        # Además se comitea a GitHub, para que sobreviva a un reinicio real
+        # del contenedor de Streamlit Cloud (que reclona el repo desde git).
+        beneficios_sync_ok = False
         if beneficios_guardado_ok:
+            beneficios_sync_ok = commit_json_file(
+                "config/beneficios_config.json",
+                beneficios_dict,
+                "Actualizar configuración de Beneficios Adicionales",
+            )
+
+        if beneficios_guardado_ok and beneficios_sync_ok:
             st.success(":material/check_circle: Parámetros actualizados correctamente")
+        elif beneficios_guardado_ok and not github_sync_configured():
+            st.warning(":material/warning: Beneficios Adicionales guardados, pero sin sincronización con GitHub configurada — se perderán en un reinicio real de la app. Configura `[github]` en los Secrets de Streamlit Cloud.")
+        elif beneficios_guardado_ok:
+            st.warning(":material/warning: Beneficios Adicionales guardados, pero no se pudo sincronizar con GitHub — se perderán en un reinicio real de la app.")
         else:
             st.warning(":material/warning: Parámetros generales guardados, pero no se pudieron guardar los Beneficios Adicionales.")
         st.balloons()

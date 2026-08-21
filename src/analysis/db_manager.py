@@ -221,13 +221,21 @@ class AnalysisDBManager:
                     )
                     """
                 )
+                seed = self._leer_beneficios_seed_desde_archivo()
                 cursor.execute(
                     """
                     INSERT OR IGNORE INTO beneficios_config (
                         id, aguinaldo_navidad, aguinaldo_fiestas_patrias, gift_card,
                         bono_vacaciones_monto, bono_vacaciones_tope_renta
-                    ) VALUES (1, 60000, 60000, 50000, 200000, 2500000)
-                    """
+                    ) VALUES (1, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        seed["aguinaldo_navidad"],
+                        seed["aguinaldo_fiestas_patrias"],
+                        seed["gift_card"],
+                        seed["bono_vacaciones_monto"],
+                        seed["bono_vacaciones_tope_renta"],
+                    ),
                 )
 
                 # Tabla de propuestas de renta creadas desde la interfaz principal (Propuestas)
@@ -673,6 +681,24 @@ class AnalysisDBManager:
         "bono_vacaciones_monto": 200000,
         "bono_vacaciones_tope_renta": 2500000,
     }
+    _BENEFICIOS_CONFIG_FILE = "config/beneficios_config.json"
+
+    def _leer_beneficios_seed_desde_archivo(self) -> Dict[str, float]:
+        """Lee los valores iniciales de beneficios desde el archivo comiteado en git.
+
+        Se usa solo para poblar la fila inicial de `beneficios_config` cuando
+        el contenedor se crea desde cero (ej. tras un reinicio en Streamlit
+        Cloud, que reclona el repo). `save_beneficios_config` mantiene este
+        archivo actualizado vía commit automático a GitHub, así el próximo
+        contenedor arranca con los últimos valores guardados en vez de los
+        defaults de fábrica.
+        """
+        try:
+            with open(self._BENEFICIOS_CONFIG_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return {**self._BENEFICIOS_DEFAULT, **data}
+        except Exception:
+            return dict(self._BENEFICIOS_DEFAULT)
 
     def get_beneficios_config(self) -> Dict[str, Any]:
         """Obtiene los montos vigentes de beneficios adicionales desde la BD."""

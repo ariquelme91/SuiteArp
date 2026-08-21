@@ -93,7 +93,7 @@ class InternalCompetitivenessCalculator:
             resultados[nivel] = {
                 "nivel_hay": nivel,
                 "cantidad_empleados": len(empleados_nivel),
-                "promedio_anualizado": round(statistics.mean(compensaciones), 2),
+                "promedio_anualizado": round(statistics.median(compensaciones), 2),
                 "minimo_anualizado": round(min(compensaciones), 2),
                 "maximo_anualizado": round(max(compensaciones), 2),
                 "desviacion_std": round(statistics.stdev(compensaciones), 2) if len(compensaciones) > 1 else 0,
