@@ -1714,8 +1714,9 @@ def configuration_section():
         # Además se comitea a GitHub, para que sobreviva a un reinicio real
         # del contenedor de Streamlit Cloud (que reclona el repo desde git).
         beneficios_sync_ok = False
+        beneficios_sync_detalle = ""
         if beneficios_guardado_ok:
-            beneficios_sync_ok = commit_json_file(
+            beneficios_sync_ok, beneficios_sync_detalle = commit_json_file(
                 "config/beneficios_config.json",
                 beneficios_dict,
                 "Actualizar configuración de Beneficios Adicionales",
@@ -1726,7 +1727,7 @@ def configuration_section():
         elif beneficios_guardado_ok and not github_sync_configured():
             st.warning(":material/warning: Beneficios Adicionales guardados, pero sin sincronización con GitHub configurada — se perderán en un reinicio real de la app. Configura `[github]` en los Secrets de Streamlit Cloud.")
         elif beneficios_guardado_ok:
-            st.warning(":material/warning: Beneficios Adicionales guardados, pero no se pudo sincronizar con GitHub — se perderán en un reinicio real de la app.")
+            st.warning(f":material/warning: Beneficios Adicionales guardados, pero no se pudo sincronizar con GitHub — se perderán en un reinicio real de la app.\n\n**Detalle:** {beneficios_sync_detalle}")
         else:
             st.warning(":material/warning: Parámetros generales guardados, pero no se pudieron guardar los Beneficios Adicionales.")
         st.balloons()
