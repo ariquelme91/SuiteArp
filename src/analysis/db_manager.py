@@ -5,6 +5,7 @@ Gestor de Base de Datos SQLite para análisis de salarios.
 import sqlite3
 from typing import List, Dict, Optional, Any
 from pathlib import Path
+from datetime import datetime
 import logging
 import json
 
@@ -930,6 +931,47 @@ class AnalysisDBManager:
                 return result[0] if result else None
         except Exception as e:
             logger.error(f"Error obteniendo IPC: {e}")
+            return None
+
+    def get_ipc_cercano(self, mes: str, tolerancia_meses: int = 2) -> Optional[float]:
+        """
+        Obtiene el IPC de un mes exacto o, si no existe, el registro más
+        cercano dentro de una tolerancia de meses (antes o después).
+
+        Los IPC se cargan cada ~4 meses (no todos los meses tienen registro),
+        por lo que un aumento puede caer en un mes sin dato exacto.
+        """
+        try:
+            exacto = self.get_ipc(mes)
+            if exacto is not None:
+                return exacto
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT mes, valor_ipc FROM ipc_history")
+                rows = cursor.fetchall()
+
+            if not rows:
+                return None
+
+            target = datetime.strptime(mes, "%Y-%m")
+            mejor_valor = None
+            mejor_diff = None
+
+            for mes_row, valor in rows:
+                try:
+                    fecha_row = datetime.strptime(mes_row, "%Y-%m")
+                except ValueError:
+                    continue
+
+                diff_meses = abs((fecha_row.year - target.year) * 12 + (fecha_row.month - target.month))
+                if diff_meses <= tolerancia_meses and (mejor_diff is None or diff_meses < mejor_diff):
+                    mejor_valor = valor
+                    mejor_diff = diff_meses
+
+            return mejor_valor
+        except Exception as e:
+            logger.error(f"Error obteniendo IPC cercano: {e}")
             return None
 
     def upsert_compensation_level(self, nivel: int, mercado_financiero: float = None, mercado_seguros: float = None, descripcion: str = None) -> bool:
