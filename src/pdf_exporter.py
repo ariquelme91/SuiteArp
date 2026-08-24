@@ -686,7 +686,7 @@ class PDFExporter:
 
         return dates, real_salaries, ipc_salaries
 
-    def _build_salary_evolution_figure(self, salary_history: list, ipc_history: List[Dict]):
+    def _build_salary_evolution_figure(self, salary_history: list, ipc_history: List[Dict], sobrepasa_por_periodo: Optional[Dict[str, bool]] = None):
         """
         Construye la figura matplotlib de evolución salarial (Real vs Ajustado por IPC).
 
@@ -696,6 +696,10 @@ class PDFExporter:
         Args:
             salary_history: Lista de registros con start_date y base_wage (ya filtrados)
             ipc_history: Lista de registros con mes y valor_ipc
+            sobrepasa_por_periodo: Si se entrega, marca los puntos usando esta
+                comparación período a período ({"YYYY-MM": True/False}) en vez del
+                criterio por defecto (acumulado vs sueldo inicial). Permite que el
+                resaltado del gráfico coincida exactamente con el de la tabla.
 
         Returns:
             Tupla con (figura matplotlib, lista de puntos de ajuste) o (None, []) si hay error
@@ -726,10 +730,15 @@ class PDFExporter:
                    linestyle='--', label='Sueldo Ajustado por IPC (Contractual)',
                    marker='s', markersize=4, zorder=2)
 
-            # Marcar ajustes reales (donde sueldo real > sueldo IPC)
+            # Marcar los puntos donde el reajuste difiere del IPC
             adjustment_points = []
             for i, (real, ipc) in enumerate(zip(real_salaries, ipc_salaries)):
-                if real > ipc * 1.01:  # 1% de tolerancia para evitar ruido
+                if sobrepasa_por_periodo is not None:
+                    es_ajuste = bool(sobrepasa_por_periodo.get(dates[i], False))
+                else:
+                    es_ajuste = real > ipc * 1.01  # 1% de tolerancia para evitar ruido
+
+                if es_ajuste:
                     ax.scatter(i, real, marker='o', s=150, color='#FF8C00',
                               edgecolors='#E67E00', linewidths=1.5, zorder=4)
                     adjustment_points.append((dates[i], real, ipc))

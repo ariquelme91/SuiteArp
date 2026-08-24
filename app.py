@@ -1410,16 +1410,28 @@ def comparison_section(payroll_engine=None):
                 if ipc_history_list:
                     from src.pdf_exporter import PDFExporter
 
+                    # Mismo criterio "sobrepasa IPC" que la tabla de arriba, indexado
+                    # por período, para que el punto resaltado en el gráfico coincida
+                    # exactamente con la fila resaltada en la tabla.
+                    sobrepasa_por_periodo = {
+                        row["Periodo"]: sobrepasa_ipc[idx]
+                        for idx, row in enumerate(history_data)
+                    }
+
                     pdf_exp = PDFExporter()
-                    fig, _ = pdf_exp._build_salary_evolution_figure(filtered_history, ipc_history_list)
+                    fig, _ = pdf_exp._build_salary_evolution_figure(
+                        filtered_history, ipc_history_list, sobrepasa_por_periodo=sobrepasa_por_periodo
+                    )
                     if fig is not None:
                         st.pyplot(fig)
                         import matplotlib.pyplot as plt
                         plt.close(fig)
+                    else:
+                        st.warning(":material/warning: No se pudo construir el gráfico de evolución (datos insuficientes para este empleado).")
                 else:
-                    st.caption("Carga el histórico de IPC en Configuración para ver el gráfico de evolución.")
+                    st.warning(":material/warning: No hay histórico de IPC cargado — ve a Configuración para cargarlo y ver el gráfico de evolución.")
             except Exception as e:
-                st.caption(f"No se pudo generar el gráfico de evolución: {e}")
+                st.warning(f":material/warning: No se pudo generar el gráfico de evolución: {e}")
     else:
         st.info("No se encontró historial de sueldos")
 
