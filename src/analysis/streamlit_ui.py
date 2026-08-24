@@ -413,8 +413,9 @@ def show_analysis_section(buk_client: BukClient):
                                             # redondeos de sueldo y pequeños desajustes de fecha
                                             es_mayor_ipc = aumento_pct > (ipc_valor + 0.3)
                                         else:
-                                            # Si no hay IPC registrado, asumir que sobrepasa
-                                            es_mayor_ipc = True
+                                            # Sin IPC registrado para comparar: no destacar
+                                            # (no asumir que sobrepasa sin poder verificarlo)
+                                            es_mayor_ipc = False
 
                                         # Solo agregar si hay cambio de sueldo
                                         hist_data.append({
@@ -442,7 +443,7 @@ def show_analysis_section(buk_client: BukClient):
                                 styled_df = hist_df_display.style.apply(estilo_fila, axis=1)
                                 st.dataframe(styled_df, width='stretch', hide_index=True)
                                 st.info(f"Total de períodos: {len(hist_data)}")
-                                st.caption(":blue[:material/circle:] Celeste = Aumento sobrepasa el IPC | Blanco = Aumento igual o menor al IPC")
+                                st.caption(":blue[:material/circle:] Celeste = Aumento sobrepasa el IPC registrado | Blanco = Igual o menor al IPC, o sin IPC para comparar")
                             else:
                                 st.info("No hay historial de sueldos disponible")
                         else:
