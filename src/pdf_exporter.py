@@ -686,30 +686,26 @@ class PDFExporter:
 
         return dates, real_salaries, ipc_salaries
 
-    def _generate_salary_evolution_chart(self, salary_history: list, ipc_history: List[Dict]) -> Tuple[Optional[Image], list]:
+    def _build_salary_evolution_figure(self, salary_history: list, ipc_history: List[Dict]):
         """
-        Genera un gráfico de evolución salarial con matplotlib y lo retorna como Image para PDF.
+        Construye la figura matplotlib de evolución salarial (Real vs Ajustado por IPC).
+
+        Compartida entre la generación del PDF y el gráfico equivalente mostrado
+        en la app (Propuestas), para que ambos se vean siempre igual.
 
         Args:
-            salary_history: Lista de registros con start_date y base_wage
+            salary_history: Lista de registros con start_date y base_wage (ya filtrados)
             ipc_history: Lista de registros con mes y valor_ipc
 
         Returns:
-            Tupla con (Objeto Image de reportlab, lista de puntos de ajuste) o (None, []) si hay error
+            Tupla con (figura matplotlib, lista de puntos de ajuste) o (None, []) si hay error
         """
         try:
-            import tempfile
-            import os
-
-            # Filtrar historial
-            filtered_history = [record for record in salary_history
-                               if record.get("start_date", "")[:7] > "2019-05"]
-
-            if len(filtered_history) < 2:
+            if len(salary_history) < 2:
                 return None, []
 
             dates, real_salaries, ipc_salaries = self._calculate_ipc_adjusted_salary(
-                filtered_history, ipc_history
+                salary_history, ipc_history
             )
 
             if not dates:
@@ -755,6 +751,36 @@ class PDFExporter:
             ax.spines['right'].set_visible(False)
 
             plt.tight_layout()
+
+            return fig, adjustment_points
+
+        except Exception as e:
+            logger.error(f"Error construyendo gráfico de evolución salarial: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None, []
+
+    def _generate_salary_evolution_chart(self, salary_history: list, ipc_history: List[Dict]) -> Tuple[Optional[Image], list]:
+        """
+        Genera un gráfico de evolución salarial con matplotlib y lo retorna como Image para PDF.
+
+        Args:
+            salary_history: Lista de registros con start_date y base_wage
+            ipc_history: Lista de registros con mes y valor_ipc
+
+        Returns:
+            Tupla con (Objeto Image de reportlab, lista de puntos de ajuste) o (None, []) si hay error
+        """
+        try:
+            import tempfile
+
+            # Filtrar historial
+            filtered_history = [record for record in salary_history
+                               if record.get("start_date", "")[:7] > "2019-05"]
+
+            fig, adjustment_points = self._build_salary_evolution_figure(filtered_history, ipc_history)
+            if fig is None:
+                return None, []
 
             # Guardar en archivo temporal
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:

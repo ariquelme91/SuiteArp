@@ -1327,7 +1327,10 @@ def comparison_section(payroll_engine=None):
         # Filtrar registros: excluir mayo 2019 y anteriores
         filtered_history = [record for record in salary_history if record.get("start_date", "")[:7] > "2019-05"]
 
+        db_ipc = AnalysisDBManager()
+
         history_data = []
+        sobrepasa_ipc = []  # Rastrear qué filas sobrepasan el IPC
         for i, record in enumerate(filtered_history):
             start = record.get("start_date", "")
             wage = record.get("base_wage", 0)
@@ -1339,6 +1342,7 @@ def comparison_section(payroll_engine=None):
             variation = ""
             variation_pct = ""
             skip_record = False
+            es_mayor_ipc = False
 
             if i < len(filtered_history) - 1:  # Si no es el último (más antiguo)
                 prev_wage = filtered_history[i + 1].get("base_wage")
@@ -1353,6 +1357,15 @@ def comparison_section(payroll_engine=None):
                         variation = f"${change:,.0f}"
                         variation_pct = f"{change_pct:+.1f}%"
 
+                        # Comparar contra el IPC del período (o el más cercano dentro
+                        # de una tolerancia de meses, ya que no se carga todos los meses)
+                        ipc_bd = db_ipc.get_ipc_cercano(periodo, tolerancia_meses=2)
+                        if ipc_bd is not None:
+                            ipc_valor = float(ipc_bd) * 100
+                            es_mayor_ipc = change_pct > (ipc_valor + 0.3)
+                        else:
+                            es_mayor_ipc = True
+
             if not skip_record:
                 history_data.append({
                     "Periodo": periodo,
@@ -1360,9 +1373,18 @@ def comparison_section(payroll_engine=None):
                     "Variación ($)": variation,
                     "Variación (%)": variation_pct,
                 })
+                sobrepasa_ipc.append(es_mayor_ipc)
 
         df = pd.DataFrame(history_data)
-        st.dataframe(df, width='stretch', hide_index=True)
+
+        def _resaltar_sobre_ipc(row):
+            idx = row.name
+            if idx < len(sobrepasa_ipc) and sobrepasa_ipc[idx]:
+                return ['background-color: #FFF3B0'] * len(row)
+            return [''] * len(row)
+
+        st.dataframe(df.style.apply(_resaltar_sobre_ipc, axis=1), width='stretch', hide_index=True)
+        st.caption("Fondo amarillo = Aumento sobrepasa el IPC registrado para ese período")
 
         # Resumen (usando datos filtrados)
         col1, col2, col3 = st.columns(3)
@@ -1380,6 +1402,24 @@ def comparison_section(payroll_engine=None):
                 current = filtered_history[0].get("base_wage", 0)
                 first = filtered_history[-1].get("base_wage", 0)
                 st.metric("Sueldo Inicial", f"${first:,.0f}")
+
+        # Gráfico de evolución salarial (el mismo que se incluye en el PDF)
+        if len(filtered_history) >= 2:
+            try:
+                ipc_history_list = db_ipc.get_ipc_history()
+                if ipc_history_list:
+                    from src.pdf_exporter import PDFExporter
+
+                    pdf_exp = PDFExporter()
+                    fig, _ = pdf_exp._build_salary_evolution_figure(filtered_history, ipc_history_list)
+                    if fig is not None:
+                        st.pyplot(fig)
+                        import matplotlib.pyplot as plt
+                        plt.close(fig)
+                else:
+                    st.caption("Carga el histórico de IPC en Configuración para ver el gráfico de evolución.")
+            except Exception as e:
+                st.caption(f"No se pudo generar el gráfico de evolución: {e}")
     else:
         st.info("No se encontró historial de sueldos")
 
