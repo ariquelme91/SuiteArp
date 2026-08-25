@@ -38,10 +38,15 @@ st.set_page_config(
 # Estilos CSS
 st.markdown("""
     <style>
+    /* Evitar que imágenes (logos, fotos de empleado) desborden en pantallas angostas */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #1F4E78;
+        color: #3B78C3;
         margin-bottom: 1rem;
     }
     .app-logo {
@@ -50,30 +55,7 @@ st.markdown("""
     .app-logo img {
         width: 280px;
         height: auto;
-    }
-    .success-box {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-    }
-    .info-box {
-        background-color: #d1ecf1;
-        border: 1px solid #bee5eb;
-        color: #0c5460;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-    }
-    .warning-box {
-        background-color: #fff3cd;
-        border: 1px solid #ffeeba;
-        color: #856404;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
+        max-width: 100%;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1382,7 +1364,7 @@ def comparison_section(payroll_engine=None):
         def _resaltar_sobre_ipc(row):
             idx = row.name
             if idx < len(sobrepasa_ipc) and sobrepasa_ipc[idx]:
-                return ['background-color: #B3E5FC'] * len(row)
+                return ['background-color: #B3E5FC; color: #000000'] * len(row)
             return [''] * len(row)
 
         st.dataframe(df.style.apply(_resaltar_sobre_ipc, axis=1), width='stretch', hide_index=True)

@@ -242,9 +242,9 @@ def show_analysis_section(buk_client: BukClient):
         [data-testid="stVerticalBlockBorderWrapper"]:has(> [data-testid="stHorizontalBlock"]) > [data-testid="stHorizontalBlock"] {
             position: sticky;
             top: 0;
-            background: white;
+            background: #111111;
             z-index: 999;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
         }
         </style>
         <script>
@@ -254,9 +254,9 @@ def show_analysis_section(buk_client: BukClient):
             if(headers.length > 0) {
                 headers[0].style.position = 'sticky';
                 headers[0].style.top = '0';
-                headers[0].style.backgroundColor = 'white';
+                headers[0].style.backgroundColor = '#111111';
                 headers[0].style.zIndex = '999';
-                headers[0].style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                headers[0].style.boxShadow = '0 2px 4px rgba(0,0,0,0.4)';
             }
         });
         </script>
@@ -437,7 +437,7 @@ def show_analysis_section(buk_client: BukClient):
                                     idx = row.name
                                     if idx < len(sobrepasa_ipc) and sobrepasa_ipc[idx]:
                                         # Celeste claro para filas que sobrepasan IPC
-                                        return ['background-color: #B3E5FC'] * len(row)
+                                        return ['background-color: #B3E5FC; color: #000000'] * len(row)
                                     return [''] * len(row)
 
                                 styled_df = hist_df_display.style.apply(estilo_fila, axis=1)

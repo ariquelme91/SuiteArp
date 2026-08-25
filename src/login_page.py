@@ -17,34 +17,24 @@ def render_login_page(auth_manager: AuthManager):
     # Estilos personalizados
     st.markdown("""
     <style>
-    .login-container {
-        max-width: 400px;
-        margin: 50px auto;
-    }
     .login-logo {
         text-align: center;
         margin-bottom: 10px;
     }
     .login-logo img {
         width: 240px;
+        max-width: 100%;
     }
     .login-title {
         text-align: center;
-        color: #1F4E78;
+        color: #3B78C3;
         font-size: 32px;
         margin-bottom: 5px;
     }
     .login-subtitle {
         text-align: center;
-        color: #666;
+        color: #AAAAAA;
         margin-bottom: 30px;
-    }
-    .demo-info {
-        background: #F5F5F5;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 20px;
-        font-size: 13px;
     }
     </style>
     """, unsafe_allow_html=True)
