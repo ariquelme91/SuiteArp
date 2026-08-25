@@ -853,11 +853,34 @@ class PDFExporter:
         Returns:
             Dict {"YYYY-MM": True/False}. Vacío si no hay con qué comparar.
         """
+        return {
+            detalle["mes"]: detalle["supera_ipc"]
+            for detalle in self._detallar_variaciones(salary_history, db_manager)
+        }
+
+    def _detallar_variaciones(self, salary_history: list, db_manager) -> List[Dict]:
+        """
+        Describe cada variación de sueldo comparándola con el IPC de SU propio mes.
+
+        Es la fuente única de la que salen tanto el marcado del gráfico como la
+        tabla de ajustes: para cada cambio de sueldo entrega el aumento efectivo
+        de ese mes y el reajuste por IPC que le correspondía, que es lo que
+        realmente interesa comparar. No confundir con la distancia acumulada
+        respecto de la línea de IPC del gráfico, que crece mes a mes y por lo
+        tanto no describe ningún aumento en particular.
+
+        Args:
+            salary_history: Lista de registros con start_date y base_wage
+            db_manager: AnalysisDBManager, o None si no se pudo inicializar
+
+        Returns:
+            Lista ordenada cronológicamente con un dict por variación.
+        """
         if not db_manager:
-            return {}
+            return []
 
         ordenado = sorted(salary_history, key=lambda x: x.get("start_date", ""))
-        resultado = {}
+        detalles = []
         sueldo_anterior = None
 
         for record in ordenado:
@@ -867,12 +890,31 @@ class PDFExporter:
                 continue
 
             if sueldo_anterior and sueldo_anterior > 0 and wage != sueldo_anterior:
+                mes = start_date[:7]
                 aumento_pct = ((wage - sueldo_anterior) / sueldo_anterior) * 100
-                resultado[start_date[:7]] = db_manager.aumento_supera_ipc(start_date[:7], aumento_pct)
+
+                # Fuera de los meses de reajuste (marzo, julio y noviembre) no
+                # hay IPC contra el cual comparar: el aumento es íntegramente
+                # una decisión de la empresa.
+                mes_num = int(mes[5:7])
+                es_mes_reajuste = mes_num in db_manager.MESES_REAJUSTE_IPC
+                ipc = db_manager.get_ipc(mes) if es_mes_reajuste else None
+                ipc_pct = float(ipc) * 100 if ipc is not None and float(ipc) <= 1.0 else None
+
+                detalles.append({
+                    "mes": mes,
+                    "sueldo_anterior": sueldo_anterior,
+                    "sueldo_nuevo": wage,
+                    "variacion": wage - sueldo_anterior,
+                    "aumento_pct": aumento_pct,
+                    "ipc_pct": ipc_pct,
+                    "sobre_ipc_pp": aumento_pct - ipc_pct if ipc_pct is not None else aumento_pct,
+                    "supera_ipc": db_manager.aumento_supera_ipc(mes, aumento_pct),
+                })
 
             sueldo_anterior = wage
 
-        return resultado
+        return detalles
 
     def _add_salary_history_to_pdf(self, story, salary_history: list):
         """Agrega historial de sueldos con gráfico a una segunda página del PDF."""
@@ -908,7 +950,8 @@ class PDFExporter:
 
         # Marcar los mismos períodos que la app resalta en la tabla, para que
         # el PDF y la pantalla cuenten exactamente la misma historia.
-        sobrepasa_por_periodo = self._calcular_periodos_sobre_ipc(filtered_history, db_manager)
+        variaciones = self._detallar_variaciones(filtered_history, db_manager)
+        sobrepasa_por_periodo = {v["mes"]: v["supera_ipc"] for v in variaciones}
 
         # Generar gráfico de evolución salarial
         if ipc_history and len(filtered_history) >= 2:
@@ -916,12 +959,13 @@ class PDFExporter:
                 filtered_history, ipc_history, sobrepasa_por_periodo=sobrepasa_por_periodo
             )
             if chart_result and chart_result[0]:
-                chart_img, adjustment_points = chart_result
+                chart_img, _ = chart_result
                 story.append(chart_img)
                 story.append(Spacer(1, 0.2 * inch))
 
-                # Agregar tabla explicativa de ajustes reales
-                if adjustment_points:
+                # Agregar tabla explicativa de los aumentos que no son IPC
+                ajustes = [v for v in variaciones if v["supera_ipc"]]
+                if ajustes:
                     explanation_style = ParagraphStyle(
                         'ExplanationTitle',
                         parent=self.styles['Normal'],
@@ -930,29 +974,40 @@ class PDFExporter:
                         textColor=colors.HexColor("#1F4E78"),
                         spaceAfter=6,
                     )
-                    story.append(Paragraph("Ajustes Salariales Realizados", explanation_style))
+                    story.append(Paragraph("Ajustes Salariales por Sobre el IPC", explanation_style))
 
-                    # Obtener los 2 mayores ajustes
-                    sorted_adjustments = sorted(
-                        adjustment_points,
-                        key=lambda x: ((x[1] - x[2]) / x[2]) * 100 if x[2] > 0 else 0,
-                        reverse=True
-                    )[:2]
+                    nota_style = ParagraphStyle(
+                        'ExplanationNote',
+                        parent=self.styles['Normal'],
+                        fontSize=7.5,
+                        textColor=colors.HexColor("#555555"),
+                        spaceAfter=4,
+                    )
+                    story.append(Paragraph(
+                        "Corresponde a los puntos destacados en el gráfico. Cada aumento se compara "
+                        "con el reajuste por IPC de su propio mes (marzo, julio y noviembre).",
+                        nota_style
+                    ))
 
-                    adjustment_data = [["Mes", "Aumento vs IPC", "% vs IPC", "Detalles del Ajuste"]]
+                    adjustment_data = [[
+                        "Mes", "Sueldo Base", "Aumento", "% Aplicado", "IPC del Mes", "Sobre IPC"
+                    ]]
 
-                    for month, real_salary, ipc_salary in sorted_adjustments:
-                        real_component = real_salary - ipc_salary
-                        real_component_pct = ((real_component) / ipc_salary * 100) if ipc_salary > 0 else 0
-
+                    for ajuste in ajustes:
+                        ipc_pct = ajuste["ipc_pct"]
                         adjustment_data.append([
-                            month,
-                            f"${real_component:,.0f}",
-                            f"{real_component_pct:.1f}%",
-                            f"Ajuste real adicional por encima de IPC"
+                            ajuste["mes"],
+                            f"${ajuste['sueldo_nuevo']:,.0f}",
+                            f"${ajuste['variacion']:,.0f}",
+                            f"{ajuste['aumento_pct']:+.1f}%",
+                            f"{ipc_pct:.2f}%" if ipc_pct is not None else "No aplica",
+                            f"{ajuste['sobre_ipc_pp']:+.1f} pp",
                         ])
 
-                    adjustment_table = Table(adjustment_data, colWidths=[1.2*inch, 1.2*inch, 1.0*inch, 2.1*inch])
+                    adjustment_table = Table(
+                        adjustment_data,
+                        colWidths=[0.85*inch, 1.25*inch, 1.1*inch, 0.95*inch, 1.0*inch, 0.85*inch]
+                    )
                     adjustment_table.setStyle(TableStyle([
                         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
                         ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
