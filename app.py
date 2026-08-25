@@ -57,6 +57,23 @@ st.markdown("""
         height: auto;
         max-width: 100%;
     }
+    /* Dar contraste visual a los campos de entrada (texto, número, fecha,
+       selectbox) para que se note claramente dónde hay que escribir o
+       seleccionar. El tema oscuro los deja casi del mismo color que el
+       fondo, por lo que un usuario nuevo no distingue la caja. Se usa
+       box-shadow en vez de border porque Streamlit ya fija su propio
+       border-color y lo sobrescribe; box-shadow no compite con esa regla. */
+    [data-baseweb="input"],
+    [data-baseweb="select"] > div,
+    [data-baseweb="textarea"] {
+        box-shadow: 0 0 0 1px #5A6472 !important;
+        border-radius: 6px !important;
+    }
+    [data-baseweb="input"]:focus-within,
+    [data-baseweb="select"] > div:focus-within,
+    [data-baseweb="textarea"]:focus-within {
+        box-shadow: 0 0 0 2px #3B78C3 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
