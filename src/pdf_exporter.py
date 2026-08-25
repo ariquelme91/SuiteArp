@@ -789,13 +789,20 @@ class PDFExporter:
             logger.error(traceback.format_exc())
             return None, []
 
-    def _generate_salary_evolution_chart(self, salary_history: list, ipc_history: List[Dict]) -> Tuple[Optional[Image], list]:
+    def _generate_salary_evolution_chart(
+        self,
+        salary_history: list,
+        ipc_history: List[Dict],
+        sobrepasa_por_periodo: Optional[Dict[str, bool]] = None,
+    ) -> Tuple[Optional[Image], list]:
         """
         Genera un gráfico de evolución salarial con matplotlib y lo retorna como Image para PDF.
 
         Args:
             salary_history: Lista de registros con start_date y base_wage
             ipc_history: Lista de registros con mes y valor_ipc
+            sobrepasa_por_periodo: Marcado período a período ({"YYYY-MM": True/False}),
+                para que los puntos destacados coincidan con la tabla en pantalla
 
         Returns:
             Tupla con (Objeto Image de reportlab, lista de puntos de ajuste) o (None, []) si hay error
@@ -807,7 +814,9 @@ class PDFExporter:
             filtered_history = [record for record in salary_history
                                if record.get("start_date", "")[:7] > "2019-05"]
 
-            fig, adjustment_points = self._build_salary_evolution_figure(filtered_history, ipc_history)
+            fig, adjustment_points = self._build_salary_evolution_figure(
+                filtered_history, ipc_history, sobrepasa_por_periodo
+            )
             if fig is None:
                 return None, []
 
