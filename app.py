@@ -1356,16 +1356,7 @@ def comparison_section(payroll_engine=None):
                         variation = f"${change:,.0f}"
                         variation_pct = f"{change_pct:+.1f}%"
 
-                        # Comparar contra el IPC del período (o el más cercano dentro
-                        # de una tolerancia de meses, ya que no se carga todos los meses)
-                        ipc_bd = db_ipc.get_ipc_cercano(periodo, tolerancia_meses=2)
-                        if ipc_bd is not None:
-                            ipc_valor = float(ipc_bd) * 100
-                            es_mayor_ipc = change_pct > (ipc_valor + 0.3)
-                        else:
-                            # Sin IPC registrado para comparar: no destacar (no
-                            # asumir que sobrepasa sin tener el dato para verificarlo)
-                            es_mayor_ipc = False
+                        es_mayor_ipc = db_ipc.aumento_supera_ipc(periodo, change_pct)
 
             if not skip_record:
                 history_data.append({
@@ -1600,42 +1591,6 @@ def comparison_section(payroll_engine=None):
                     logger.warning(f"No se pudo loguear exportación PDF: {e}")
             else:
                 st.error(":material/cancel: Error al generar PDF")
-
-
-# Histórico de IPC de referencia (INE), para carga masiva en Configuración.
-# Mismos valores que cargar_ipc.py (mantener sincronizados si se actualizan).
-_IPC_HISTORICO_REFERENCIA = {
-    "2026-07": 0.0240,
-    "2026-03": 0.0050,
-    "2025-11": 0.0140,
-    "2025-07": 0.0050,
-    "2025-03": 0.0150,
-    "2024-11": 0.0210,
-    "2024-07": 0.0110,
-    "2024-03": 0.0151,
-    "2023-11": 0.0160,
-    "2023-07": 0.0140,
-    "2023-03": 0.0200,
-    "2022-11": 0.0403,
-    "2022-07": 0.0550,
-    "2022-03": 0.0280,
-    "2021-11": 0.0370,
-    "2021-07": 0.0387,
-    "2021-03": 0.0390,
-    "2020-11": 0.0221,
-    "2020-07": 0.0256,
-    "2020-03": 0.0262,
-    "2019-11": 0.0193,
-    "2019-07": 0.0203,
-    "2019-03": 0.0194,
-    "2018-11": 0.0126,
-    "2018-07": 0.0259,
-    "2018-03": 0.0280,
-    "2017-11": 0.0161,
-    "2017-07": 0.0262,
-    "2016-11": 0.0257,
-    "2016-07": 0.0244,
-}
 
 
 def configuration_section():
@@ -1909,22 +1864,23 @@ def configuration_section():
         if st.button(":material/refresh: Recargar", width='stretch', key="reload_ipc"):
             st.rerun()
 
-    with st.expander(":material/database: Cargar histórico completo de IPC (referencia INE, 2016-2026)"):
+    ipc_seed = db.leer_ipc_seed_desde_archivo()
+    with st.expander(f":material/database: Cargar histórico completo de IPC ({len(ipc_seed)} meses de referencia)"):
         st.caption(
-            "Carga de una sola vez las variaciones de IPC de referencia desde nov-2016 a jul-2026. "
-            "Útil para completar meses faltantes sin ingresarlos uno por uno. No sobrescribe los "
-            "meses que ya tengas guardados con otro valor distinto."
+            "Carga de una sola vez el histórico de reajustes por IPC de la empresa (marzo, julio y "
+            "noviembre de cada año). Útil para completar meses faltantes sin ingresarlos uno por uno. "
+            "Sobrescribe el valor de los meses que ya estén cargados."
         )
         if st.button(":material/upload: Cargar histórico completo", key="load_ipc_seed_btn"):
             cargados = 0
-            for mes_seed, valor_seed in _IPC_HISTORICO_REFERENCIA.items():
+            for mes_seed, valor_seed in ipc_seed.items():
                 if db.upsert_ipc(mes_seed, valor_seed):
                     cargados += 1
 
             ipc_sync_ok, ipc_sync_detalle = commit_json_file(
                 "config/ipc_history.json",
                 db.get_ipc_history_dict(),
-                "Cargar histórico completo de IPC (referencia INE)",
+                "Cargar histórico completo de IPC",
             )
 
             if ipc_sync_ok:

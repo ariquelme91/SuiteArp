@@ -638,17 +638,41 @@ class PDFExporter:
         # Ordenar historial por fecha ascendente (más antiguo primero)
         sorted_history = sorted(salary_history, key=lambda x: x.get("start_date", ""))
 
-        # Crear diccionario de IPC indexado por mes (YYYY-MM)
-        ipc_dict = {record['mes']: record['valor_ipc'] for record in ipc_history}
+        # Los IPC se guardan como tasa del período (ej: 0.0403 = 4,03% en
+        # nov-2022) y solo para los meses en que la empresa reajusta (marzo,
+        # julio y noviembre). Para poder valorizar cualquier mes se encadenan
+        # las tasas en orden cronológico y se arma un índice acumulado.
+        tasas = sorted(
+            (
+                (registro["mes"], float(registro["valor_ipc"]))
+                for registro in ipc_history
+                if registro.get("mes") and registro.get("valor_ipc") is not None
+                # Descarta valores tipo "índice" de una carga antigua con otro
+                # formato: una tasa por período nunca llega a 100% (1.0).
+                and float(registro["valor_ipc"]) <= 1.0
+            ),
+            key=lambda item: item[0],
+        )
+
+        indice_por_mes = {}
+        factor_acumulado = 1.0
+        for mes_ipc, tasa in tasas:
+            factor_acumulado *= (1 + tasa)
+            indice_por_mes[mes_ipc] = factor_acumulado
+
+        def indice_hasta(mes: str) -> float:
+            """Índice acumulado del último reajuste aplicado en o antes de `mes`."""
+            aplicables = [f for m, f in indice_por_mes.items() if m <= mes]
+            return aplicables[-1] if aplicables else 1.0
 
         dates = []
         real_salaries = []
         ipc_salaries = []
 
         initial_salary = None
-        initial_month = None
+        indice_inicial = None
 
-        for i, record in enumerate(sorted_history):
+        for record in sorted_history:
             start_date = record.get("start_date", "")
             wage = record.get("base_wage", 0)
 
@@ -660,29 +684,14 @@ class PDFExporter:
             dates.append(month_key)
             real_salaries.append(wage)
 
-            # Calcular sueldo ajustado por IPC
-            if i == 0:
-                # Primer registro (más antiguo)
+            if initial_salary is None:
+                # Primer registro con datos válidos (más antiguo)
                 initial_salary = wage
-                initial_month = month_key
+                indice_inicial = indice_hasta(month_key)
                 ipc_salaries.append(wage)
             else:
-                # Calcular el sueldo si se hubiera ajustado solo por IPC
-                # desde el salario inicial
-                try:
-                    ipc_value_initial = ipc_dict.get(initial_month)
-                    ipc_value_current = ipc_dict.get(month_key)
-
-                    if ipc_value_initial and ipc_value_current and ipc_value_initial > 0:
-                        # Sueldo IPC = Sueldo Inicial * (IPC_actual / IPC_inicial)
-                        ipc_adjusted = initial_salary * (ipc_value_current / ipc_value_initial)
-                        ipc_salaries.append(ipc_adjusted)
-                    else:
-                        # Si no hay datos de IPC, usar el sueldo real
-                        ipc_salaries.append(wage)
-                except Exception as e:
-                    logger.warning(f"Error calculando IPC ajustado: {e}")
-                    ipc_salaries.append(wage)
+                # Sueldo si solo se hubieran aplicado los reajustes por IPC
+                ipc_salaries.append(initial_salary * (indice_hasta(month_key) / indice_inicial))
 
         return dates, real_salaries, ipc_salaries
 
@@ -809,6 +818,42 @@ class PDFExporter:
             logger.error(traceback.format_exc())
             return None, []
 
+    def _calcular_periodos_sobre_ipc(self, salary_history: list, db_manager) -> Dict[str, bool]:
+        """
+        Determina, período a período, qué aumentos superan el reajuste por IPC.
+
+        Usa el mismo criterio que la app (AnalysisDBManager.aumento_supera_ipc),
+        para que los puntos destacados del gráfico coincidan con las filas
+        destacadas de la tabla en pantalla.
+
+        Args:
+            salary_history: Lista de registros con start_date y base_wage
+            db_manager: AnalysisDBManager, o None si no se pudo inicializar
+
+        Returns:
+            Dict {"YYYY-MM": True/False}. Vacío si no hay con qué comparar.
+        """
+        if not db_manager:
+            return {}
+
+        ordenado = sorted(salary_history, key=lambda x: x.get("start_date", ""))
+        resultado = {}
+        sueldo_anterior = None
+
+        for record in ordenado:
+            start_date = record.get("start_date", "")
+            wage = record.get("base_wage", 0)
+            if not start_date or not wage:
+                continue
+
+            if sueldo_anterior and sueldo_anterior > 0 and wage != sueldo_anterior:
+                aumento_pct = ((wage - sueldo_anterior) / sueldo_anterior) * 100
+                resultado[start_date[:7]] = db_manager.aumento_supera_ipc(start_date[:7], aumento_pct)
+
+            sueldo_anterior = wage
+
+        return resultado
+
     def _add_salary_history_to_pdf(self, story, salary_history: list):
         """Agrega historial de sueldos con gráfico a una segunda página del PDF."""
         # Título
@@ -832,6 +877,7 @@ class PDFExporter:
             return
 
         # Obtener datos de IPC desde la base de datos
+        db_manager = None
         try:
             from .analysis.db_manager import AnalysisDBManager
             db_manager = AnalysisDBManager()
@@ -840,9 +886,15 @@ class PDFExporter:
             logger.warning(f"No se pudo obtener historial de IPC: {e}")
             ipc_history = []
 
+        # Marcar los mismos períodos que la app resalta en la tabla, para que
+        # el PDF y la pantalla cuenten exactamente la misma historia.
+        sobrepasa_por_periodo = self._calcular_periodos_sobre_ipc(filtered_history, db_manager)
+
         # Generar gráfico de evolución salarial
         if ipc_history and len(filtered_history) >= 2:
-            chart_result = self._generate_salary_evolution_chart(filtered_history, ipc_history)
+            chart_result = self._generate_salary_evolution_chart(
+                filtered_history, ipc_history, sobrepasa_por_periodo=sobrepasa_por_periodo
+            )
             if chart_result and chart_result[0]:
                 chart_img, adjustment_points = chart_result
                 story.append(chart_img)

@@ -403,19 +403,7 @@ def show_analysis_section(buk_client: BukClient):
                                         aumento_monto = sueldo_actual - sueldo_anterior
                                         aumento_pct = (aumento_monto / sueldo_anterior) * 100
 
-                                        # Obtener IPC del mes del aumento (o el mas cercano
-                                        # dentro de una tolerancia, ya que el IPC no se carga
-                                        # todos los meses)
-                                        ipc_bd = db.get_ipc_cercano(periodo, tolerancia_meses=2)
-                                        if ipc_bd is not None:
-                                            ipc_valor = float(ipc_bd) * 100
-                                            # Tolerancia de 0.3 puntos porcentuales para
-                                            # redondeos de sueldo y pequeños desajustes de fecha
-                                            es_mayor_ipc = aumento_pct > (ipc_valor + 0.3)
-                                        else:
-                                            # Sin IPC registrado para comparar: no destacar
-                                            # (no asumir que sobrepasa sin poder verificarlo)
-                                            es_mayor_ipc = False
+                                        es_mayor_ipc = db.aumento_supera_ipc(periodo, aumento_pct)
 
                                         # Solo agregar si hay cambio de sueldo
                                         hist_data.append({

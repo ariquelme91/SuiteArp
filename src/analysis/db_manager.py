@@ -120,7 +120,14 @@ class AnalysisDBManager:
                     )
                     """
                 )
-                ipc_seed = self._leer_ipc_seed_desde_archivo()
+                # Limpieza de filas de una carga antigua que guardaba un índice
+                # acumulado (100.0, 131.5...) en vez de la tasa del período.
+                # Ensuciaban la tabla en Configuración y no las usa ningún
+                # cálculo. Una tasa real nunca llega a 100% (1.0 en decimal),
+                # así que el criterio no puede alcanzar a un dato válido.
+                cursor.execute("DELETE FROM ipc_history WHERE valor_ipc > 1.0")
+
+                ipc_seed = self.leer_ipc_seed_desde_archivo()
                 for mes_seed, valor_seed in ipc_seed.items():
                     cursor.execute(
                         """
@@ -920,7 +927,10 @@ class AnalysisDBManager:
 
     _IPC_HISTORY_FILE = "config/ipc_history.json"
 
-    def _leer_ipc_seed_desde_archivo(self) -> Dict[str, float]:
+    # Meses en que la empresa aplica el reajuste por IPC (marzo, julio, noviembre).
+    MESES_REAJUSTE_IPC = (3, 7, 11)
+
+    def leer_ipc_seed_desde_archivo(self) -> Dict[str, float]:
         """Lee el histórico de IPC desde el archivo comiteado en git.
 
         Se usa solo para poblar filas iniciales de `ipc_history` cuando el
@@ -965,52 +975,48 @@ class AnalysisDBManager:
             logger.error(f"Error obteniendo IPC: {e}")
             return None
 
-    def get_ipc_cercano(self, mes: str, tolerancia_meses: int = 2) -> Optional[float]:
+    def aumento_supera_ipc(self, mes: str, aumento_pct: float, tolerancia_pp: float = 0.3) -> bool:
         """
-        Obtiene el IPC de un mes exacto o, si no existe, el registro más
-        cercano dentro de una tolerancia de meses (antes o después).
+        Determina si un aumento de sueldo corresponde a un incremento real,
+        es decir, que va más allá del reajuste por IPC del período.
 
-        Los IPC se cargan cada ~4 meses (no todos los meses tienen registro),
-        por lo que un aumento puede caer en un mes sin dato exacto.
+        La empresa aplica el reajuste por IPC solo en marzo, julio y noviembre.
+        De ahí se desprenden los dos casos:
+
+        - Mes de reajuste: se compara contra el IPC guardado para ese mes
+          exacto. Si no hay IPC registrado no se destaca, porque no hay con
+          qué verificarlo (mejor omitir que afirmar algo sin respaldo).
+        - Cualquier otro mes: no hubo reajuste por IPC, así que todo el
+          aumento es un incremento real.
+
+        Args:
+            mes: Período del aumento en formato YYYY-MM
+            aumento_pct: Variación del sueldo en porcentaje (ej: 9.0 para +9%)
+            tolerancia_pp: Margen en puntos porcentuales para absorber
+                redondeos de sueldo (ej: 1,5% aplicado sobre un IPC de 1,51%)
+
+        Returns:
+            True si el aumento debe destacarse como incremento real
         """
+        if aumento_pct <= 0:
+            return False
+
         try:
-            exacto = self.get_ipc(mes)
-            if exacto is not None:
-                return exacto
+            mes_num = int(mes[5:7])
+        except (ValueError, IndexError, TypeError):
+            return False
 
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT mes, valor_ipc FROM ipc_history")
-                rows = cursor.fetchall()
+        if mes_num not in self.MESES_REAJUSTE_IPC:
+            return True
 
-            if not rows:
-                return None
+        ipc = self.get_ipc(mes)
+        # Se descartan valores tipo "índice" (ej: 100.0, 131.5) que quedaron de
+        # una carga antigua con otro formato: una tasa de IPC por período nunca
+        # llega a 100% (1.0 en decimal).
+        if ipc is None or float(ipc) > 1.0:
+            return False
 
-            target = datetime.strptime(mes, "%Y-%m")
-            mejor_valor = None
-            mejor_diff = None
-
-            for mes_row, valor in rows:
-                # Ignorar filas legacy tipo "índice" (ej: 100.0, 131.5) que coexisten
-                # en la misma tabla con otro formato: una tasa IPC real por período
-                # nunca debería superar 100% (1.0 en decimal).
-                if valor is None or valor > 1.0:
-                    continue
-
-                try:
-                    fecha_row = datetime.strptime(mes_row, "%Y-%m")
-                except ValueError:
-                    continue
-
-                diff_meses = abs((fecha_row.year - target.year) * 12 + (fecha_row.month - target.month))
-                if diff_meses <= tolerancia_meses and (mejor_diff is None or diff_meses < mejor_diff):
-                    mejor_valor = valor
-                    mejor_diff = diff_meses
-
-            return mejor_valor
-        except Exception as e:
-            logger.error(f"Error obteniendo IPC cercano: {e}")
-            return None
+        return aumento_pct > (float(ipc) * 100) + tolerancia_pp
 
     def upsert_compensation_level(self, nivel: int, mercado_financiero: float = None, mercado_seguros: float = None, descripcion: str = None) -> bool:
         """Inserta o actualiza un nivel de compensación."""
