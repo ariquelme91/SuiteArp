@@ -743,7 +743,16 @@ class PDFExporter:
             adjustment_points = []
             for i, (real, ipc) in enumerate(zip(real_salaries, ipc_salaries)):
                 if sobrepasa_por_periodo is not None:
-                    es_ajuste = bool(sobrepasa_por_periodo.get(dates[i], False))
+                    # El marcado viene indexado por mes, así que hay dos casos que
+                    # cuidar: el primer punto es la base del gráfico y no tiene
+                    # variación previa que destacar, y cuando un mes trae más de
+                    # un registro la variación corresponde al último de ellos.
+                    ultimo_del_mes = (i + 1 == len(dates)) or (dates[i + 1] != dates[i])
+                    es_ajuste = (
+                        i > 0
+                        and ultimo_del_mes
+                        and bool(sobrepasa_por_periodo.get(dates[i], False))
+                    )
                 else:
                     es_ajuste = real > ipc * 1.01  # 1% de tolerancia para evitar ruido
 
@@ -758,7 +767,9 @@ class PDFExporter:
                               rotation=45, ha='right', fontsize=9)
 
             ax.set_ylabel('Pesos Chilenos ($)', fontsize=10, fontweight='bold')
-            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e6:.0f}M' if x >= 1e6 else f'${x/1e3:.0f}K'))
+            # Un decimal en los millones: redondear a entero hacía que marcas
+            # distintas (2,4M y 2,8M) se mostraran con la misma etiqueta.
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x/1e6:.1f}M' if x >= 1e6 else f'${x/1e3:.0f}K'))
 
             # Leyenda
             ax.legend(loc='upper left', fontsize=9, framealpha=0.95)
