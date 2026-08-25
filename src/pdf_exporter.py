@@ -963,67 +963,6 @@ class PDFExporter:
                 story.append(chart_img)
                 story.append(Spacer(1, 0.2 * inch))
 
-                # Agregar tabla explicativa de los aumentos que no son IPC
-                ajustes = [v for v in variaciones if v["supera_ipc"]]
-                if ajustes:
-                    explanation_style = ParagraphStyle(
-                        'ExplanationTitle',
-                        parent=self.styles['Normal'],
-                        fontSize=10,
-                        fontName='Helvetica-Bold',
-                        textColor=colors.HexColor("#1F4E78"),
-                        spaceAfter=6,
-                    )
-                    story.append(Paragraph("Ajustes Salariales por Sobre el IPC", explanation_style))
-
-                    nota_style = ParagraphStyle(
-                        'ExplanationNote',
-                        parent=self.styles['Normal'],
-                        fontSize=7.5,
-                        textColor=colors.HexColor("#555555"),
-                        spaceAfter=4,
-                    )
-                    story.append(Paragraph(
-                        "Corresponde a los puntos destacados en el gráfico. Cada aumento se compara "
-                        "con el reajuste por IPC de su propio mes (marzo, julio y noviembre).",
-                        nota_style
-                    ))
-
-                    adjustment_data = [[
-                        "Mes", "Sueldo Base", "Aumento", "% Aplicado", "IPC del Mes", "Sobre IPC"
-                    ]]
-
-                    for ajuste in ajustes:
-                        ipc_pct = ajuste["ipc_pct"]
-                        adjustment_data.append([
-                            ajuste["mes"],
-                            f"${ajuste['sueldo_nuevo']:,.0f}",
-                            f"${ajuste['variacion']:,.0f}",
-                            f"{ajuste['aumento_pct']:+.1f}%",
-                            f"{ipc_pct:.2f}%" if ipc_pct is not None else "No aplica",
-                            f"{ajuste['sobre_ipc_pp']:+.1f} pp",
-                        ])
-
-                    adjustment_table = Table(
-                        adjustment_data,
-                        colWidths=[0.85*inch, 1.25*inch, 1.1*inch, 0.95*inch, 1.0*inch, 0.85*inch]
-                    )
-                    adjustment_table.setStyle(TableStyle([
-                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F4E78")),
-                        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                        ("FONTSIZE", (0, 0), (-1, -1), 8),
-                        ("LEFTPADDING", (0, 0), (-1, -1), 3),
-                        ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-                        ("TOPPADDING", (0, 0), (-1, -1), 2),
-                        ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
-                        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                        ("ALIGN", (1, 0), (-1, -1), "CENTER"),
-                        ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F5F5F5")),
-                    ]))
-                    story.append(adjustment_table)
-                    story.append(Spacer(1, 0.2 * inch))
-
         # Preparar datos para la tabla
         history_data = [["Periodo", "Sueldo Base", "Variación ($)", "Variación (%)"]]
 
