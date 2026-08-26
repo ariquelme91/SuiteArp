@@ -1400,7 +1400,7 @@ def comparison_section(payroll_engine=None):
             try:
                 ipc_history_list = db_ipc.get_ipc_history()
                 if ipc_history_list:
-                    from src.pdf_exporter import PDFExporter
+                   
 
                     # Mismo criterio "sobrepasa IPC" que la tabla de arriba, indexado
                     # por período, para que el punto resaltado en el gráfico coincida
